@@ -20,7 +20,7 @@ function App() {
           <Route path="/inputMain" element={<InputMain/>}></Route>
           <Route path="/forgot-password" element={<ForgotPassword/>}></Route>
           <Route path="/reset-password/:uid/:token" element={<ResetPassword/>}></Route>
-          <Route path="/auth/google/callback" element={<GoogleAuthCallback/>}></Route>
+          <Route path="/auth/google/callback/" element={<GoogleAuthCallback/>}></Route>
         </Routes>
       </Router>
     </>

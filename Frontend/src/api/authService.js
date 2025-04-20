@@ -129,20 +129,34 @@ export const authService = {
 
     // Password reset request
     async requestPasswordReset(email) {
-        return await axios.post(
-            getApiUrl(API_CONFIG.AUTH.PASSWORD_RESET), 
-            { email }, 
-            { headers: { 'Content-Type': 'application/json' } }
-        );
+        try {
+            return await axios.post(
+                getApiUrl(API_CONFIG.AUTH.PASSWORD_RESET), 
+                { email }, 
+                { headers: { 'Content-Type': 'application/json' } }
+            );
+        } catch (error) {
+            console.error('Password reset error:', error);
+            throw error;
+        }
     },
 
     // Password reset confirmation
     async confirmPasswordReset(uid, token, password, password2) {
-        return await axios.post(
-            buildApiUrl(API_CONFIG.AUTH.PASSWORD_RESET_CONFIRM, { uid, token }), 
-            { password, password2 },
-            { headers: { 'Content-Type': 'application/json' } }
-        );
+        try {
+            const url = getApiUrl(API_CONFIG.AUTH.PASSWORD_RESET_CONFIRM)
+                .replace(':uid', uid)
+                .replace(':token', token);
+                
+            return await axios.post(
+                url, 
+                { password, password2 },
+                { headers: { 'Content-Type': 'application/json' } }
+            );
+        } catch (error) {
+            console.error('Password reset confirmation error:', error);
+            throw error;
+        }
     },
 
     // Get current user

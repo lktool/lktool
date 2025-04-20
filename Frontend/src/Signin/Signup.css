@@ -134,3 +134,23 @@ input[type="text"]:focus,input[type="password"]:focus,input[type="email"]:focus 
     color: rgb(220, 0, 0);
     font-size: 17px;
 }
+
+.or-divider {
+    display: flex;
+    align-items: center;
+    margin: 16px 0;
+    color: #757575;
+  }
+  
+  .or-divider::before,
+  .or-divider::after {
+    content: '';
+    flex: 1;
+    border-bottom: 1px solid #dadce0;
+  }
+  
+  .or-divider span {
+    margin: 0 10px;
+    font-size: 14px;
+    font-weight: 500;
+  }
