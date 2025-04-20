@@ -25,7 +25,7 @@ const GoogleLoginButton = ({ onSuccess, actionType = 'login' }) => {
     
     // Create a new window for Google OAuth
     const googleAuthUrl = 'https://accounts.google.com/o/oauth2/v2/auth';
-    const redirectUri = 'http://localhost:5173/auth/google/callback';
+    const redirectUri = 'https://lktools.onrender.com/auth/google/callback';
     const clientId = '270981560790-bbip14n5rt5he5e1pcj9ff75h0k7a51a.apps.googleusercontent.com';
     
     // Store the action type in localStorage for the callback to use
