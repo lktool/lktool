@@ -1,0 +1,34 @@
+.landing-container{
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    text-align: center;
+    row-gap: 20px;
+}
+.landing-content{
+    display: flex;
+    flex-direction: column;
+    row-gap: 10px;
+}
+.landing-controls{
+    display: flex;
+}
+.landing-controls button{
+    cursor: pointer;
+    padding: .5rem;
+    margin-right: 10px;
+    font-size: 18px;
+    border-radius: 10px;
+    outline: none;
+    border: none;
+    color: white;
+    background-color: #67AE6E;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.landing-singin-icon,.landing-login-icon{
+    margin-right: 5px;
+}

@@ -1,0 +1,138 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+
+*{
+    font-family:'Poppins',sans-serif;
+}
+
+*{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+.container2{
+    min-height: 100vh;
+    min-width:100vw;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 20px;
+}
+.inside2{
+    border: 1px solid black;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    border-radius: 10px;
+    text-align: center;
+    padding: 1.5rem;
+    width: 380px;
+    border: none;
+    background-color: hsl(0, 0%, 85%);
+
+}
+
+/* input{
+    width: 100%;
+    font-size: 18px;
+    margin-bottom: 10px;
+    padding: .7rem;
+    border-radius: 5px;
+    outline: none;
+    border: 1px solid black;
+    border: none;
+
+    
+} */
+
+input[type="text"],input[type="password"],input[type="email"]{
+    padding: 12px 15px;
+    border: 2px solid #ccc;
+    border-radius: 8px;
+    font-size: 1rem;
+    background-color: #328E6E;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+input[type="text"]:focus,input[type="password"]:focus,input[type="email"]:focus {
+    border-color: #0077b6;
+    box-shadow: 0 0 8px rgba(0, 119, 182, 0.3);
+    background-color: #ffffff;
+    outline: none;
+}
+
+input:hover{
+    cursor: pointer;
+}
+/* .login-btn{
+    width: 100%;
+    padding: .7rem;
+    font-size: 18px;
+    background: blue;
+    border: none;
+    color: white;
+    border-radius: 5px;
+    margin: 10px 0px;
+}
+.login-btn:hover{
+    background: hsl(240, 100%, 40%);
+    cursor: pointer;
+} */
+/* .google-btn{
+    width: 300px;
+    padding: .7rem;
+    font-size: 18px;
+    background-color: blue;
+    border: none;
+    color: white;
+    border-radius: 5px; 
+    margin: 10px 0px;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+}
+.google-btn:hover{
+    background-color: blue;
+    cursor: pointer;
+
+}
+.google-image{
+    width: 30px;
+    height: 30px;
+} */
+.login{
+    margin-bottom: 10px;
+}
+.input-password{
+    position: relative;
+    z-index: 1;
+    display: flex;
+
+}
+.login-btn{
+    width: 100%;
+    padding: .7rem;
+    border-radius: 5px;
+    border: none;
+    color: white;
+    background-color: #67AE6E;
+    margin-top: 5px;
+    margin-bottom: 10px;
+}
+.eye-icon{
+    position:absolute;
+    z-index: 2;
+    right: 10px;
+    top: 13px;
+    text-align: center;
+    opacity: 0.7;
+}
+.eye-icon:hover{
+    cursor: pointer;
+}
+.error-message{
+    color: rgb(220, 0, 0);
+    font-size: 17px;
+}

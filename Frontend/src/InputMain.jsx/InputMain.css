@@ -1,0 +1,21 @@
+.inputMain-container{
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    text-align: center;
+    row-gap: 10px;
+}
+.inputMain-add-button{
+    cursor: pointer;
+    padding: .5rem;
+    margin-right: 10px;
+    font-size: 18px;
+    border-radius: 10px;
+    outline: none;
+    border: none;
+    color: white;
+    background-color: #67AE6E;
+    margin-top: 10px;
+}
