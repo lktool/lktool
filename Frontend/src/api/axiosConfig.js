@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Create axios instance with base URL
 const axiosInstance = axios.create({
-  baseURL: 'http://localhost:8000',
+  baseURL: 'https://lktool.onrender.com/api',
   headers: {
     'Content-Type': 'application/json',
   }

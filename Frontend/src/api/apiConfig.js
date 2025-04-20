@@ -1,6 +1,6 @@
 // API configuration constants
 export const API_CONFIG = {
-  BASE_URL: 'http://localhost:8000',
+  BASE_URL: 'https://lktool.onrender.com',
   API_PREFIX: '/api',
   
   // Full API base URL with prefix
