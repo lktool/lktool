@@ -165,7 +165,7 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",  # Default Vite dev server port
     "http://localhost:3000",  # Alternative frontend port
 ]
-#ALLOWED_HOSTS = ['your-backend-service-name.onrender.com']
+ALLOWED_HOSTS = ['https://lktool.onrender.com','lktool.onrender.com']
 
 # For development only - remove in production
 CORS_ALLOW_CREDENTIALS = True
