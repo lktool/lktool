@@ -8,6 +8,7 @@ export default defineConfig({
   build: {
     outDir: 'dist', // this is the publish directory in Render
   },
+  base: '/',
   server: {
     port: 3000, // optional: sets local dev port
   },
