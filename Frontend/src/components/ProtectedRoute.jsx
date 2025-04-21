@@ -1,4 +1,4 @@
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { authService } from '../api/authService';
 
@@ -6,6 +6,7 @@ function ProtectedRoute({ children, allowedRoles = [] }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [userRole, setUserRole] = useState(null);
+  const location = useLocation();
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -35,18 +36,41 @@ function ProtectedRoute({ children, allowedRoles = [] }) {
   }, []);
 
   if (isLoading) {
-    // You could render a loading spinner here
-    return <div className="loading">Loading...</div>;
+    return (
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: '100vh'
+      }}>
+        <div style={{
+          border: '4px solid #f3f3f3',
+          borderTop: '4px solid #67AE6E',
+          borderRadius: '50%',
+          width: '40px',
+          height: '40px',
+          animation: 'spin 1s linear infinite'
+        }}></div>
+        <style>{`
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+        `}</style>
+        <p>Loading...</p>
+      </div>
+    );
   }
 
   // Not authenticated, redirect to login
   if (!isAuthenticated) {
-    return <Navigate to="/login" />;
+    return <Navigate to="/login" state={{ from: location.pathname }} replace />;
   }
 
   // Role-based access control
   if (allowedRoles.length > 0 && !allowedRoles.includes(userRole)) {
-    return <Navigate to="/" />;
+    return <Navigate to="/" replace />;
   }
 
   return children;

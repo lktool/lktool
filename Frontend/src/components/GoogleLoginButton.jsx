@@ -26,7 +26,7 @@ const GoogleLoginButton = ({ onSuccess, actionType = 'login' }) => {
     // Create a new window for Google OAuth
     const googleAuthUrl = 'https://accounts.google.com/o/oauth2/v2/auth';
     // Add trailing slash to match Google Cloud Console configuration
-    const redirectUri = 'https://lktools.onrender.com/auth/google/callback/';
+    const redirectUri = 'https://lktool.onrender.com/auth/google/callback/';
     const clientId = '270981560790-bbip14n5rt5he5e1pcj9ff75h0k7a51a.apps.googleusercontent.com';
     
     // Store the action type in localStorage for the callback to use
@@ -107,9 +107,14 @@ const GoogleLoginButton = ({ onSuccess, actionType = 'login' }) => {
           localStorage.setItem('refreshToken', data.refresh_token);
         }
         
-        // Call the onSuccess callback
+        // Call the onSuccess callback with proper redirection based on action type
         if (onSuccess) {
-          onSuccess(data.is_new_user);
+          // If signup, redirect to login, otherwise proceed to inputMain
+          if (action === 'signup') {
+            onSuccess(true); // true indicates new user
+          } else {
+            onSuccess(false); // false indicates existing user
+          }
         }
       } else {
         throw new Error('Authentication failed. Please try again.');

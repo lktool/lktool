@@ -1,9 +1,9 @@
 import './Login.css';
 import { AiOutlineEye, AiOutlineEyeInvisible } from 'react-icons/ai';
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { validateEmail } from "../Utils/validate";
-import GoogleLoginButton from "../components/GoogleLoginButton";
+/*  */import GoogleLoginButton from "../components/GoogleLoginButton";
 import { authService } from '../api/authService';
 
 function Login() {
@@ -14,7 +14,7 @@ function Login() {
     const [loading, setLoading] = useState(false);
 
     const navigate = useNavigate();
-
+    
     async function handleSubmit(event) {
         event.preventDefault();
 
@@ -34,7 +34,7 @@ function Login() {
         try {
             // Use authService instead of direct axios call
             await authService.login(email, password);
-            navigate("/inputMain");
+            navigate("/inputMain"); // Always navigate to inputMain after successful login
         }
         catch (err) {
             console.error("Login error:", err);
@@ -94,11 +94,11 @@ function Login() {
                             </button>
                         </div>
                         
-                        <div className="or-divider">
+{/*                         <div className="or-divider">
                             <span>OR</span>
                         </div>
                         
-                        <GoogleLoginButton onSuccess={() => navigate("/inputMain")} actionType="login" />
+                        <GoogleLoginButton onSuccess={() => navigate("/inputMain")} actionType="login" /> */}
                         
                         <p>Don't have an account? <span><Link to="/signup">Signup</Link></span></p>
                     </form>

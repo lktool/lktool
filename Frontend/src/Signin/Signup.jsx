@@ -44,8 +44,8 @@ function Signup() {
     try {
       // Use authService instead of direct axios call
       await authService.register(email, password);
-      navigate("/inputMain");
-      alert("Registration successful");
+      navigate("/login"); // Change this to redirect to login instead of inputMain
+      alert("Registration successful! Please login to continue.");
     } catch (err) {
       console.error("Registration error:", err);
       if (err.response?.data?.email) {
@@ -141,11 +141,11 @@ function Signup() {
               {loading ? "Signing up..." : "Signup"}
             </button>
             
-            <div className="or-divider">
+{/*             <div className="or-divider">
               <span>OR</span>
             </div>
             
-            <GoogleLoginButton onSuccess={() => navigate("/inputMain")} actionType="signup" />
+            <GoogleLoginButton onSuccess={() => navigate("/inputMain")} actionType="signup" /> */}
             
             <p>
               Already have an account?
