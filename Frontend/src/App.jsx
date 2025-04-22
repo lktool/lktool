@@ -2,7 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-d
 import Landing from "./Landing/Landing";
 import Admin from "./Admin/Admin";
 import Login from './Login/Login';
-import Signup from "./Signin/Signup";
+import Signup from "./SignUp/Signup";
 import InputMain from "./InputMain.jsx/InputMain";
 import ForgotPassword from "./ForgotPassword/ForgotPassword";
 import ResetPassword from "./ResetPassword/ResetPassword";
