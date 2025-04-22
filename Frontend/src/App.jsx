@@ -9,6 +9,8 @@ import ResetPassword from "./ResetPassword/ResetPassword";
 import GoogleAuthCallback from "./components/GoogleAuthCallback";
 import NotFound from "./components/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
+import VerifyEmail from "./VerifyEmail/VerifyEmail";  
+import FormData from "./FormData/FormDate";
 
 function App() {
   return (
@@ -21,6 +23,7 @@ function App() {
           <Route path="/signup" element={<Signup />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password/:uid/:token" element={<ResetPassword />} />
+          <Route path="/verify-email/:token" element={<VerifyEmail/>}></Route>
           <Route path="/auth/google/callback/" element={<GoogleAuthCallback />} />
           
           {/* Protected Routes */}

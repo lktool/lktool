@@ -12,23 +12,43 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         # Add custom claims
         token['email'] = user.email
         return token
+    
+    def validate(self, attrs):
+        # First, validate credentials using parent's validate method
+        data = super().validate(attrs)
+        
+        # Check if user email is verified
+        if not self.user.is_verified:
+            raise serializers.ValidationError(
+                {"email": "Email not verified. Please check your inbox for the verification link."}
+            )
+        
+        return data
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('id', 'email')
+        fields = ('id', 'email', 'is_verified')
 
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
+    password2 = serializers.CharField(write_only=True, required=True)
     
     class Meta:
         model = User
-        fields = ('email', 'password')
-
+        fields = ('email', 'password', 'password2')
+    
+    def validate(self, attrs):
+        if attrs['password'] != attrs['password2']:
+            raise serializers.ValidationError({"password": "Password fields didn't match."})
+        return attrs
+    
     def create(self, validated_data):
+        validated_data.pop('password2', None)  # Remove password2 before creating user
         user = User.objects.create_user(
             email=validated_data['email'],
-            password=validated_data['password']
+            password=validated_data['password'],
+            is_verified=False  # Explicitly set is_verified to False
         )
         return user
 

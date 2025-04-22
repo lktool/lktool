@@ -14,6 +14,11 @@ from .serializers import (
     UserSerializer, RegisterSerializer, CustomTokenObtainPairSerializer,
     PasswordResetSerializer, PasswordResetConfirmSerializer
 )
+from .utils import send_verification_email, verify_email_token
+import logging
+
+# Initialize logger
+logger = logging.getLogger(__name__)
 
 User = get_user_model()
 
@@ -30,14 +35,113 @@ class RegisterView(generics.CreateAPIView):
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
         
+        # Send verification email with better error handling
+        email_sent = False
+        try:
+            email_sent = send_verification_email(user)
+        except Exception as e:
+            logger.error(f"Error sending verification email: {str(e)}")
+        
         # Generate token for the user
         refresh = RefreshToken.for_user(user)
         
         return Response({
             "user": UserSerializer(user).data,
-            "message": "User created successfully",
+            "message": "User created successfully. " + 
+                      ("Please check your email to verify your account." if email_sent else 
+                       "We encountered an issue sending the verification email. Please try again later or contact support."),
             "token": str(refresh.access_token),
+            "email_sent": email_sent
         }, status=status.HTTP_201_CREATED)
+
+class EmailVerificationView(APIView):
+    """
+    View to handle email verification
+    """
+    permission_classes = (permissions.AllowAny,)
+    
+    def post(self, request):
+        token = request.data.get('token')
+        
+        if not token:
+            return Response(
+                {'error': 'Verification token is required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        email = verify_email_token(token)
+        
+        if email is None:
+            return Response(
+                {'error': 'Verification link has expired. Please request a new one.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        elif email is False:
+            return Response(
+                {'error': 'Invalid verification token.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        try:
+            user = User.objects.get(email=email)
+            
+            if user.is_verified:
+                return Response(
+                    {'message': 'Email already verified. You can now log in.'},
+                    status=status.HTTP_200_OK
+                )
+            
+            user.is_verified = True
+            user.save()
+            
+            return Response(
+                {'message': 'Email successfully verified. You can now log in.'},
+                status=status.HTTP_200_OK
+            )
+        except User.DoesNotExist:
+            return Response(
+                {'error': 'User not found.'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+class ResendVerificationEmailView(APIView):
+    """
+    View to resend verification email
+    """
+    permission_classes = (permissions.AllowAny,)
+    
+    def post(self, request):
+        email = request.data.get('email')
+        
+        if not email:
+            return Response(
+                {'error': 'Email is required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+            
+        try:
+            user = User.objects.get(email=email)
+            
+            if user.is_verified:
+                return Response(
+                    {'message': 'Email already verified. You can now log in.'},
+                    status=status.HTTP_200_OK
+                )
+                
+            # Send verification email
+            send_verification_email(user)
+            
+            return Response(
+                {'message': 'Verification email sent successfully. Please check your inbox.'},
+                status=status.HTTP_200_OK
+            )
+            
+        except User.DoesNotExist:
+            # Don't reveal which emails exist for security
+            return Response(
+                {'message': 'If this email exists in our system, a verification email has been sent.'},
+                status=status.HTTP_200_OK
+            )
 
 class PasswordResetView(APIView):
     permission_classes = (permissions.AllowAny,)

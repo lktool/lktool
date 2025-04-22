@@ -12,6 +12,8 @@ export const API_CONFIG = {
     PASSWORD_RESET_CONFIRM: '/api/auth/password-reset/:uid/:token/',
     USER_PROFILE: '/api/auth/user/',
     GOOGLE_AUTH: '/api/auth/google/',
+    VERIFY_EMAIL: '/api/auth/verify-email/',
+    RESEND_VERIFICATION: '/api/auth/resend-verification/',
   },
   // Add other API endpoints as needed
 };

@@ -1,0 +1,87 @@
+/* General Reset */
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f9f9f9;
+  padding: 20px;
+}
+
+/* .classroom-form-data Container */
+.classroom-form-data {
+  max-width: 800px;
+  margin: 0 auto;
+  background-color: white;
+  padding: 30px;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Headings */
+.classroom-form-data .classroom-heading {
+  margin-bottom: 20px;
+  font-size: 28px;
+  color: #328E6E;
+}
+
+/* .classroom-fieldset and Legends */
+.classroom-fieldset {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 25px;
+  background-color: #fafafa;
+}
+
+.classroom-legend {
+  font-weight: bold;
+  font-size: 18px;
+  color: #328E6E;
+  padding: 0 10px;
+}
+
+/* Labels & Inputs */
+label {
+  display: block;
+  margin-bottom: 12px;
+  color: #333;
+  font-size: 15px;
+}
+
+input[type="text"],
+input[type="number"],
+input[type="date"],
+select {
+  display: block;
+  width: 100%;
+  padding: 10px 12px;
+  margin-top: 4px;
+  margin-bottom: 12px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+input[type="checkbox"] {
+  margin-right: 10px;
+}
+
+/* Red Legend (Warning Section) */
+.classroom-legend.classroom-danger {
+  color: #b91c1c;
+}
+
+/* Submit Button */
+.classroom-submit-button {
+  background-color: #328E6E;
+  color: white;
+  padding: 12px 24px;
+  font-size: 16px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.classroom-submit-button:hover {
+  background-color: #28795b;
+}

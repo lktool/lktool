@@ -28,26 +28,30 @@ apiClient.interceptors.response.use(
             try {
                 const refreshToken = localStorage.getItem('refreshToken');
                 if (refreshToken) {
-                    const response = await axios.post(
-                        getApiUrl(API_CONFIG.AUTH.REFRESH), 
-                        { refresh: refreshToken },
-                        { headers: { 'Content-Type': 'application/json' } }
-                    );
-                    
-                    if (response.data.access) {
-                        localStorage.setItem('token', response.data.access);
-                        apiClient.defaults.headers.common['Authorization'] = `Bearer ${response.data.access}`;
-                        originalRequest.headers['Authorization'] = `Bearer ${response.data.access}`;
-                        return apiClient(originalRequest);
+                    try {
+                        const response = await axios.post(
+                            getApiUrl(API_CONFIG.AUTH.REFRESH), 
+                            { refresh: refreshToken },
+                            { headers: { 'Content-Type': 'application/json' } }
+                        );
+                        
+                        if (response.data.access) {
+                            localStorage.setItem('token', response.data.access);
+                            apiClient.defaults.headers.common['Authorization'] = `Bearer ${response.data.access}`;
+                            originalRequest.headers['Authorization'] = `Bearer ${response.data.access}`;
+                            return apiClient(originalRequest);
+                        }
+                    } catch (refreshError) {
+                        console.error("Refresh token error", refreshError);
+                        // Silent token removal on refresh failures
+                        if (refreshError.response?.status === 401) {
+                            localStorage.removeItem('token');
+                            localStorage.removeItem('refreshToken');
+                        }
                     }
                 }
-            } catch (refreshError) {
-                console.error("Refresh token error", refreshError);
-                // Only clear tokens if refresh explicitly fails
-                if (refreshError.response && refreshError.response.status === 401) {
-                    localStorage.removeItem('token');
-                    localStorage.removeItem('refreshToken');
-                }
+            } catch (err) {
+                console.error("Token refresh error", err);
             }
         }
         return Promise.reject(error);
@@ -78,23 +82,38 @@ apiClient.interceptors.request.use(
 );
 
 export const authService = {
-    // Register a new user - simplified to just email and password
-    async register(email, password) {
+    // Register a new user - include password2
+    async register(email, password, confirmPassword) {
         try {
             console.log("Sending signup request with:", { email, password });
+            
+            // Add delay for better UX - helps avoid race conditions
+            await new Promise(resolve => setTimeout(resolve, 300));
+            
             const response = await axios.post(
                 getApiUrl(API_CONFIG.AUTH.SIGNUP), 
-                { email, password }, 
+                { 
+                    email, 
+                    password,
+                    password2: confirmPassword // Make sure to send confirmation password
+                }, 
                 { headers: { 'Content-Type': 'application/json' } }
             );
             
             if (response.data.token) {
-                localStorage.setItem('token', response.data.token);
+                localStorage.setItem('temp_token', response.data.token); // Don't set as main token yet
             }
             
             return response.data;
         } catch (error) {
+            // Log the full error response for debugging
             console.error('Registration error details:', error.response?.data || error.message);
+            
+            // Format error message for email already exists
+            if (error.response?.data?.email?.[0]?.includes('already exists')) {
+                error.alreadyExists = true;
+            }
+            
             throw error;
         }
     },
@@ -167,5 +186,35 @@ export const authService = {
     // Check if user is authenticated
     isAuthenticated() {
         return !!localStorage.getItem('token');
-    }
+    },
+
+    // Resend verification email
+    async resendVerification(email) {
+        try {
+            const response = await axios.post(
+                getApiUrl(API_CONFIG.AUTH.RESEND_VERIFICATION), 
+                { email },
+                { headers: { 'Content-Type': 'application/json' } }
+            );
+            return response.data;
+        } catch (error) {
+            console.error('Failed to resend verification email:', error);
+            throw error;
+        }
+    },
+
+    // Verify email
+    async verifyEmail(token) {
+        try {
+            const response = await axios.post(
+                getApiUrl(API_CONFIG.AUTH.VERIFY_EMAIL), 
+                { token },
+                { headers: { 'Content-Type': 'application/json' } }
+            );
+            return response.data;
+        } catch (error) {
+            console.error('Email verification error:', error);
+            throw error;
+        }
+    },
 };

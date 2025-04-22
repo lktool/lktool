@@ -158,6 +158,13 @@ SIMPLE_JWT = {
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
     'ROTATE_REFRESH_TOKENS': False,
     'BLACKLIST_AFTER_ROTATION': True,
+        # Add for graceful error handling
+    'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
+    'AUTH_HEADER_TYPES': ('Bearer',),
+    'USER_ID_FIELD': 'id',
+    'USER_ID_CLAIM': 'user_id',
+    'JTI_CLAIM': 'jti',
+
 }
 
 # CORS settings - update for proper frontend communication
@@ -192,20 +199,33 @@ CORS_ALLOW_HEADERS = [
     'x-requested-with',
 ]
 
-# Email configuration with fallback to console backend if no credentials provided
+# Email Configuration - Properly load from environment
+EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
+EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
+EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 587))
+EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'True').lower() == 'true'
 EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
 
-if EMAIL_HOST_USER and EMAIL_HOST_PASSWORD:
-    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-    EMAIL_HOST = 'smtp.gmail.com'
-    EMAIL_PORT = 587
-    EMAIL_USE_TLS = True
-    DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
-else:
-    # Fallback to console if no email credentials provided
-    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
-    DEFAULT_FROM_EMAIL = 'noreply@example.com'
+# Handle environment variables with quotes
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', '')
+if DEFAULT_FROM_EMAIL and (DEFAULT_FROM_EMAIL.startswith('"') and DEFAULT_FROM_EMAIL.endswith('"')):
+    DEFAULT_FROM_EMAIL = DEFAULT_FROM_EMAIL[1:-1]
+if not DEFAULT_FROM_EMAIL:
+    DEFAULT_FROM_EMAIL = EMAIL_HOST_USER or 'noreply@yoursite.com'
 
-# Frontend URL for password reset
-FRONTEND_URL = 'http://localhost:5173'  # Adjust based on your frontend URL
+# Frontend URL for email verification links
+FRONTEND_URL = os.environ.get('FRONTEND_URL', 'http://localhost:5173')
+
+# Add email debugging in development
+if DEBUG:
+    print("\n--- Email Configuration ---")
+    print(f"EMAIL_BACKEND: {EMAIL_BACKEND}")
+    print(f"EMAIL_HOST: {EMAIL_HOST}")
+    print(f"EMAIL_PORT: {EMAIL_PORT}")
+    print(f"EMAIL_USE_TLS: {EMAIL_USE_TLS}")
+    print(f"EMAIL_HOST_USER: {EMAIL_HOST_USER}")
+    print(f"EMAIL_HOST_PASSWORD: {'*' * 8 if EMAIL_HOST_PASSWORD else 'Not set'}")
+    print(f"DEFAULT_FROM_EMAIL: {DEFAULT_FROM_EMAIL}")
+    print(f"FRONTEND_URL: {FRONTEND_URL}")
+    print("-------------------------\n")
