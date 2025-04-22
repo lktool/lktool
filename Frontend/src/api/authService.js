@@ -82,38 +82,23 @@ apiClient.interceptors.request.use(
 );
 
 export const authService = {
-    // Register a new user - include password2
-    async register(email, password, confirmPassword) {
+    // Register a new user - updated to include password2 parameter
+    async register(email, password, password2) {
         try {
-            console.log("Sending signup request with:", { email, password });
-            
-            // Add delay for better UX - helps avoid race conditions
-            await new Promise(resolve => setTimeout(resolve, 300));
-            
+            console.log("Sending signup request with:", { email, password, password2 });
             const response = await axios.post(
                 getApiUrl(API_CONFIG.AUTH.SIGNUP), 
-                { 
-                    email, 
-                    password,
-                    password2: confirmPassword // Make sure to send confirmation password
-                }, 
+                { email, password, password2 }, 
                 { headers: { 'Content-Type': 'application/json' } }
             );
             
             if (response.data.token) {
-                localStorage.setItem('temp_token', response.data.token); // Don't set as main token yet
+                localStorage.setItem('token', response.data.token);
             }
             
             return response.data;
         } catch (error) {
-            // Log the full error response for debugging
             console.error('Registration error details:', error.response?.data || error.message);
-            
-            // Format error message for email already exists
-            if (error.response?.data?.email?.[0]?.includes('already exists')) {
-                error.alreadyExists = true;
-            }
-            
             throw error;
         }
     },

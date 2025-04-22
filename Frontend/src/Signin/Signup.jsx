@@ -42,9 +42,9 @@ function Signup() {
     setLoading(true);
 
     try {
-      // Use authService instead of direct axios call
-      await authService.register(email, password);
-      navigate("/login"); // Change this to redirect to login instead of inputMain
+      // Updated to pass confirmPassword as password2
+      await authService.register(email, password, confirmPassword);
+      navigate("/login");
       alert("Registration successful! Please login to continue.");
     } catch (err) {
       console.error("Registration error:", err);
@@ -52,6 +52,8 @@ function Signup() {
         setError(`Email error: ${err.response.data.email[0]}`);
       } else if (err.response?.data?.password) {
         setError(`Password error: ${err.response.data.password[0]}`);
+      } else if (err.response?.data?.password2) {
+        setError(`Confirm password error: ${err.response.data.password2[0]}`);
       } else if (err.response?.data?.message) {
         setError(err.response.data.message);
       } else if (err.response?.data?.error) {
