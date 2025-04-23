@@ -3,7 +3,8 @@ from rest_framework_simplejwt.views import TokenRefreshView
 from .views import (
     RegisterView, CustomTokenObtainPairView,
     PasswordResetView, PasswordResetConfirmView,
-    UserProfileView, EmailVerificationView, ResendVerificationEmailView
+    UserProfileView, EmailVerificationView, ResendVerificationEmailView,
+    VerifyTokenView  # Added the import here
 )
 from .google_auth import GoogleAuthView
 

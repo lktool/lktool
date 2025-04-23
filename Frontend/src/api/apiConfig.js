@@ -14,6 +14,7 @@ export const API_CONFIG = {
     GOOGLE_AUTH: '/api/auth/google/',
     VERIFY_EMAIL: '/api/auth/verify-email/',
     RESEND_VERIFICATION: '/api/auth/resend-verification/',
+    VERIFY_TOKEN: '/api/auth/verify-token/',  // Add this new endpoint
   },
   // Add other API endpoints as needed
 };

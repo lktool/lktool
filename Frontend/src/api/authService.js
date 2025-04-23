@@ -242,10 +242,9 @@ export const authService = {
             const token = tokenCache.getToken();
             if (!token) return false;
             
-            // Use a dedicated endpoint for token verification
             try {
-                // Make a request to validate the token server-side
-                await apiClient.get(API_CONFIG.AUTH.USER_PROFILE, {
+                // Use the dedicated token verification endpoint
+                await apiClient.get(API_CONFIG.AUTH.VERIFY_TOKEN, {
                     timeout: 5000 // Short timeout for quick response
                 });
                 return true;
