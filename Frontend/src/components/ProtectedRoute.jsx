@@ -1,4 +1,4 @@
-import { Navigate, useLocation } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { authService } from '../api/authService';
 
@@ -6,27 +6,28 @@ function ProtectedRoute({ children, allowedRoles = [] }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [userRole, setUserRole] = useState(null);
-  const location = useLocation();
 
   useEffect(() => {
     const checkAuth = async () => {
-      const token = localStorage.getItem('token');
-      
-      if (!token) {
-        setIsLoading(false);
-        return;
-      }
-      
       try {
-        // Check if the user is authenticated by requesting their profile
-        const response = await authService.getCurrentUser();
-        setIsAuthenticated(true);
-        setUserRole(response.data.role);
+        // Thoroughly verify token is valid by checking with the server
+        const isValid = await authService.checkTokenValidity();
+        
+        if (isValid) {
+          // Only if token is valid, fetch user profile
+          const response = await authService.getCurrentUser();
+          setIsAuthenticated(true);
+          setUserRole(response.data.role);
+        } else {
+          // Clear invalid tokens
+          authService.logout();
+          setIsAuthenticated(false);
+        }
       } catch (error) {
         console.error('Authentication error:', error);
         // Clear invalid token
-        localStorage.removeItem('token');
-        localStorage.removeItem('refreshToken');
+        authService.logout();
+        setIsAuthenticated(false);
       } finally {
         setIsLoading(false);
       }
@@ -63,9 +64,10 @@ function ProtectedRoute({ children, allowedRoles = [] }) {
     );
   }
 
-  // Not authenticated, redirect to login
+  // Not authenticated, redirect to login with a reason
   if (!isAuthenticated) {
-    return <Navigate to="/login" state={{ from: location.pathname }} replace />;
+    localStorage.setItem('auth_redirect_reason', 'login_required');
+    return <Navigate to="/login" replace />;
   }
 
   // Role-based access control

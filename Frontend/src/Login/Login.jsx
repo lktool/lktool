@@ -37,34 +37,53 @@ function Login() {
         return true;
     };
 
-    // Check for token expiration or session issues
+    // Improved authentication checking that requires credentials
     useEffect(() => {
-        // Check if we already have a valid token
-        const token = localStorage.getItem('token');
-        if (token) {
-            // Verify token validity without full profile fetch (lightweight check)
-            authService.checkTokenValidity()
-                .then(isValid => {
-                    if (isValid) {
-                        navigate("/inputMain");
-                    }
-                })
-                .catch(() => {
-                    // Token invalid, but we don't need to show an error
-                    localStorage.removeItem('token');
-                });
+        // First, remove any auth redirect reason if it exists
+        const redirectReason = localStorage.getItem('auth_redirect_reason');
+        if (redirectReason) {
+            if (redirectReason === 'login_required') {
+                setError('Authentication required. Please log in to continue.');
+            }
+            localStorage.removeItem('auth_redirect_reason');
         }
         
-        // Clear any expired tokens message
+        // Clear any expired tokens
         const expiredToken = localStorage.getItem('expired_token');
         if (expiredToken === 'true') {
             setError('Your session has expired. Please log in again.');
             localStorage.removeItem('expired_token');
+            authService.logout(); // Make sure to clear any remaining token
+        }
+        
+        // Only check token validity if user deliberately navigated to login
+        // Don't auto-redirect to protected routes from login screen
+        if (redirectReason !== 'login_required') {
+            // Check if we have a valid token
+            const checkValidToken = async () => {
+                try {
+                    const isValid = await authService.checkTokenValidity();
+                    if (isValid) {
+                        navigate("/inputMain");
+                    }
+                } catch (err) {
+                    // Just clear any invalid tokens silently
+                    authService.logout();
+                }
+            };
+            
+            checkValidToken();
         }
     }, [navigate]);
 
     async function handleSubmit(event) {
         event.preventDefault();
+
+        // Require both email and password
+        if (!email.trim() || !password.trim()) {
+            setError("Email and password are required");
+            return;
+        }
 
         // Prevent multiple rapid login attempts
         if (loginAttemptRef.current) {
@@ -78,14 +97,20 @@ function Login() {
 
         setError("");
         setLoading(true);
-        setIsUnverifiedEmail(false); // Reset unverified email status
+        setIsUnverifiedEmail(false); 
 
         // Debounce login attempts
         loginAttemptRef.current = setTimeout(async () => {
             try {
                 // Use authService with timeout handling
-                await authService.login(email, password);
-                navigate("/inputMain");
+                const response = await authService.login(email, password);
+                
+                // Only navigate if we have a valid token
+                if (response && (response.access || response.token)) {
+                    navigate("/inputMain");
+                } else {
+                    setError("Authentication failed. Please try again.");
+                }
             }
             catch (err) {
                 console.error("Login error:", err);

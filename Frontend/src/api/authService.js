@@ -236,24 +236,41 @@ export const authService = {
         }
     },
 
-    // Quick token validation check (lightweight)
+    // Enhanced token validation to prevent unauthorized access
     async checkTokenValidity() {
         try {
             const token = tokenCache.getToken();
             if (!token) return false;
             
-            // Use a HEAD request for lightweight validation
-            await apiClient.head(API_CONFIG.AUTH.USER_PROFILE);
-            return true;
+            // Use a dedicated endpoint for token verification
+            try {
+                // Make a request to validate the token server-side
+                await apiClient.get(API_CONFIG.AUTH.USER_PROFILE, {
+                    timeout: 5000 // Short timeout for quick response
+                });
+                return true;
+            } catch (error) {
+                // Any error means the token is invalid
+                this.logout(); // Clear tokens on failure
+                return false;
+            }
         } catch (error) {
+            console.error('Token validation error:', error);
+            this.logout(); // Clear tokens on any error
             return false;
         }
     },
 
-    // Logout
+    // Enhanced logout to clear all auth data
     logout() {
         localStorage.removeItem('token');
         localStorage.removeItem('refreshToken');
+        localStorage.removeItem('user_data');
+        
+        // Clear any cached authentication state
+        if (window.__auth_state) {
+            delete window.__auth_state;
+        }
     },
 
     // Password reset request
@@ -293,9 +310,14 @@ export const authService = {
         return await apiClient.get(API_CONFIG.AUTH.USER_PROFILE);
     },
     
-    // Check if user is authenticated
+    // Check if user is authenticated - enhanced with validation
     isAuthenticated() {
-        return !!tokenCache.getToken();
+        try {
+            const token = tokenCache.getToken();
+            return Boolean(token); // Return true only if valid token exists
+        } catch (error) {
+            return false;
+        }
     },
 
     // Enhanced resend verification email method

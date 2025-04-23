@@ -18,4 +18,5 @@ urlpatterns = [
     path('auth/google/', GoogleAuthView.as_view(), name='google_auth'),
     path('auth/verify-email/', EmailVerificationView.as_view(), name='verify_email'),
     path('auth/resend-verification/', ResendVerificationEmailView.as_view(), name='resend_verification'),
+    path('auth/verify-token/', VerifyTokenView.as_view(), name='verify_token'),
 ]

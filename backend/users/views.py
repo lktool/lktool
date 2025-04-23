@@ -262,3 +262,17 @@ class UserProfileView(APIView):
     def get(self, request):
         serializer = UserSerializer(request.user)
         return Response(serializer.data)
+
+class VerifyTokenView(APIView):
+    """
+    View to verify token validity
+    """
+    permission_classes = (permissions.IsAuthenticated,)
+    
+    def get(self, request):
+        # If we got here, the token is valid (IsAuthenticated check passed)
+        return Response({
+            'valid': True,
+            'user_id': request.user.id,
+            'email': request.user.email
+        })
