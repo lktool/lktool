@@ -24,10 +24,13 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/", include('users.urls')),
     
-    # Catch-all pattern for SPA - this should be last
-    re_path(r'^(?!admin/|api/).*$', TemplateView.as_view(template_name='index.html')),
+    # Catch‑all: serve React’s index.html for any non-API, non-admin, non‑static, non‑media path
+    re_path(
+        r'^(?!admin/|api/|static/|media/).*$',
+        TemplateView.as_view(template_name="index.html"),
+        name="spa-fallback"
+    ),
 ]
 
-# Serve static files in development
 if settings.DEBUG:
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

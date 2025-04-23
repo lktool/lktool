@@ -73,9 +73,13 @@ ROOT_URLCONF = "backend.urls"
 REACT_APP_DIR = os.path.join(BASE_DIR, '..', 'Frontend', 'dist')  # Fix the path to point to the actual Vite build
 
 # Serve static files
+STATIC_URL = '/'
 STATICFILES_DIRS = [
-    os.path.join(REACT_APP_DIR, 'assets'),  # assets from Vite build
+    REACT_APP_DIR,  # this includes index.html & the assets/ subfolder
 ]
+
+# Optional but recommended: compressed manifest storage for cache‑busting
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Add React build directory to templates
 TEMPLATES = [
@@ -142,7 +146,6 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = "static/"
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 
