@@ -19,6 +19,7 @@ export default defineConfig({
   base: '/',
   server: {
     strictPort: true,  
+    historyApiFallback: true,
     proxy: {
       '/api': {
         target: 'https://lktool.onrender.com',
