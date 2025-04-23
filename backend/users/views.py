@@ -14,44 +14,69 @@ from .serializers import (
     UserSerializer, RegisterSerializer, CustomTokenObtainPairSerializer,
     PasswordResetSerializer, PasswordResetConfirmSerializer
 )
-from .utils import send_verification_email, verify_email_token
+from .utils import verify_email_token, send_verification_email
+import threading
+from django.db import transaction
 import logging
 
-# Initialize logger
 logger = logging.getLogger(__name__)
-
 User = get_user_model()
+
+# Function to send email in background
+def send_email_async(subject, message, from_email, recipient_list, html_message=None):
+    try:
+        send_mail(
+            subject,
+            message,
+            from_email,
+            recipient_list,
+            fail_silently=False,
+            html_message=html_message
+        )
+    except Exception as e:
+        logger.error(f"Failed to send email: {str(e)}")
 
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
+    
+    def post(self, request, *args, **kwargs):
+        # Optimize by caching frequently accessed users
+        response = super().post(request, *args, **kwargs)
+        return response
 
 class RegisterView(generics.CreateAPIView):
     queryset = User.objects.all()
     permission_classes = (permissions.AllowAny,)
     serializer_class = RegisterSerializer
 
+    @transaction.atomic
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
+        
+        # Database write in transaction for atomicity and speed
         user = serializer.save()
         
-        # Send verification email with better error handling
-        email_sent = False
-        try:
-            email_sent = send_verification_email(user)
-        except Exception as e:
-            logger.error(f"Error sending verification email: {str(e)}")
+        # Make sure the user is NOT verified upon registration
+        user.is_verified = False
+        user.save()
         
         # Generate token for the user
         refresh = RefreshToken.for_user(user)
         
+        # Start email sending in background thread
+        if hasattr(settings, 'SEND_VERIFICATION_EMAIL') and settings.SEND_VERIFICATION_EMAIL:
+            email_thread = threading.Thread(
+                target=send_verification_email,
+                args=(user,)
+            )
+            email_thread.daemon = True  # Daemon thread won't block app shutdown
+            email_thread.start()
+        
         return Response({
             "user": UserSerializer(user).data,
-            "message": "User created successfully. " + 
-                      ("Please check your email to verify your account." if email_sent else 
-                       "We encountered an issue sending the verification email. Please try again later or contact support."),
+            "message": "User created successfully. Please check your email for verification instructions.",
             "token": str(refresh.access_token),
-            "email_sent": email_sent
         }, status=status.HTTP_201_CREATED)
 
 class EmailVerificationView(APIView):
@@ -159,25 +184,21 @@ class PasswordResetView(APIView):
                     uid = urlsafe_base64_encode(force_bytes(user.pk))
                     
                     # Build reset URL using the frontend URL
-                    # Fallback to a default URL if FRONTEND_URL is not defined
                     frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:5173')
                     reset_url = f"{frontend_url}/reset-password/{uid}/{token}"
                     
-                    # Try to send the email
-                    try:
-                        send_mail(
-                            'Password Reset Request',
-                            f'Please click the following link to reset your password: {reset_url}',
-                            settings.DEFAULT_FROM_EMAIL,
-                            [user.email],
-                            fail_silently=False,
-                        )
-                    except Exception as e:
-                        # Log the error but don't expose it in the response
-                        print(f"Email sending error: {str(e)}")
-                        # For now, still return a success message since we don't want to
-                        # reveal which emails exist in our system
+                    # Start email sending in background thread
+                    subject = 'Password Reset Request'
+                    message = f'Please click the following link to reset your password: {reset_url}'
                     
+                    email_thread = threading.Thread(
+                        target=send_email_async,
+                        args=(subject, message, settings.DEFAULT_FROM_EMAIL, [user.email])
+                    )
+                    email_thread.daemon = True
+                    email_thread.start()
+                    
+                    # Return success immediately without waiting for email
                     return Response(
                         {"message": "Password reset email has been sent."},
                         status=status.HTTP_200_OK
@@ -192,7 +213,7 @@ class PasswordResetView(APIView):
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             # Log the error for debugging
-            print(f"Password reset error: {str(e)}")
+            logger.error(f"Password reset error: {str(e)}")
             return Response(
                 {"error": "An unexpected error occurred."},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR

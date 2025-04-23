@@ -32,9 +32,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = "django-insecure-95udpxakz7tgh4@clqs(jqq=coel+k(ik@@2%4gg@g=00)96on"
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False  # Turn off debug in production
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'lktool.onrender.com', 'lktools.onrender.com']
+ALLOWED_HOSTS = [
+    'lktool.onrender.com',  # Your backend domain
+    'localhost',
+    '127.0.0.1',
+]
 
 # Custom user model - this must come BEFORE the auth app is used
 AUTH_USER_MODEL = 'users.CustomUser'
@@ -55,16 +59,17 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'django.middleware.cache.UpdateCacheMiddleware',  # Add at start
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    'whitenoise.middleware.WhiteNoiseMiddleware',
-
+    'django.middleware.cache.FetchFromCacheMiddleware',  # Add at end
 ]
 
 ROOT_URLCONF = "backend.urls"
@@ -80,6 +85,18 @@ STATICFILES_DIRS = [
 
 # Optional but recommended: compressed manifest storage for cache‑busting
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+# Add Django cache settings
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'unique-snowflake',
+    }
+}
+
+# Cache timeouts
+CACHE_MIDDLEWARE_SECONDS = 60 * 15  # 15 minutes
+CACHE_MIDDLEWARE_KEY_PREFIX = 'lktool'
 
 # Add React build directory to templates
 TEMPLATES = [
@@ -109,8 +126,11 @@ DATABASES = {
     'default': dj_database_url.config(default=os.environ.get("DATABASE_URL"))
 }
 
-
-
+# Database optimization settings
+DATABASE_OPTIONS = {
+    'timeout': 30,  # 30 seconds
+    'connect_timeout': 10,  # 10 seconds
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
@@ -164,35 +184,33 @@ REST_FRAMEWORK = {
     ],
 }
 
-# Simple JWT settings
+# Simple JWT settings optimized for performance
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(days=1),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
     'ROTATE_REFRESH_TOKENS': False,
     'BLACKLIST_AFTER_ROTATION': True,
-        # Add for graceful error handling
     'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
     'AUTH_HEADER_TYPES': ('Bearer',),
     'USER_ID_FIELD': 'id',
     'USER_ID_CLAIM': 'user_id',
     'JTI_CLAIM': 'jti',
-
+    # Add these for performance
+    'SLIDING_TOKEN_REFRESH_EXP_CLAIM': 'refresh_exp',
+    'SLIDING_TOKEN_LIFETIME': timedelta(days=1),
+    'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=7),
+    'AUTH_COOKIE': None,  # Don't use cookies for tokens
 }
 
-# CORS settings - update for proper frontend communication
+# CORS settings - FIXED to allow the correct frontend URL
 CORS_ALLOWED_ORIGINS = [
+    "https://lktools.onrender.com",  # Frontend domain with 's'
     "http://localhost:5173",
     "http://localhost:3000",
-    "https://lktools.onrender.com",
 ]
+
+# Make sure these are correctly set
 CORS_ALLOW_CREDENTIALS = True
-
-# In production, don't allow all origins
-if not DEBUG:
-    CORS_ALLOW_ALL_ORIGINS = False
-else:
-    CORS_ALLOW_ALL_ORIGINS = True
-
 CORS_ALLOW_METHODS = [
     'DELETE',
     'GET',
@@ -214,6 +232,9 @@ CORS_ALLOW_HEADERS = [
     'x-requested-with',
 ]
 
+# Important: Turn off this setting in production
+CORS_ALLOW_ALL_ORIGINS = False  
+
 # Email Configuration - Properly load from environment
 EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
 EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
@@ -231,6 +252,9 @@ if not DEFAULT_FROM_EMAIL:
 
 # Frontend URL for email verification links
 FRONTEND_URL = os.environ.get('FRONTEND_URL', 'https://lktools.onrender.com')
+
+# Email background processing setting
+SEND_VERIFICATION_EMAIL = True 
 
 # Add email debugging in development
 if DEBUG:

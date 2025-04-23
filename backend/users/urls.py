@@ -5,6 +5,7 @@ from .views import (
     PasswordResetView, PasswordResetConfirmView,
     UserProfileView, EmailVerificationView, ResendVerificationEmailView
 )
+from .google_auth import GoogleAuthView
 
 urlpatterns = [
     path('auth/signup/', RegisterView.as_view(), name='auth_register'),
@@ -14,6 +15,7 @@ urlpatterns = [
     path('auth/password-reset/<str:uidb64>/<str:token>/', 
          PasswordResetConfirmView.as_view(), name='password_reset_confirm'),
     path('auth/user/', UserProfileView.as_view(), name='user_profile'),
+    path('auth/google/', GoogleAuthView.as_view(), name='google_auth'),
     path('auth/verify-email/', EmailVerificationView.as_view(), name='verify_email'),
     path('auth/resend-verification/', ResendVerificationEmailView.as_view(), name='resend_verification'),
 ]

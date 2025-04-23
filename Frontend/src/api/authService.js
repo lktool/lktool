@@ -1,16 +1,62 @@
 import axios from 'axios';
 import { API_CONFIG, getApiUrl, buildApiUrl } from './apiConfig';
 
-// Create an axios instance with base URL
+// Create an axios instance with optimized config
 const apiClient = axios.create({
     baseURL: API_CONFIG.API_URL,
     headers: {
         'Content-Type': 'application/json',
     },
+    timeout: 20000, // 20 second timeout
     withCredentials: true,  // Important for CORS with credentials
 });
 
-// Add a response interceptor to handle token refresh
+// Token storage with TTL for caching
+const tokenCache = {
+    setToken(token, ttl = 3600000) { // Default 1 hour TTL
+        const item = {
+            value: token,
+            expiry: Date.now() + ttl
+        };
+        localStorage.setItem('token', JSON.stringify(item));
+    },
+    getToken() {
+        const itemStr = localStorage.getItem('token');
+        if (!itemStr) return null;
+        
+        try {
+            const item = JSON.parse(itemStr);
+            const now = Date.now();
+            
+            if (now > item.expiry) {
+                localStorage.removeItem('token');
+                localStorage.setItem('expired_token', 'true');
+                return null;
+            }
+            
+            return item.value;
+        } catch (e) {
+            // Handle legacy format
+            return localStorage.getItem('token');
+        }
+    }
+};
+
+// Add a response interceptor to handle token refresh with retry queue
+let isRefreshing = false;
+let failedQueue = [];
+
+const processQueue = (error, token = null) => {
+    failedQueue.forEach(prom => {
+        if (error) {
+            prom.reject(error);
+        } else {
+            prom.resolve(token);
+        }
+    });
+    failedQueue = [];
+};
+
 apiClient.interceptors.response.use(
     (response) => {
         return response;
@@ -24,34 +70,47 @@ apiClient.interceptors.response.use(
             !originalRequest.url?.includes('auth/signup') && 
             !originalRequest.url?.includes('auth/refresh')) {
             
+            if (isRefreshing) {
+                // Add failed request to queue
+                return new Promise((resolve, reject) => {
+                    failedQueue.push({ resolve, reject });
+                }).then(token => {
+                    originalRequest.headers['Authorization'] = `Bearer ${token}`;
+                    return apiClient(originalRequest);
+                }).catch(err => Promise.reject(err));
+            }
+
             originalRequest._retry = true;
+            isRefreshing = true;
+            
             try {
                 const refreshToken = localStorage.getItem('refreshToken');
                 if (refreshToken) {
-                    try {
-                        const response = await axios.post(
-                            getApiUrl(API_CONFIG.AUTH.REFRESH), 
-                            { refresh: refreshToken },
-                            { headers: { 'Content-Type': 'application/json' } }
-                        );
-                        
-                        if (response.data.access) {
-                            localStorage.setItem('token', response.data.access);
-                            apiClient.defaults.headers.common['Authorization'] = `Bearer ${response.data.access}`;
-                            originalRequest.headers['Authorization'] = `Bearer ${response.data.access}`;
-                            return apiClient(originalRequest);
-                        }
-                    } catch (refreshError) {
-                        console.error("Refresh token error", refreshError);
-                        // Silent token removal on refresh failures
-                        if (refreshError.response?.status === 401) {
-                            localStorage.removeItem('token');
-                            localStorage.removeItem('refreshToken');
-                        }
+                    const response = await axios.post(
+                        getApiUrl(API_CONFIG.AUTH.REFRESH), 
+                        { refresh: refreshToken },
+                        { headers: { 'Content-Type': 'application/json' } }
+                    );
+                    
+                    if (response.data.access) {
+                        const newToken = response.data.access;
+                        tokenCache.setToken(newToken);
+                        apiClient.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
+                        originalRequest.headers['Authorization'] = `Bearer ${newToken}`;
+                        processQueue(null, newToken);
+                        return apiClient(originalRequest);
                     }
                 }
-            } catch (err) {
-                console.error("Token refresh error", err);
+                processQueue(error, null);
+            } catch (refreshError) {
+                processQueue(refreshError, null);
+                // Only clear tokens if refresh explicitly fails
+                if (refreshError.response && refreshError.response.status === 401) {
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('refreshToken');
+                }
+            } finally {
+                isRefreshing = false;
             }
         }
         return Promise.reject(error);
@@ -70,7 +129,7 @@ apiClient.interceptors.request.use(
             return config;
         }
         
-        const token = localStorage.getItem('token');
+        const token = tokenCache.getToken();
         if (token) {
             config.headers['Authorization'] = `Bearer ${token}`;
         }
@@ -81,47 +140,113 @@ apiClient.interceptors.request.use(
     }
 );
 
+// Enhanced auth service with better error handling
 export const authService = {
-    // Register a new user - updated to include password2 parameter
+    // Register a new user with improved error handling
     async register(email, password, password2) {
         try {
             console.log("Sending signup request with:", { email, password, password2 });
+            
+            // Add debug info for CORS troubleshooting
+            console.log(`Sending request from ${window.location.origin} to ${getApiUrl(API_CONFIG.AUTH.SIGNUP)}`);
+            
+            // Use controller to implement timeout
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+            
             const response = await axios.post(
                 getApiUrl(API_CONFIG.AUTH.SIGNUP), 
                 { email, password, password2 }, 
-                { headers: { 'Content-Type': 'application/json' } }
+                { 
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        // Add explicit CORS headers for debugging
+                        'Access-Control-Request-Method': 'POST',
+                        'Access-Control-Request-Headers': 'content-type'
+                    },
+                    signal: controller.signal,
+                    withCredentials: true  // Important for CORS with credentials
+                }
             );
             
+            clearTimeout(timeoutId);
+            
             if (response.data.token) {
-                localStorage.setItem('token', response.data.token);
+                tokenCache.setToken(response.data.token);
             }
             
             return response.data;
         } catch (error) {
+            // Enhanced error logging
             console.error('Registration error details:', error.response?.data || error.message);
+            console.error('Full error object:', error);
+            
+            if (error.name === 'AbortError') {
+                throw new Error('Request timeout');
+            }
+            
+            // Special handling for CORS errors
+            if (error.message && error.message.includes('Network Error')) {
+                console.error('CORS issue detected. Check server CORS configuration.');
+            }
+            
             throw error;
         }
     },
 
-    // Login user
+    // Login user with better error handling
     async login(email, password) {
         try {
+            // Debug info
+            console.log(`Sending login request from ${window.location.origin} to ${getApiUrl(API_CONFIG.AUTH.LOGIN)}`);
+            
+            // Use abort controller for timeout
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 15000);
+            
             // Use regular axios for authentication requests
             const response = await axios.post(
                 getApiUrl(API_CONFIG.AUTH.LOGIN), 
                 { email, password },
-                { headers: { 'Content-Type': 'application/json' } }
+                { 
+                    headers: { 'Content-Type': 'application/json' },
+                    signal: controller.signal,
+                    withCredentials: true // Important for CORS
+                }
             );
             
+            clearTimeout(timeoutId);
+            
             if (response.data.access) {
-                localStorage.setItem('token', response.data.access);
+                tokenCache.setToken(response.data.access);
                 localStorage.setItem('refreshToken', response.data.refresh);
             }
             
             return response.data;
         } catch (error) {
-            console.error('Login error:', error.response?.data || error.message);
+            // Enhanced error logging
+            console.error('Login error details:', error.response?.data || error.message);
+            console.error('Full error object:', error);
+            
+            if (error.name === 'AbortError') {
+                throw new Error('Request timeout');
+            }
+            
             throw error;
+        }
+    },
+
+    // Quick token validation check (lightweight)
+    async checkTokenValidity() {
+        try {
+            const token = tokenCache.getToken();
+            if (!token) return false;
+            
+            // Use a HEAD request for lightweight validation
+            await apiClient.head(API_CONFIG.AUTH.USER_PROFILE);
+            return true;
+        } catch (error) {
+            return false;
         }
     },
 
@@ -170,20 +295,38 @@ export const authService = {
     
     // Check if user is authenticated
     isAuthenticated() {
-        return !!localStorage.getItem('token');
+        return !!tokenCache.getToken();
     },
 
-    // Resend verification email
+    // Enhanced resend verification email method
     async resendVerification(email) {
         try {
+            console.log(`Attempting to resend verification for email: ${email}`);
+            
             const response = await axios.post(
                 getApiUrl(API_CONFIG.AUTH.RESEND_VERIFICATION), 
                 { email },
-                { headers: { 'Content-Type': 'application/json' } }
+                { 
+                    headers: { 'Content-Type': 'application/json' },
+                    withCredentials: true
+                }
             );
+            
+            console.log('Resend verification response:', response.data);
             return response.data;
         } catch (error) {
             console.error('Failed to resend verification email:', error);
+            
+            // Check if the error is because the email is already verified
+            if (error.response?.data?.detail?.includes('already verified')) {
+                throw new Error('This email is already verified. Please try logging in.');
+            }
+            
+            // Check if no account exists
+            if (error.response?.status === 404) {
+                throw new Error('No account found with this email address.');
+            }
+            
             throw error;
         }
     },

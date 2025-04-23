@@ -4,13 +4,16 @@ from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 from django.conf import settings
+from functools import lru_cache
 
 logger = logging.getLogger(__name__)
 
-def generate_email_verification_token(user):
-    """Generate a secure token for email verification"""
+# Use LRU cache for expensive operations
+@lru_cache(maxsize=128)
+def generate_email_verification_token(user_id, email):
+    """Generate a secure token for email verification with caching"""
     signer = TimestampSigner()
-    return signer.sign(user.email)
+    return signer.sign(email)
 
 def verify_email_token(token, max_age=86400):  # Default: 24 hours expiry
     """Verify an email verification token"""
@@ -27,7 +30,8 @@ def verify_email_token(token, max_age=86400):  # Default: 24 hours expiry
 
 def send_verification_email(user):
     """Send verification email with both HTML and plain text versions"""
-    token = generate_email_verification_token(user)
+    # Use cached token generation when possible
+    token = generate_email_verification_token(user.id, user.email)
     frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:5173')
     verification_url = f"{frontend_url}/verify-email/{token}"
     

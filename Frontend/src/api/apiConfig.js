@@ -1,4 +1,4 @@
-// Base API URL
+// Base API URL - update to absolute URL to avoid issues with HashRouter
 const API_BASE_URL = 'https://lktool.onrender.com';
 
 // API endpoint configuration
@@ -30,4 +30,13 @@ export const buildApiUrl = (urlTemplate, params) => {
     });
   }
   return getApiUrl(url);
+};
+
+// Export for use in debugging
+export const getDomainInfo = () => {
+  return {
+    currentOrigin: window.location.origin,
+    apiBaseUrl: API_BASE_URL,
+    fullApiUrl: getApiUrl('/api/auth/signup/')
+  };
 };
