@@ -7,11 +7,11 @@ function Landing() {
     const navigate = useNavigate();
 
     function handleLogin(){
-        navigate('api/auth/login');
+        navigate('/login');
     }
 
     function handleSignin(){
-        navigate('api/auth/signup/');
+        navigate('/signup');
     }
 
   return (

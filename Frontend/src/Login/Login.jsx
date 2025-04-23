@@ -110,7 +110,7 @@ function Login() {
                         
                         <GoogleLoginButton onSuccess={() => navigate("/inputMain")} actionType="login" />
                         
-                        <p>Don't have an account? <span><Link to="api/auth/signup">Signup</Link></span></p>
+                        <p>Don't have an account? <span><Link to="/signup">Signup</Link></span></p>
                     </form>
                 </div>
             </div>
