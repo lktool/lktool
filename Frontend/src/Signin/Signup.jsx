@@ -152,7 +152,7 @@ function Signup() {
             <p>
               Already have an account?
               <span>
-                <Link to="/login">Login</Link>
+                <Link to="api/auth/login">Login</Link>
               </span>
             </p>
           </form>
