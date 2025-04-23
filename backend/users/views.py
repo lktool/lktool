@@ -88,7 +88,11 @@ class EmailVerificationView(APIView):
     def post(self, request):
         token = request.data.get('token')
         
+        # Enhanced debug logging
+        logger.info(f"Received verification request with token: {token[:10]}...")
+        
         if not token:
+            logger.error("Verification failed: No token provided")
             return Response(
                 {'error': 'Verification token is required'},
                 status=status.HTTP_400_BAD_REQUEST
@@ -97,15 +101,19 @@ class EmailVerificationView(APIView):
         email = verify_email_token(token)
         
         if email is None:
+            logger.error("Verification failed: Token expired")
             return Response(
                 {'error': 'Verification link has expired. Please request a new one.'},
                 status=status.HTTP_400_BAD_REQUEST
             )
         elif email is False:
+            logger.error("Verification failed: Invalid token")
             return Response(
                 {'error': 'Invalid verification token.'},
                 status=status.HTTP_400_BAD_REQUEST
             )
+        
+        logger.info(f"Token verified successfully for email: {email}")
         
         try:
             user = User.objects.get(email=email)
@@ -124,6 +132,7 @@ class EmailVerificationView(APIView):
                 status=status.HTTP_200_OK
             )
         except User.DoesNotExist:
+            logger.error(f"User not found for email: {email}")
             return Response(
                 {'error': 'User not found.'},
                 status=status.HTTP_404_NOT_FOUND

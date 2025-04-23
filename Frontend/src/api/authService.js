@@ -350,17 +350,36 @@ export const authService = {
         }
     },
 
-    // Verify email
+    // Enhanced email verification method
     async verifyEmail(token) {
         try {
+            console.log("Sending verification request for token");
+            
+            // Don't encode the token in the URL (already done) but send it as-is in the request body
             const response = await axios.post(
                 getApiUrl(API_CONFIG.AUTH.VERIFY_EMAIL), 
-                { token },
-                { headers: { 'Content-Type': 'application/json' } }
+                { token: token },
+                { 
+                    headers: { 'Content-Type': 'application/json' },
+                    timeout: 15000, // Longer timeout for verification
+                }
             );
+            
+            if (response.status === 200) {
+                console.log("Email verification successful");
+            }
+            
             return response.data;
         } catch (error) {
             console.error('Email verification error:', error);
+            
+            // Enhanced error details for debugging
+            if (error.response) {
+                console.error('Server response:', error.response.data);
+            } else if (error.request) {
+                console.error('No response received from server');
+            }
+            
             throw error;
         }
     },

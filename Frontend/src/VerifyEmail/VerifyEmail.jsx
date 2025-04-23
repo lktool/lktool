@@ -1,25 +1,40 @@
 import { useEffect, useState } from 'react';
-import { Link, useParams, useNavigate } from 'react-router-dom';
+import { Link, useParams, useNavigate, useLocation } from 'react-router-dom';
 import { authService } from '../api/authService';
 import './VerifyEmail.css';
 
 function VerifyEmail() {
     const { token } = useParams();
-    const [status, setStatus] = useState('verifying'); // verifying, success, error
+    const [status, setStatus] = useState('verifying'); 
     const [message, setMessage] = useState('');
     const navigate = useNavigate();
+    const location = useLocation();
 
     useEffect(() => {
         const verifyEmail = async () => {
-            if (!token) {
+            // More robust token extraction
+            let verificationToken = token;
+            
+            // If there are issues with HashRouter parameter extraction
+            if (!verificationToken || verificationToken === 'undefined') {
+                // Extract token from hash part for HashRouter
+                const hash = window.location.hash;
+                const match = hash.match(/\/verify-email\/(.+)$/);
+                if (match && match[1]) {
+                    verificationToken = match[1];
+                }
+            }
+            
+            if (!verificationToken) {
                 setStatus('error');
                 setMessage('No verification token provided.');
                 return;
             }
+            
+            console.log("Attempting to verify email with token");
 
             try {
-                // Use authService instead of direct axios call
-                const response = await authService.verifyEmail(token);
+                const response = await authService.verifyEmail(verificationToken);
                 
                 setStatus('success');
                 setMessage(response.message || 'Email successfully verified. You can now log in.');
@@ -30,13 +45,14 @@ function VerifyEmail() {
                 }, 3000);
                 
             } catch (err) {
+                console.error("Verification error:", err);
                 setStatus('error');
                 setMessage(err.response?.data?.error || 'Failed to verify email. The link may be invalid or expired.');
             }
         };
 
         verifyEmail();
-    }, [token, navigate]);
+    }, [token, navigate, location]);
 
     return (
         <div className="verify-email-container">

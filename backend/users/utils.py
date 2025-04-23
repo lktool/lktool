@@ -33,7 +33,13 @@ def send_verification_email(user):
     # Use cached token generation when possible
     token = generate_email_verification_token(user.id, user.email)
     frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:5173')
-    verification_url = f"{frontend_url}/verify-email/{token}"
+    
+    # CRITICAL FIX: Remove trailing slashes to prevent double slashes in URL
+    if frontend_url.endswith('/'):
+        frontend_url = frontend_url[:-1]
+    
+    # FIXED: Include hash (#) for HashRouter compatibility
+    verification_url = f"{frontend_url}/#/verify-email/{token}"
     
     # Context for email template
     context = {

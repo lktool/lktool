@@ -23,7 +23,9 @@ function App() {
           <Route path="/signup" element={<Signup />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password/:uid/:token" element={<ResetPassword />} />
-          <Route path="/verify-email/:token" element={<VerifyEmail/>}></Route>
+          
+          {/* FIXED: Use wildcard matching for tokens with special characters like : */}
+          <Route path="/verify-email/:token" element={<VerifyEmail />} />
           <Route path="/auth/google/callback/" element={<GoogleAuthCallback />} />
           
           {/* Protected Routes */}

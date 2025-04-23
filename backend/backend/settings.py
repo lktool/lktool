@@ -203,14 +203,14 @@ SIMPLE_JWT = {
     'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=7),
 }
 
-# CORS settings - FIXED to allow the correct frontend URL
+# CORS settings - Ensure all necessary endpoints are accessible
 CORS_ALLOWED_ORIGINS = [
-    "https://lktools.onrender.com",  # Frontend domain with 's'
+    "https://lktools.onrender.com",
     "http://localhost:5173",
     "http://localhost:3000",
 ]
 
-# Make sure these are correctly set
+# For HashRouter URLs, you might need these additional settings
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_METHODS = [
     'DELETE',
@@ -221,6 +221,7 @@ CORS_ALLOW_METHODS = [
     'PUT',
 ]
 
+# Make sure to include Authorization header for JWT
 CORS_ALLOW_HEADERS = [
     'accept',
     'accept-encoding',
