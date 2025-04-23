@@ -19,11 +19,11 @@ function App() {
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<Landing />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/reset-password/:uid/:token" element={<ResetPassword />} />
-          <Route path="/verify-email/:token" element={<VerifyEmail/>}></Route>
+          <Route path="api/auth/login" element={<Login />} />
+          <Route path="api/auth/signup" element={<Signup />} />
+          <Route path="api/auth/forgot-password" element={<ForgotPassword />} />
+          <Route path="api/auth/reset-password/:uid/:token" element={<ResetPassword />} />
+          <Route path="api/auth/verify-email/:token" element={<VerifyEmail/>}></Route>
           <Route path="/auth/google/callback/" element={<GoogleAuthCallback />} />
           
           {/* Protected Routes */}
