@@ -34,7 +34,7 @@ SECRET_KEY = "django-insecure-95udpxakz7tgh4@clqs(jqq=coel+k(ik@@2%4gg@g=00)96on
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', 'lktool.onrender.com', 'lktools.onrender.com']
 
 # Custom user model - this must come BEFORE the auth app is used
 AUTH_USER_MODEL = 'users.CustomUser'
@@ -69,10 +69,19 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = "backend.urls"
 
+# React/SPA configuration
+REACT_APP_DIR = os.path.join(BASE_DIR, '..', 'Frontend', 'dist')  # Fix the path to point to the actual Vite build
+
+# Serve static files
+STATICFILES_DIRS = [
+    os.path.join(REACT_APP_DIR, 'assets'),  # assets from Vite build
+]
+
+# Add React build directory to templates
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [REACT_APP_DIR],  # Add React build directory
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -137,15 +146,6 @@ STATIC_URL = "static/"
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 
-REACT_APP_DIR = os.path.join(BASE_DIR, 'frontend', 'dist')
-
-# Serve static files
-STATICFILES_DIRS = [
-    os.path.join(REACT_APP_DIR, 'assets'),  # assets from Vite build
-]
-
-TEMPLATES[0]['DIRS'] = [REACT_APP_DIR] 
-
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
@@ -178,14 +178,17 @@ SIMPLE_JWT = {
 
 # CORS settings - update for proper frontend communication
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173",  # Default Vite dev server port
-    "http://localhost:3000",  # Alternative frontend port
+    "http://localhost:5173",
+    "http://localhost:3000",
+    "https://lktools.onrender.com",
 ]
-ALLOWED_HOSTS = ['https://lktool.onrender.com','lktool.onrender.com']
-
-# For development only - remove in production
 CORS_ALLOW_CREDENTIALS = True
-CORS_ALLOW_ALL_ORIGINS = True  # For development only
+
+# In production, don't allow all origins
+if not DEBUG:
+    CORS_ALLOW_ALL_ORIGINS = False
+else:
+    CORS_ALLOW_ALL_ORIGINS = True
 
 CORS_ALLOW_METHODS = [
     'DELETE',
@@ -224,7 +227,7 @@ if not DEFAULT_FROM_EMAIL:
     DEFAULT_FROM_EMAIL = EMAIL_HOST_USER or 'noreply@yoursite.com'
 
 # Frontend URL for email verification links
-FRONTEND_URL = os.environ.get('FRONTEND_URL', 'http://localhost:5173')
+FRONTEND_URL = os.environ.get('FRONTEND_URL', 'https://lktools.onrender.com')
 
 # Add email debugging in development
 if DEBUG:

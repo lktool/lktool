@@ -1,15 +1,31 @@
 // vite.config.js
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import { resolve } from 'path';
 
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react()],
   build: {
-    outDir: 'dist', // this is the publish directory in Render
+    outDir: 'dist',
+    assetsDir: 'assets',
+    emptyOutDir: true,
+    rollupOptions: {
+      input: {
+        main: resolve(__dirname, 'index.html')
+      }
+    }
   },
   base: '/',
   server: {
-    port: 3000, // optional: sets local dev port
+    port: 3000,
+    strictPort: true,
+    proxy: {
+      '/api': {
+        target: 'https://lktool.onrender.com',
+        changeOrigin: true,
+        secure: false
+      }
+    }
   },
 });
