@@ -239,23 +239,22 @@ export const authService = {
     // Enhanced token validation to prevent unauthorized access
     async checkTokenValidity() {
         try {
-            const token = tokenCache.getToken();
+            const token = localStorage.getItem('token');
             if (!token) return false;
             
+            // IMPORTANT: Make an actual API call to validate the token
             try {
-                // Use the dedicated token verification endpoint
-                await apiClient.get(API_CONFIG.AUTH.VERIFY_TOKEN, {
-                    timeout: 5000 // Short timeout for quick response
-                });
-                return true;
+                // Make server validate the token by requesting protected resource
+                const response = await apiClient.get(API_CONFIG.AUTH.USER_PROFILE);
+                return response && response.status === 200;
             } catch (error) {
-                // Any error means the token is invalid
-                this.logout(); // Clear tokens on failure
+                console.error('Token validation failed:', error);
+                this.logout(); // Clear invalid tokens
                 return false;
             }
         } catch (error) {
-            console.error('Token validation error:', error);
-            this.logout(); // Clear tokens on any error
+            console.error('Token check error:', error);
+            this.logout();
             return false;
         }
     },
@@ -266,10 +265,9 @@ export const authService = {
         localStorage.removeItem('refreshToken');
         localStorage.removeItem('user_data');
         
-        // Clear any cached authentication state
-        if (window.__auth_state) {
-            delete window.__auth_state;
-        }
+        // Clear any session storage as well
+        sessionStorage.removeItem('token');
+        sessionStorage.removeItem('auth_state');
     },
 
     // Password reset request

@@ -257,9 +257,18 @@ class UserProfileView(APIView):
     """
     View to retrieve the authenticated user's profile
     """
-    permission_classes = (permissions.IsAuthenticated,)
+    permission_classes = (permissions.IsAuthenticated,)  # Ensure this is set
     
     def get(self, request):
+        if not request.user.is_authenticated:
+            return Response({"detail": "Authentication credentials were not provided."},
+                          status=status.HTTP_401_UNAUTHORIZED)
+        
+        # CRITICAL FIX: Ensure user is verified
+        if not getattr(request.user, 'is_verified', True):
+            return Response({"detail": "Email not verified. Please verify your email first."},
+                          status=status.HTTP_403_FORBIDDEN)
+        
         serializer = UserSerializer(request.user)
         return Response(serializer.data)
 

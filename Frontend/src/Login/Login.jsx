@@ -39,7 +39,7 @@ function Login() {
 
     // Improved authentication checking that requires credentials
     useEffect(() => {
-        // First, remove any auth redirect reason if it exists
+        // First check for redirect reasons
         const redirectReason = localStorage.getItem('auth_redirect_reason');
         if (redirectReason) {
             if (redirectReason === 'login_required') {
@@ -48,31 +48,26 @@ function Login() {
             localStorage.removeItem('auth_redirect_reason');
         }
         
-        // Clear any expired tokens
+        // Clear expired tokens
         const expiredToken = localStorage.getItem('expired_token');
         if (expiredToken === 'true') {
             setError('Your session has expired. Please log in again.');
             localStorage.removeItem('expired_token');
-            authService.logout(); // Make sure to clear any remaining token
+            authService.logout(); // Clear any remaining token
         }
         
-        // Only check token validity if user deliberately navigated to login
-        // Don't auto-redirect to protected routes from login screen
-        if (redirectReason !== 'login_required') {
-            // Check if we have a valid token
-            const checkValidToken = async () => {
-                try {
-                    const isValid = await authService.checkTokenValidity();
-                    if (isValid) {
-                        navigate("/inputMain");
-                    }
-                } catch (err) {
-                    // Just clear any invalid tokens silently
-                    authService.logout();
+        // CRITICAL FIX: Only check token validity if we didn't come from a protected route
+        if (!redirectReason) {
+            // Check token validity but don't auto-redirect if on login page
+            authService.checkTokenValidity().then(isValid => {
+                // Only redirect if valid AND user didn't explicitly navigate to login
+                if (isValid && !window.location.href.includes('login')) {
+                    navigate('/inputMain');
                 }
-            };
-            
-            checkValidToken();
+            }).catch(() => {
+                // Clear any invalid tokens silently
+                authService.logout();
+            });
         }
     }, [navigate]);
 

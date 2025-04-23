@@ -10,24 +10,29 @@ function ProtectedRoute({ children, allowedRoles = [] }) {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        // Thoroughly verify token is valid by checking with the server
-        const isValid = await authService.checkTokenValidity();
+        // CRITICAL FIX: Force server validation of token instead of just checking local storage
+        const token = localStorage.getItem('token');
+        if (!token) {
+          setIsAuthenticated(false);
+          setIsLoading(false);
+          return;
+        }
         
-        if (isValid) {
-          // Only if token is valid, fetch user profile
-          const response = await authService.getCurrentUser();
+        // Make an actual API call to verify the token with the server
+        const response = await authService.getCurrentUser();
+        if (response && response.data) {
           setIsAuthenticated(true);
           setUserRole(response.data.role);
         } else {
-          // Clear invalid tokens
-          authService.logout();
+          // If no data returned, token might be invalid
           setIsAuthenticated(false);
+          authService.logout(); // Clear any invalid tokens
         }
       } catch (error) {
-        console.error('Authentication error:', error);
-        // Clear invalid token
-        authService.logout();
+        console.error('Authentication verification failed:', error);
+        // Any error means the token is invalid or expired
         setIsAuthenticated(false);
+        authService.logout(); // Clear invalid tokens
       } finally {
         setIsLoading(false);
       }
@@ -38,34 +43,16 @@ function ProtectedRoute({ children, allowedRoles = [] }) {
 
   if (isLoading) {
     return (
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'center',
-        alignItems: 'center',
-        height: '100vh'
-      }}>
-        <div style={{
-          border: '4px solid #f3f3f3',
-          borderTop: '4px solid #67AE6E',
-          borderRadius: '50%',
-          width: '40px',
-          height: '40px',
-          animation: 'spin 1s linear infinite'
-        }}></div>
-        <style>{`
-          @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-          }
-        `}</style>
-        <p>Loading...</p>
+      <div className="loading-container">
+        <div className="loading-spinner"></div>
+        <p>Verifying authentication...</p>
       </div>
     );
   }
 
-  // Not authenticated, redirect to login with a reason
+  // Not authenticated, redirect to login
   if (!isAuthenticated) {
+    // Store redirect reason for login page
     localStorage.setItem('auth_redirect_reason', 'login_required');
     return <Navigate to="/login" replace />;
   }
