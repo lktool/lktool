@@ -1,5 +1,11 @@
 import "./NavBar.css";
+import {useNavigate} from 'react-router-dom';
 function NavBar(){
+    const navigate = useNavigate();
+
+    function handleAdmin(){
+        navigate('/formData');
+    }
     return (<>
         <div className="navbar-container">
             <div className="navbar-content">
@@ -8,7 +14,7 @@ function NavBar(){
                 </div>
                 <div className="navbar-profiles-controls">
                     <div className="navbar-account">
-                        <a href="">Account</a>
+                        <a href="" onClick={handleAdmin}>Admin</a>
                     </div>
                     <div className="navbar-Logout">
                         <a href="">Logout</a>
