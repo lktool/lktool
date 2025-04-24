@@ -4,7 +4,7 @@ from .views import (
     RegisterView, CustomTokenObtainPairView,
     PasswordResetView, PasswordResetConfirmView,
     UserProfileView, EmailVerificationView, ResendVerificationEmailView,
-    VerifyTokenView  # Added the import here
+    VerifyTokenView, CheckEmailStatusView  # Add it to the imports
 )
 from .google_auth import GoogleAuthView
 
@@ -20,5 +20,4 @@ urlpatterns = [
     path('auth/verify-email/', EmailVerificationView.as_view(), name='verify_email'),
     path('auth/resend-verification/', ResendVerificationEmailView.as_view(), name='resend_verification'),
     path('auth/verify-token/', VerifyTokenView.as_view(), name='verify_token'),
-    path('auth/check-email/', CheckEmailStatusView.as_view(), name='check_email'),
 ]
