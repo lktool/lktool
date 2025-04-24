@@ -4,7 +4,6 @@ import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
 import React from "react";
 import { validateEmail } from "../Utils/validate";
 import { Link, useNavigate } from "react-router-dom";
-import GoogleLoginButton from "../components/GoogleLoginButton";
 import { authService } from '../api/authService';
 
 function Signup() {
@@ -219,16 +218,10 @@ function Signup() {
               )}
               {validationErrors.confirmPassword && <p className="error-message">{validationErrors.confirmPassword}</p>}
             </div>
-            <p className="error-message">{error}</p>
+            {error && <p className="error-message">{error}</p>}
             <button className="signup-btn" type="submit" disabled={loading}>
               {loading ? "Signing up..." : "Signup"}
             </button>
-            
-            <div className="or-divider">
-              <span>OR</span>
-            </div>
-            
-            <GoogleLoginButton onSuccess={() => navigate("/inputMain")} actionType="signup" />
             
             <p>
               Already have an account?

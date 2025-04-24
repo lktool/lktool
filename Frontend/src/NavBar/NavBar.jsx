@@ -1,11 +1,29 @@
 import "./NavBar.css";
 import {useNavigate} from 'react-router-dom';
+import { useState, useEffect } from 'react';
+
 function NavBar(){
     const navigate = useNavigate();
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
+    
+    useEffect(() => {
+        // Check if user is logged in
+        const token = localStorage.getItem('token');
+        setIsLoggedIn(!!token);
+    }, []);
 
     function handleAdmin(){
         navigate('/formData');
     }
+    
+    function handleLogout(){
+        // Clear user authentication data
+        localStorage.removeItem('token');
+        setIsLoggedIn(false);
+        // Redirect to login page
+        navigate('/login');
+    }
+
     return (<>
         <div className="navbar-container">
             <div className="navbar-content">
@@ -16,9 +34,11 @@ function NavBar(){
                     <div className="navbar-account">
                         <a href="" onClick={handleAdmin}>Admin</a>
                     </div>
-                    <div className="navbar-Logout">
-                        <a href="">Logout</a>
-                    </div>
+                    {isLoggedIn && (
+                        <div className="navbar-Logout">
+                            <a href="" onClick={(e) => {e.preventDefault(); handleLogout();}}>Logout</a>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

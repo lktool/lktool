@@ -5,8 +5,6 @@ import Login from './Login/Login';
 import Signup from "./SignUp/Signup";
 import InputMain from "./InputMain.jsx/InputMain";
 import ForgotPassword from "./ForgotPassword/ForgotPassword";
-import ResetPassword from "./ResetPassword/ResetPassword";
-import GoogleAuthCallback from "./components/GoogleAuthCallback";
 import NotFound from "./components/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
 import VerifyEmail from "./VerifyEmail/VerifyEmail";  
@@ -22,11 +20,10 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/reset-password/:uid/:token" element={<ResetPassword />} />
+{/*           <Route path="/reset-password/:uid/:token" element={<ResetPassword />} /> */}
           
           {/* FIXED: Use wildcard matching for tokens with special characters like : */}
           <Route path="/verify-email/:token" element={<VerifyEmail />} />
-          <Route path="/auth/google/callback/" element={<GoogleAuthCallback />} />
           
           {/* Protected Routes */}
           <Route 

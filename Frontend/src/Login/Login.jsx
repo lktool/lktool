@@ -3,7 +3,6 @@ import { AiOutlineEye, AiOutlineEyeInvisible } from 'react-icons/ai';
 import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { validateEmail } from "../Utils/validate";
-import GoogleLoginButton from "../components/GoogleLoginButton";
 import { authService } from '../api/authService';
 
 function Login() {
@@ -190,7 +189,7 @@ function Login() {
                                 }
                             
                         </div>
-                        <p className="error-message">{error}</p>
+                        {error && <p className="error-message">{error}</p>}
                         
                         {/* Show resend verification option when appropriate */}
                         {isUnverifiedEmail && (
@@ -218,12 +217,6 @@ function Login() {
                                 {loading ? 'Logging in...' : 'Login'}
                             </button>
                         </div>
-                        
-                        <div className="or-divider">
-                            <span>OR</span>
-                        </div>
-                        
-                        <GoogleLoginButton onSuccess={() => navigate("/inputMain")} actionType="login" />
                         
                         <p>Don't have an account? <span><Link to="/signup">Signup</Link></span></p>
                     </form>
