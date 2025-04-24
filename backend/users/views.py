@@ -14,7 +14,7 @@ from .serializers import (
     UserSerializer, RegisterSerializer, CustomTokenObtainPairSerializer,
     PasswordResetSerializer, PasswordResetConfirmSerializer
 )
-from .utils import verify_email_token, send_verification_email
+from .utils import verify_email_token, send_verification_email, build_frontend_url
 import threading
 from django.db import transaction
 import logging
@@ -209,15 +209,8 @@ class PasswordResetView(APIView):
                     token = default_token_generator.make_token(user)
                     uid = urlsafe_base64_encode(force_bytes(user.pk))
                     
-                    # Build reset URL using the frontend URL
-                    frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:5173')
-                    
-                    # Remove trailing slashes & add hash for HashRouter
-                    if frontend_url.endswith('/'):
-                        frontend_url = frontend_url[:-1]
-                    
-                    # Use hash format for HashRouter compatibility
-                    reset_url = f"{frontend_url}/#/reset-password/{uid}/{token}"
+                    # FIXED: Use the helper function to build URL with hash
+                    reset_url = build_frontend_url(f"/reset-password/{uid}/{token}")
                     
                     # Start email sending in background thread
                     subject = 'Password Reset Request'

@@ -28,18 +28,28 @@ def verify_email_token(token, max_age=86400):  # Default: 24 hours expiry
         logger.warning(f"Invalid email verification token: {token}")
         return False  # Token invalid
 
+def build_frontend_url(path):
+    """Build a properly formatted frontend URL that works with HashRouter"""
+    frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:5173')
+    
+    # Remove trailing slashes to prevent double slashes
+    if frontend_url.endswith('/'):
+        frontend_url = frontend_url[:-1]
+    
+    # Ensure path starts with a slash
+    if not path.startswith('/'):
+        path = '/' + path
+    
+    # For HashRouter, include the # in the URL
+    return f"{frontend_url}/#" + path
+
 def send_verification_email(user):
     """Send verification email with both HTML and plain text versions"""
     # Use cached token generation when possible
     token = generate_email_verification_token(user.id, user.email)
-    frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:5173')
     
-    # CRITICAL FIX: Remove trailing slashes to prevent double slashes in URL
-    if frontend_url.endswith('/'):
-        frontend_url = frontend_url[:-1]
-    
-    # FIXED: Include hash (#) for HashRouter compatibility
-    verification_url = f"{frontend_url}/#/verify-email/{token}"
+    # Use the helper function for consistent URLs with hash
+    verification_url = build_frontend_url(f"/verify-email/{token}")
     
     # Context for email template
     context = {
