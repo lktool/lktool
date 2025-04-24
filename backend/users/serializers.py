@@ -14,16 +14,29 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         return token
     
     def validate(self, attrs):
-        # First, validate credentials using parent's validate method
-        data = super().validate(attrs)
+        # Get the email and normalize it for consistency
+        if 'email' in attrs:
+            attrs['email'] = attrs['email'].lower().strip()
         
-        # Check if user email is verified
-        if not self.user.is_verified:
-            raise serializers.ValidationError(
-                {"email": "Email not verified. Please check your inbox for the verification link."}
-            )
-        
-        return data
+        try:
+            # First, validate credentials using parent's validate method
+            data = super().validate(attrs)
+            
+            # Check if user email is verified
+            if not self.user.is_verified:
+                raise serializers.ValidationError(
+                    {"email": ["Email not verified. Please check your inbox for the verification link."]}
+                )
+            
+            return data
+            
+        except serializers.ValidationError as e:
+            # Enhance error message if it's about incorrect credentials
+            if hasattr(e, 'detail') and 'No active account found with the given credentials' in str(e.detail):
+                raise serializers.ValidationError(
+                    {"email": ["No account found with this email and password combination."]}
+                )
+            raise
 
 class RegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, required=True, validators=[validate_password])

@@ -20,4 +20,5 @@ urlpatterns = [
     path('auth/verify-email/', EmailVerificationView.as_view(), name='verify_email'),
     path('auth/resend-verification/', ResendVerificationEmailView.as_view(), name='resend_verification'),
     path('auth/verify-token/', VerifyTokenView.as_view(), name='verify_token'),
+    path('auth/check-email/', CheckEmailStatusView.as_view(), name='check_email'),
 ]

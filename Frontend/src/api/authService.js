@@ -204,10 +204,16 @@ export const authService = {
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), 15000);
             
+            // FORMAT FIX: Make sure email is trimmed and lowercase for consistency
+            const formattedEmail = email.trim().toLowerCase();
+            
             // Use regular axios for authentication requests
             const response = await axios.post(
                 getApiUrl(API_CONFIG.AUTH.LOGIN), 
-                { email, password },
+                { 
+                    email: formattedEmail, 
+                    password: password 
+                },
                 { 
                     headers: { 'Content-Type': 'application/json' },
                     signal: controller.signal,
@@ -220,6 +226,9 @@ export const authService = {
             if (response.data.access) {
                 tokenCache.setToken(response.data.access);
                 localStorage.setItem('refreshToken', response.data.refresh);
+                
+                // Also store the user's email for later use
+                localStorage.setItem('user_email', formattedEmail);
             }
             
             return response.data;

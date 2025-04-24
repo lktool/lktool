@@ -91,7 +91,7 @@ function Login() {
 
         setError("");
         setLoading(true);
-        setIsUnverifiedEmail(false); 
+        setIsUnverifiedEmail(false);
 
         // Debounce login attempts
         loginAttemptRef.current = setTimeout(async () => {
@@ -99,7 +99,6 @@ function Login() {
                 // Use authService with timeout handling
                 const response = await authService.login(email, password);
                 
-                // Only navigate if we have a valid token
                 if (response && (response.access || response.token)) {
                     navigate("/inputMain");
                 } else {
@@ -109,8 +108,23 @@ function Login() {
             catch (err) {
                 console.error("Login error:", err);
                 
-                // Check specifically for unverified email errors
-                if (err.response?.data?.detail?.includes('not verified') || 
+                // IMPROVED ERROR HANDLING: Check for email validation errors
+                if (err.response?.data?.email) {
+                    // If email is an array, extract first error message
+                    if (Array.isArray(err.response.data.email)) {
+                        setError(`Email error: ${err.response.data.email[0]}`);
+                        
+                        // Check if this is a verification issue
+                        if (err.response.data.email[0].includes('verified') || 
+                            err.response.data.email[0].includes('verification')) {
+                            setIsUnverifiedEmail(true);
+                        }
+                    } else {
+                        setError(`Email error: ${err.response.data.email}`);
+                    }
+                }
+                // Check for unverified email specifically
+                else if (err.response?.data?.detail?.includes('not verified') || 
                     err.response?.data?.detail?.includes('verification') ||
                     err.message?.includes('not verified')) {
                     setIsUnverifiedEmail(true);
@@ -128,7 +142,7 @@ function Login() {
                 setLoading(false);
                 loginAttemptRef.current = null;
             }
-        }, 100); // Small timeout to prevent multiple submissions
+        }, 100);
     }
 
     async function handleResendVerification() {

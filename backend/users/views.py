@@ -294,3 +294,27 @@ class VerifyTokenView(APIView):
             'user_id': request.user.id,
             'email': request.user.email
         })
+
+class CheckEmailStatusView(APIView):
+    """
+    Check if an email exists and is verified (for debugging)
+    """
+    permission_classes = (permissions.AllowAny,)
+    
+    def post(self, request):
+        email = request.data.get('email')
+        
+        if not email:
+            return Response({'error': 'Email is required'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Normalize the email
+        email = email.lower().strip()
+        
+        try:
+            user = User.objects.get(email=email)
+            return Response({
+                'exists': True,
+                'is_verified': user.is_verified
+            })
+        except User.DoesNotExist:
+            return Response({'exists': False})
