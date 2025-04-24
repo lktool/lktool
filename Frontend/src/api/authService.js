@@ -279,16 +279,28 @@ export const authService = {
         sessionStorage.removeItem('auth_state');
     },
 
-    // Password reset request
+    // Password reset request with improved error handling
     async requestPasswordReset(email) {
         try {
-            return await axios.post(
+            console.log(`Sending password reset request for: ${email}`);
+            
+            // FORMAT FIX: Make sure email is trimmed and lowercase for consistency
+            const formattedEmail = email.trim().toLowerCase();
+            
+            const response = await axios.post(
                 getApiUrl(API_CONFIG.AUTH.PASSWORD_RESET), 
-                { email }, 
-                { headers: { 'Content-Type': 'application/json' } }
+                { email: formattedEmail }, 
+                { 
+                    headers: { 'Content-Type': 'application/json' },
+                    timeout: 10000 // 10 second timeout
+                }
             );
+            
+            console.log('Password reset response:', response.data);
+            return response.data;
         } catch (error) {
-            console.error('Password reset error:', error);
+            console.error('Password reset error details:', error.response?.data || error.message);
+            console.error('Full password reset error:', error);
             throw error;
         }
     },

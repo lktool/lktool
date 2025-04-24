@@ -5,6 +5,7 @@ import Login from './Login/Login';
 import Signup from "./SignUp/Signup";
 import InputMain from "./InputMain.jsx/InputMain";
 import ForgotPassword from "./ForgotPassword/ForgotPassword";
+/* import ResetPassword from "./ResetPassword/ResetPassword"; / */
 import NotFound from "./components/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
 import VerifyEmail from "./VerifyEmail/VerifyEmail";  
@@ -43,6 +44,11 @@ function App() {
               </ProtectedRoute>
             } 
           />
+          <Route path="/formData" element={
+            <ProtectedRoute>
+              <FormData/> 
+            </ProtectedRoute>}>
+            </Route>
           
           {/* Not Found Route - will redirect to home */}
           <Route path="/not-found" element={<NotFound />} />

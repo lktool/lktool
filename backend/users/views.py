@@ -25,6 +25,8 @@ User = get_user_model()
 # Function to send email in background
 def send_email_async(subject, message, from_email, recipient_list, html_message=None):
     try:
+        logger.info(f"Sending email to: {recipient_list} with subject: {subject}")
+        
         send_mail(
             subject,
             message,
@@ -33,8 +35,23 @@ def send_email_async(subject, message, from_email, recipient_list, html_message=
             fail_silently=False,
             html_message=html_message
         )
+        
+        logger.info(f"Email sent successfully to: {recipient_list}")
     except Exception as e:
         logger.error(f"Failed to send email: {str(e)}")
+        
+        # Print detailed error for debugging
+        if settings.DEBUG:
+            import traceback
+            print("\n--------------------------------")
+            print("EMAIL SENDING ERROR")
+            print("--------------------------------")
+            print(f"To: {recipient_list}")
+            print(f"Subject: {subject}")
+            print(f"From: {from_email}")
+            print(f"Error: {str(e)}")
+            print(traceback.format_exc())
+            print("--------------------------------\n")
 
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
@@ -194,18 +211,50 @@ class PasswordResetView(APIView):
                     
                     # Build reset URL using the frontend URL
                     frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:5173')
-                    reset_url = f"{frontend_url}/reset-password/{uid}/{token}"
+                    
+                    # Remove trailing slashes & add hash for HashRouter
+                    if frontend_url.endswith('/'):
+                        frontend_url = frontend_url[:-1]
+                    
+                    # Use hash format for HashRouter compatibility
+                    reset_url = f"{frontend_url}/#/reset-password/{uid}/{token}"
                     
                     # Start email sending in background thread
                     subject = 'Password Reset Request'
+                    
+                    # HTML message with proper formatting and escaping
+                    html_message = f"""
+                    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                        <h2 style="color: #328E6E;">Password Reset</h2>
+                        <p>Hello,</p>
+                        <p>We received a request to reset your password. Click the link below to set a new password:</p>
+                        <p style="text-align: center; margin: 30px 0;">
+                            <a href="{reset_url}" style="background-color: #67AE6E; color: white; padding: 12px 20px; text-decoration: none; border-radius: 4px; display: inline-block;">
+                                Reset Password
+                            </a>
+                        </p>
+                        <p>Or copy and paste this link in your browser:</p>
+                        <p style="word-break: break-all; background-color: #f5f5f5; padding: 10px; border-radius: 4px;">
+                            {reset_url}
+                        </p>
+                        <p>This link will expire in 24 hours.</p>
+                        <p>If you didn't request a password reset, please ignore this email.</p>
+                    </div>
+                    """
+                    
                     message = f'Please click the following link to reset your password: {reset_url}'
                     
-                    email_thread = threading.Thread(
-                        target=send_email_async,
-                        args=(subject, message, settings.DEFAULT_FROM_EMAIL, [user.email])
-                    )
-                    email_thread.daemon = True
-                    email_thread.start()
+                    try:
+                        email_thread = threading.Thread(
+                            target=send_email_async,
+                            args=(subject, message, settings.DEFAULT_FROM_EMAIL, [user.email], html_message)
+                        )
+                        email_thread.daemon = True
+                        email_thread.start()
+                        
+                        logger.info(f"Password reset email queued for: {email}")
+                    except Exception as email_err:
+                        logger.error(f"Failed to queue password reset email: {str(email_err)}")
                     
                     # Return success immediately without waiting for email
                     return Response(
@@ -214,6 +263,7 @@ class PasswordResetView(APIView):
                     )
                 except User.DoesNotExist:
                     # Don't reveal which emails are in the system
+                    logger.info(f"Password reset requested for non-existent email: {email}")
                     return Response(
                         {"message": "Password reset email has been sent."},
                         status=status.HTTP_200_OK
@@ -239,7 +289,6 @@ class PasswordResetConfirmView(APIView):
             # Check if token is valid
             if default_token_generator.check_token(user, token):
                 serializer = PasswordResetConfirmSerializer(data=request.data)
-                
                 if serializer.is_valid():
                     # Set new password
                     user.set_password(serializer.validated_data['password'])
@@ -248,14 +297,11 @@ class PasswordResetConfirmView(APIView):
                         {"message": "Password has been reset successfully."},
                         status=status.HTTP_200_OK
                     )
-                
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-            
             return Response(
                 {"error": "Invalid token"},
                 status=status.HTTP_400_BAD_REQUEST
             )
-            
         except (User.DoesNotExist, ValueError, TypeError):
             return Response(
                 {"error": "Invalid request"},
@@ -267,7 +313,7 @@ class UserProfileView(APIView):
     View to retrieve the authenticated user's profile
     """
     permission_classes = (permissions.IsAuthenticated,)  # Ensure this is set
-    
+         
     def get(self, request):
         if not request.user.is_authenticated:
             return Response({"detail": "Authentication credentials were not provided."},
@@ -277,7 +323,6 @@ class UserProfileView(APIView):
         if not getattr(request.user, 'is_verified', True):
             return Response({"detail": "Email not verified. Please verify your email first."},
                           status=status.HTTP_403_FORBIDDEN)
-        
         serializer = UserSerializer(request.user)
         return Response(serializer.data)
 
