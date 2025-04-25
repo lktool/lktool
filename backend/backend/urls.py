@@ -23,6 +23,7 @@ from django.conf.urls.static import static
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/", include('users.urls')),
+    path('api/contact/', include('contact.urls')),
     
     # Catch‑all: serve React’s index.html for any non-API, non-admin, non‑static, non‑media path
     re_path(

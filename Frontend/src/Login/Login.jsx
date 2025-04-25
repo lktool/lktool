@@ -3,6 +3,7 @@ import { AiOutlineEye, AiOutlineEyeInvisible } from 'react-icons/ai';
 import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { validateEmail } from "../Utils/validate";
+import GoogleLoginButton from "../components/GoogleLoginButton";
 import { authService } from '../api/authService';
 
 function Login() {
@@ -91,7 +92,7 @@ function Login() {
 
         setError("");
         setLoading(true);
-        setIsUnverifiedEmail(false);
+        setIsUnverifiedEmail(false); 
 
         // Debounce login attempts
         loginAttemptRef.current = setTimeout(async () => {
@@ -99,6 +100,7 @@ function Login() {
                 // Use authService with timeout handling
                 const response = await authService.login(email, password);
                 
+                // Only navigate if we have a valid token
                 if (response && (response.access || response.token)) {
                     navigate("/inputMain");
                 } else {
@@ -108,23 +110,8 @@ function Login() {
             catch (err) {
                 console.error("Login error:", err);
                 
-                // IMPROVED ERROR HANDLING: Check for email validation errors
-                if (err.response?.data?.email) {
-                    // If email is an array, extract first error message
-                    if (Array.isArray(err.response.data.email)) {
-                        setError(`Email error: ${err.response.data.email[0]}`);
-                        
-                        // Check if this is a verification issue
-                        if (err.response.data.email[0].includes('verified') || 
-                            err.response.data.email[0].includes('verification')) {
-                            setIsUnverifiedEmail(true);
-                        }
-                    } else {
-                        setError(`Email error: ${err.response.data.email}`);
-                    }
-                }
-                // Check for unverified email specifically
-                else if (err.response?.data?.detail?.includes('not verified') || 
+                // Check specifically for unverified email errors
+                if (err.response?.data?.detail?.includes('not verified') || 
                     err.response?.data?.detail?.includes('verification') ||
                     err.message?.includes('not verified')) {
                     setIsUnverifiedEmail(true);
@@ -142,7 +129,7 @@ function Login() {
                 setLoading(false);
                 loginAttemptRef.current = null;
             }
-        }, 100);
+        }, 100); // Small timeout to prevent multiple submissions
     }
 
     async function handleResendVerification() {
@@ -203,7 +190,7 @@ function Login() {
                                 }
                             
                         </div>
-                        {error && <p className="error-message">{error}</p>}
+                        <p className="error-message">{error}</p>
                         
                         {/* Show resend verification option when appropriate */}
                         {isUnverifiedEmail && (
@@ -231,6 +218,12 @@ function Login() {
                                 {loading ? 'Logging in...' : 'Login'}
                             </button>
                         </div>
+                        
+                        <div className="or-divider">
+                            <span>OR</span>
+                        </div>
+                        
+                        <GoogleLoginButton onSuccess={() => navigate("/inputMain")} actionType="login" />
                         
                         <p>Don't have an account? <span><Link to="/signup">Signup</Link></span></p>
                     </form>

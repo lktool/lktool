@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "users",
+    "contact",  # Add the new contact app
     "rest_framework",
     "rest_framework_simplejwt",
     "corsheaders",
@@ -257,6 +258,9 @@ FRONTEND_URL = os.environ.get('FRONTEND_URL', 'https://lktools.onrender.com')
 
 # Email background processing setting
 SEND_VERIFICATION_EMAIL = True 
+
+# Admin email for receiving contact form submissions
+ADMIN_EMAIL = os.environ.get('ADMIN_EMAIL', DEFAULT_FROM_EMAIL)
 
 # Add email debugging in development
 if DEBUG:

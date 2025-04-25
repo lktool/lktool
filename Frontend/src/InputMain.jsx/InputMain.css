@@ -6,16 +6,67 @@
     flex-direction: column;
     text-align: center;
     row-gap: 10px;
+    padding: 20px;
 }
+
+.inputMain-content {
+    margin-bottom: 20px;
+}
+
+.inputMain-form {
+    width: 100%;
+    max-width: 500px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+}
+
+.input-group label {
+    margin-bottom: 5px;
+    font-weight: 500;
+}
+
+.input-group input, 
+.input-group textarea {
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 16px;
+}
+
 .inputMain-add-button{
     cursor: pointer;
-    padding: .5rem;
-    margin-right: 10px;
+    padding: 12px;
     font-size: 18px;
-    border-radius: 10px;
+    border-radius: 4px;
     outline: none;
     border: none;
     color: white;
     background-color: #67AE6E;
     margin-top: 10px;
+    transition: background-color 0.3s;
+}
+
+.inputMain-add-button:hover {
+    background-color: #559b5b;
+}
+
+.inputMain-display-error {
+    color: #d32f2f;
+    margin-top: 15px;
+}
+
+.inputMain-display-success {
+    margin-top: 20px;
+    padding: 10px;
+    background-color: #d4edda;
+    color: #155724;
+    border-radius: 4px;
+    text-align: center;
 }
