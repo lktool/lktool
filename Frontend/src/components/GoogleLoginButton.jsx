@@ -25,7 +25,8 @@ const GoogleLoginButton = ({ onSuccess, actionType = 'login' }) => {
     
     // Create a new window for Google OAuth
     const googleAuthUrl = 'https://accounts.google.com/o/oauth2/v2/auth';
-    const redirectUri = 'https://lktools.onrender.com/auth/google/callback';
+    // Fix the double slash in the redirect URI
+    const redirectUri = 'https://projectsection-ten.vercel.app/auth/google/callback';
     const clientId = '270981560790-bbip14n5rt5he5e1pcj9ff75h0k7a51a.apps.googleusercontent.com';
     
     // Store the action type in localStorage for the callback to use
@@ -45,6 +46,12 @@ const GoogleLoginButton = ({ onSuccess, actionType = 'login' }) => {
     
     // Open a new window for the Google login
     const authWindow = window.open(url, '_blank', 'width=500,height=600');
+    
+    if (!authWindow) {
+      setIsLoading(false);
+      setError("Popup blocked! Please allow popups for this site.");
+      return;
+    }
     
     // Function to check if the window has been closed
     const checkWindowClosed = setInterval(() => {
@@ -73,16 +80,22 @@ const GoogleLoginButton = ({ onSuccess, actionType = 'login' }) => {
       const action = localStorage.getItem('google_auth_action') || actionType;
       localStorage.removeItem('google_auth_action');
       
+      // Add DEBUG logging
+      console.log("Verifying Google token with backend");
+      console.log("API URL:", getApiUrl(API_CONFIG.AUTH.GOOGLE_AUTH));
+      
       const response = await fetch(getApiUrl(API_CONFIG.AUTH.GOOGLE_AUTH), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           credential: token,
           action: action
-        })
+        }),
+        credentials: 'include' // Important for CORS with credentials
       });
       
       const data = await response.json();
+      console.log("Backend response:", data);
       
       if (!response.ok) {
         // Handle specific cases

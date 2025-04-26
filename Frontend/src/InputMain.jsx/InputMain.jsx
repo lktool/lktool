@@ -80,6 +80,15 @@ function InputMain(){
         } catch(err) {
             console.error("Error submitting contact form:", err);
             
+            // Handle authentication errors
+            if (err.error === 'No authentication token available. Please login again.') {
+                setError("Authentication required. Please log in again.");
+                setTimeout(() => {
+                    window.location.href = "/login"; // Removed hash
+                }, 2000);
+                return;
+            }
+            
             // Handle CORS-specific errors
             if (err.isCorsError) {
                 setError("Server connection error. The server may be unreachable or not configured correctly.");

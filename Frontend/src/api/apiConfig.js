@@ -1,4 +1,4 @@
-// Base API URL - update to absolute URL to avoid issues with HashRouter
+// Base API URL - update to absolute URL to avoid issues with BrowserRouter
 const API_BASE_URL = 'https://lktool.onrender.com';
 
 // API endpoint configuration
@@ -18,6 +18,13 @@ export const API_CONFIG = {
   },
   CONTACT: {
     SUBMIT: '/api/contact/submit/',
+  }
+};
+
+// For OAuth configs - any redirect URIs specifically
+export const OAUTH_CONFIG = {
+  google: {
+    redirectUri: 'https://projectsection-ten.vercel.app/auth/google/callback', // Fixed the URL format
   }
 };
 

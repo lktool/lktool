@@ -21,7 +21,7 @@ function GoogleAuth({ onLoginStart }) {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            redirect_uri: oauthConfig.google.redirectUri
+            redirect_uri: `${getBaseUrl()}/auth/google/callback` // Removed hash
           })
         });
         
@@ -33,15 +33,13 @@ function GoogleAuth({ onLoginStart }) {
         console.error("Failed to build Google auth URL:", err);
         setError('Google sign-in is currently unavailable');
         
-        // Fallback approach (not recommended for production)
-        // Only if your backend doesn't provide the URL
-        const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+        // Fallback approach
         if (clientId) {
           const url = new URL('https://accounts.google.com/o/oauth2/v2/auth');
           url.searchParams.append('client_id', clientId);
           url.searchParams.append('response_type', 'code');
           url.searchParams.append('scope', 'email profile');
-          url.searchParams.append('redirect_uri', oauthConfig.google.redirectUri);
+          url.searchParams.append('redirect_uri', `${getBaseUrl()}/auth/google/callback`); // Removed hash
           url.searchParams.append('prompt', 'select_account');
           
           setGoogleAuthUrl(url.toString());
