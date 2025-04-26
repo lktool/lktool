@@ -209,6 +209,7 @@ CORS_ALLOWED_ORIGINS = [
     "https://lktools.onrender.com",
     "http://localhost:5173",
     "http://localhost:3000",
+    "https://projectsection-ten.vercel.app",
 ]
 
 # For HashRouter URLs, you might need these additional settings
@@ -254,7 +255,7 @@ if not DEFAULT_FROM_EMAIL:
     DEFAULT_FROM_EMAIL = EMAIL_HOST_USER or 'noreply@yoursite.com'
 
 # Frontend URL for email verification links
-FRONTEND_URL = os.environ.get('FRONTEND_URL', 'https://lktools.onrender.com')
+FRONTEND_URL = os.environ.get('FRONTEND_URL', 'https://lktools.onrender.com' , 'https://projectsection-ten.vercel.app/')
 
 # Email background processing setting
 SEND_VERIFICATION_EMAIL = True 
