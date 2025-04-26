@@ -1,44 +1,67 @@
-import { Navigate } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { Navigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { authService } from '../api/authService';
 
 function ProtectedRoute({ children, allowedRoles = [] }) {
-  const [isAuthenticated, setIsAuthenticated] = useState(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [userRole, setUserRole] = useState(null);
 
   useEffect(() => {
-    // Check if user is authenticated
-    const token = localStorage.getItem('accessToken');
+    const checkAuth = async () => {
+      try {
+        // CRITICAL FIX: Force server validation of token instead of just checking local storage
+        const token = localStorage.getItem('token');
+        if (!token) {
+          setIsAuthenticated(false);
+          setIsLoading(false);
+          return;
+        }
+        
+        // Make an actual API call to verify the token with the server
+        const response = await authService.getCurrentUser();
+        if (response && response.data) {
+          setIsAuthenticated(true);
+          setUserRole(response.data.role);
+        } else {
+          // If no data returned, token might be invalid
+          setIsAuthenticated(false);
+          authService.logout(); // Clear any invalid tokens
+        }
+      } catch (error) {
+        console.error('Authentication verification failed:', error);
+        // Any error means the token is invalid or expired
+        setIsAuthenticated(false);
+        authService.logout(); // Clear invalid tokens
+      } finally {
+        setIsLoading(false);
+      }
+    };
     
-    if (!token) {
-      setIsAuthenticated(false);
-      return;
-    }
-    
-    // Optional: verify token on server if needed
-    // For now, just check if it exists
-    setIsAuthenticated(true);
-    
-    // Set user role if available (optional)
-    const role = localStorage.getItem('userRole') || 'user';
-    setUserRole(role);
+    checkAuth();
   }, []);
 
-  // Show loading while checking authentication
-  if (isAuthenticated === null) {
-    return <div>Loading...</div>;
+  if (isLoading) {
+    return (
+      <div className="loading-container">
+        <div className="loading-spinner"></div>
+        <p>Verifying authentication...</p>
+      </div>
+    );
   }
-  
-  // Redirect if not authenticated
+
+  // Not authenticated, redirect to login
   if (!isAuthenticated) {
-    return <Navigate to="/login" />;
+    // Store redirect reason for login page
+    localStorage.setItem('auth_redirect_reason', 'login_required');
+    return <Navigate to="/login" replace />;
   }
-  
-  // Check role permissions if specified
+
+  // Role-based access control
   if (allowedRoles.length > 0 && !allowedRoles.includes(userRole)) {
-    return <Navigate to="/not-found" />;
+    return <Navigate to="/" replace />;
   }
-  
-  // User is authenticated and has permission
+
   return children;
 }
 

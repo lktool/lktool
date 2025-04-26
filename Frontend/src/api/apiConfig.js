@@ -16,9 +16,6 @@ export const API_CONFIG = {
     RESEND_VERIFICATION: '/api/auth/resend-verification/',
     VERIFY_TOKEN: '/api/auth/verify-token/',  // Add this new endpoint
   },
-  CONTACT: {
-    SUBMIT: '/api/contact/submit/',
-  },
   // Add other API endpoints as needed
 };
 

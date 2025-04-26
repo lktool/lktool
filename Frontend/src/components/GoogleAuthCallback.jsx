@@ -1,109 +1,53 @@
-import { useEffect, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import { GOOGLE_OAUTH_CONFIG } from '../config/oauthConfig';
+import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 
-function GoogleAuthCallback() {
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(true);
-  const location = useLocation();
+const GoogleAuthCallback = () => {
   const navigate = useNavigate();
-
-  useEffect(() => {
-    async function handleCallback() {
-      try {
-        setLoading(true);
-        
-        // Get the code from the URL query parameters
-        const params = new URLSearchParams(location.search);
-        const code = params.get('code');
-        
-        if (!code) {
-          setError('Authentication failed: No code received from Google');
-          return;
-        }
-        
-        // Log for debugging
-        console.log("Received OAuth code:", code);
-        
-        // Use the exact redirect URI that matches Google Cloud Console
-        const redirectUri = GOOGLE_OAUTH_CONFIG.REDIRECT_URI;
-        console.log("Using redirect URI:", redirectUri);
-        
-        // Send the code to your backend to exchange for tokens
-        const response = await axios.post(
-          'https://lktool.onrender.com/api/auth/google/', 
-          { 
-            code,
-            redirect_uri: redirectUri
-          }
-        );
-        
-        if (response.data && response.data.access) {
-          // Store the tokens
-          localStorage.setItem('token', response.data.access);
-          localStorage.setItem('refreshToken', response.data.refresh);
-          
-          // Redirect to the main page
-          navigate('/inputMain');
-        } else {
-          setError('Authentication failed: Invalid response from server');
-        }
-      } catch (err) {
-        console.error("Google Auth Callback Error:", err);
-        
-        // Detailed error logging
-        if (err.response) {
-          console.error("Response data:", err.response.data);
-          console.error("Response status:", err.response.status);
-          
-          // Set user-friendly error message
-          if (err.response.data && err.response.data.error) {
-            setError(`Authentication failed: ${err.response.data.error}`);
-          } else {
-            setError(`Authentication failed: Server error (${err.response.status})`);
-          }
-        } else {
-          setError('Authentication failed: Network error');
-        }
-      } finally {
-        setLoading(false);
-      }
-    }
-    
-    handleCallback();
-  }, [location, navigate]);
   
-  // Simple loading and error UI
+  useEffect(() => {
+    // Function to extract id token from URL hash
+    const getTokenFromHash = () => {
+      // Remove the pound sign
+      const hash = window.location.hash.substring(1);
+      
+      // Parse the URL parameters
+      const params = new URLSearchParams(hash);
+      
+      // Get the id token (changed from access_token to id_token)
+      return params.get('id_token');
+    };
+    
+    // Try to get the token
+    const token = getTokenFromHash();
+    
+    if (token) {
+      // Store the token in localStorage so the opener window can access it
+      localStorage.setItem('google_token', token);
+      
+      // Show success message
+      console.log('Successfully authenticated with Google');
+      
+      // Navigate to the main page or close this window
+      // If this window was opened by another window, close it
+      if (window.opener) {
+        window.close();
+      } else {
+        navigate('/inputMain');
+      }
+    } else {
+      // Show error
+      console.error('No ID token found in URL');
+      
+      // Navigate back to login
+      navigate('/login');
+    }
+  }, [navigate]);
+
   return (
-    <div style={{ 
-      display: 'flex', 
-      justifyContent: 'center', 
-      alignItems: 'center', 
-      height: '100vh',
-      flexDirection: 'column'
-    }}>
-      {loading ? (
-        <div>
-          <h2>Completing authentication...</h2>
-          <p>Please wait while we log you in.</p>
-        </div>
-      ) : error ? (
-        <div>
-          <h2>Authentication Error</h2>
-          <p style={{ color: 'red' }}>{error}</p>
-          <button onClick={() => navigate('/login')}>
-            Back to Login
-          </button>
-        </div>
-      ) : (
-        <div>
-          <h2>Success!</h2>
-          <p>You've been authenticated. Redirecting...</p>
-        </div>
-      )}
+    <div className="google-auth-callback">
+      <p>Completing authentication...</p>
     </div>
   );
-}
+};
 
 export default GoogleAuthCallback;

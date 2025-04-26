@@ -7,7 +7,6 @@ from .views import (
     VerifyTokenView, CheckEmailStatusView  # Add it to the imports
 )
 from .google_auth import GoogleAuthView
-from .oauth_redirect import google_oauth_redirect
 
 urlpatterns = [
     path('auth/signup/', RegisterView.as_view(), name='auth_register'),
@@ -21,7 +20,4 @@ urlpatterns = [
     path('auth/verify-email/', EmailVerificationView.as_view(), name='verify_email'),
     path('auth/resend-verification/', ResendVerificationEmailView.as_view(), name='resend_verification'),
     path('auth/verify-token/', VerifyTokenView.as_view(), name='verify_token'),
-
-    # Add this new pattern to handle OAuth redirects
-    path('auth/google/callback/', google_oauth_redirect, name='google_oauth_redirect'),
 ]
