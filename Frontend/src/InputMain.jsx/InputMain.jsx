@@ -1,7 +1,7 @@
 import {useState} from "react";
 import NavBar from "../NavBar/NavBar";
 import "./InputMain.css";
-import axios from "axios";
+import { contactService } from "../api/contactService";
 
 function InputMain(){
     const [url, setUrl] = useState("");
@@ -68,33 +68,11 @@ function InputMain(){
         try{
             setLoading(true);
             
-            // Get the token from local storage
-            const token = localStorage.getItem('accessToken');
-            
-            if (!token) {
-                setError("You must be logged in to submit the form");
-                setLoading(false);
-                return;
-            }
-            
-            // Make API call to our new endpoint
-            const response = await axios.post(
-                `${import.meta.env.VITE_API_URL}/api/contact/submit/`, 
-                {
-                    linkedin_url: url,
-                    message: message,
-                    email: email
-                },
-                {
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    }
-                }
-            );
+            // Use contactService instead of direct axios call
+            const response = await contactService.submitContactForm(url, message, email);
             
             // Show success message and clear form
-            setSuccess(response.data.message || "Your message has been sent successfully!");
+            setSuccess(response.message || "Your message has been sent successfully!");
             setUrl("");
             setMessage("");
             setEmail("");
@@ -102,16 +80,22 @@ function InputMain(){
         } catch(err) {
             console.error("Error submitting contact form:", err);
             
-            if (err.response && err.response.data) {
-                // Handle validation errors
-                if (err.response.data.linkedin_url) {
-                    setError(err.response.data.linkedin_url[0]);
-                } else if (err.response.data.message) {
-                    setError(err.response.data.message[0]);
-                } else if (err.response.data.email) {
-                    setError(err.response.data.email[0]);
-                } else if (err.response.data.error) {
-                    setError(err.response.data.error);
+            // Handle CORS-specific errors
+            if (err.isCorsError) {
+                setError("Server connection error. The server may be unreachable or not configured correctly.");
+                return;
+            }
+            
+            // Handle other error types
+            if (typeof err === 'object') {
+                if (err.linkedin_url) {
+                    setError(err.linkedin_url[0]);
+                } else if (err.message) {
+                    setError(err.message[0]);
+                } else if (err.email) {
+                    setError(err.email[0]);
+                } else if (err.error) {
+                    setError(err.error);
                 } else {
                     setError("Failed to process your request. Please try again.");
                 }

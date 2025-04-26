@@ -212,8 +212,10 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
 ]
 
-# For HashRouter URLs, you might need these additional settings
+# Allow credentials for cross-origin requests
 CORS_ALLOW_CREDENTIALS = True
+
+# For HashRouter URLs, you might need these additional settings
 CORS_ALLOW_METHODS = [
     'DELETE',
     'GET',
