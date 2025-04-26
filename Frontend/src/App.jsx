@@ -1,4 +1,4 @@
-import { HashRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import Landing from "./Landing/Landing";
 import Admin from "./Admin/Admin";
 import Login from './Login/Login';
@@ -26,7 +26,9 @@ function App() {
           
           {/* FIXED: Use wildcard matching for tokens with special characters like : */}
           <Route path="/verify-email/:token" element={<VerifyEmail />} />
-          <Route path="/auth/google/callback/" element={<GoogleAuthCallback />} />
+          
+          {/* UPDATED: Make sure this path exactly matches Google Cloud Console */}
+          <Route path="/auth/google/callback" element={<GoogleAuthCallback />} />
           
           {/* Protected Routes */}
           <Route 

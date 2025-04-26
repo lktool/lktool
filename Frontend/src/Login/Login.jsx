@@ -5,6 +5,8 @@ import { Link, useNavigate } from "react-router-dom";
 import { validateEmail } from "../Utils/validate";
 import GoogleLoginButton from "../components/GoogleLoginButton";
 import { authService } from '../api/authService';
+import OAuthDebugger from '../components/OAuthDebugger';
+import { GOOGLE_OAUTH_CONFIG } from '../config/oauthConfig';
 
 function Login() {
     const [email, setEmail] = useState('');
@@ -166,7 +168,23 @@ function Login() {
         setVisible((prev) => !prev);
     }
 
-    return (<>
+    const handleGoogleLogin = () => {
+      // Use the redirect URI from our config
+      const redirectUri = encodeURIComponent(GOOGLE_OAUTH_CONFIG.REDIRECT_URI);
+      const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+      const scope = encodeURIComponent('email profile');
+      
+      const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${googleClientId}&redirect_uri=${redirectUri}&response_type=code&scope=${scope}&access_type=offline&prompt=consent`;
+      
+      // Log for debugging
+      console.log('Redirecting to Google with URI:', decodeURIComponent(redirectUri));
+      
+      // Redirect to Google sign-in page
+      window.location.href = googleAuthUrl;
+    };
+
+    return (
+      <div>
         <div className="container2">
             <div className="inside2">
                 <div className="inside2.1">
@@ -190,7 +208,8 @@ function Login() {
                                 }
                             
                         </div>
-                        <p className="error-message">{error}</p>
+                        {error && <p className="error-message">{error}</p>}
+
                         
                         {/* Show resend verification option when appropriate */}
                         {isUnverifiedEmail && (
@@ -230,6 +249,10 @@ function Login() {
                 </div>
             </div>
         </div>
-    </>)
+
+        {/* Add debugger in development only */}
+        {import.meta.env.DEV && <OAuthDebugger />}
+      </div>
+    )
 }
 export default Login;

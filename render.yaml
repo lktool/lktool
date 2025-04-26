@@ -1,0 +1,26 @@
+services:
+  - type: web
+    name: lktool-backend
+    env: python
+    buildCommand: cd backend && ./render_deploy.sh
+    startCommand: cd backend && gunicorn backend.wsgi:application
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: DATABASE_URL
+        fromDatabase:
+          name: lktool-db
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: WEB_CONCURRENCY
+        value: 4
+      - key: DJANGO_SETTINGS_MODULE
+        value: backend.settings
+      - key: DEBUG
+        value: "False"
+
+databases:
+  - name: lktool-db
+    databaseName: lktool
+    plan: starter

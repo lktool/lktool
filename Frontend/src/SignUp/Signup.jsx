@@ -219,7 +219,8 @@ function Signup() {
               )}
               {validationErrors.confirmPassword && <p className="error-message">{validationErrors.confirmPassword}</p>}
             </div>
-            <p className="error-message">{error}</p>
+            {error && <p className="error-message">{error}</p>}
+
             <button className="signup-btn" type="submit" disabled={loading}>
               {loading ? "Signing up..." : "Signup"}
             </button>
