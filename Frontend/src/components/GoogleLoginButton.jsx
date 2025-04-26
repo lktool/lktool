@@ -27,7 +27,7 @@ const GoogleLoginButton = ({ onSuccess, actionType = 'login' }) => {
     const googleAuthUrl = 'https://accounts.google.com/o/oauth2/v2/auth';
     // Fix the double slash in the redirect URI
     const redirectUri = 'https://projectsection-ten.vercel.app/auth/google/callback';
-    const clientId = '270981560790-bbip14n5rt5he5e1pcj9ff75h0k7a51a.apps.googleusercontent.com';
+    const clientId = '865917249576-o12qfisk9hpp4b10vjvdj2d1kqhunva9.apps.googleusercontent.com';
     
     // Store the action type in localStorage for the callback to use
     localStorage.setItem('google_auth_action', actionType);
