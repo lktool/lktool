@@ -5,6 +5,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { validateEmail } from "../Utils/validate";
 import GoogleLoginButton from "../components/GoogleLoginButton";
 import { authService } from '../api/authService';
+import CorsAlert from '../components/CorsAlert';
 
 function Login() {
     const [email, setEmail] = useState('');
@@ -14,6 +15,7 @@ function Login() {
     const [loading, setLoading] = useState(false);
     const [resendStatus, setResendStatus] = useState({ sent: false, loading: false });
     const [isUnverifiedEmail, setIsUnverifiedEmail] = useState(false);
+    const [corsError, setCorsError] = useState(false);
     const loginAttemptRef = useRef(null); // For debouncing login attempts
     const navigate = useNavigate();
 
@@ -106,58 +108,64 @@ function Login() {
                 } else {
                     setError("Authentication failed. Please try again.");
                 }
-            }
-            catch (err) {
+            } catch (err) {
                 console.error("Login error:", err);
                 
                 // Check specifically for unverified email errors
                 if (err.response?.data?.detail?.includes('not verified') || 
                     err.response?.data?.detail?.includes('verification') ||
-                    err.message?.includes('not verified')) {
+                    err.message?.includes('not verified')) {ror'
                     setIsUnverifiedEmail(true);
-                    setError("Your email address has not been verified. Please verify your email or request a new verification link below.");
+                    setError("Your email address has not been verified. Please verify your email or request a new verification link below.");to CORS policy restrictions. Please try again later or contact support.");
                 } else if (err.message === 'Request timeout') {
-                    setError("Login request timed out. Please try again.");
+                    setError("Login request timed out. Please try again.");ludes('not verified')) {
                 } else if (err.response?.data?.detail) {
-                    setError(err.response.data.detail);
+                    setError(err.response.data.detail);een verified. Please verify your email or request a new verification link below.");
                 } else if (err.response?.status === 401) {
-                    setError("Invalid email or password");
-                } else {
-                    setError("Login failed. Please check your credentials.");
+                    setError("Invalid email or password");(err.message === 'Request timeout') {
+                } else if (err.message && (
+                    err.message.includes('CORS') ||  else if (err.response?.data?.detail) {
+                    err.isCorsError ||Error(err.response.data.detail);
+                    err.message === 'Network Error'ponse?.status === 401) {
+                )) {password");
+                    setError("Cannot connect to the server due to CORS policy restrictions.");   } else {
+                    setCorsError(true);dentials or try again later.");
+                } else {           }
+                    setError("Login failed. Please check your credentials.");            } finally {
                 }
-            } finally {
+            } finally {;
                 setLoading(false);
-                loginAttemptRef.current = null;
+                loginAttemptRef.current = null; Small timeout to prevent multiple submissions
             }
         }, 100); // Small timeout to prevent multiple submissions
     }
-
-    async function handleResendVerification() {
+if (!email || !validateEmail(email)) {
+    async function handleResendVerification() {etError("Please enter a valid email address to resend verification.");
         if (!email || !validateEmail(email)) {
             setError("Please enter a valid email address to resend verification.");
             return;
-        }
+        }({ sent: false, loading: true });
         
         setResendStatus({ sent: false, loading: true });
         
-        try {
-            await authService.resendVerification(email);
-            setResendStatus({ sent: true, loading: false });
-            setError(""); // Clear any previous errors
-        } catch (err) {
-            console.error("Failed to resend verification:", err);
+        try {   setResendStatus({ sent: true, loading: false });
+            await authService.resendVerification(email);       setError(""); // Clear any previous errors
+            setResendStatus({ sent: true, loading: false });        } catch (err) {
+            setError(""); // Clear any previous errors to resend verification:", err);
+        } catch (err) {alse, loading: false });
+            console.error("Failed to resend verification:", err);gain.");
             setResendStatus({ sent: false, loading: false });
             setError("Failed to resend verification email. Please try again.");
         }
-    }
-
-    function handleEmail(event) {
-        setEmail(event.target.value);
-        // Reset unverified status and resend status when email changes
+    }function handleEmail(event) {
+;
+    function handleEmail(event) {esend status when email changes
+        setEmail(event.target.value);   setIsUnverifiedEmail(false);
+        // Reset unverified status and resend status when email changes    setResendStatus({ sent: false, loading: false });
         setIsUnverifiedEmail(false);
         setResendStatus({ sent: false, loading: false });
-    }
-    
+    }unction handlePassword(event) {
+            setPassword(event.target.value);
     function handlePassword(event) {
         setPassword(event.target.value);
     }
@@ -168,67 +176,76 @@ function Login() {
 
     return (<>
         <div className="container2">
+            {/* Show CORS alert if detected */}/h2>
+            {corsError && <CorsAlert origin={window.location.origin} />}bmit={handleSubmit}>
+            
             <div className="inside2">
                 <div className="inside2.1">
                     <h2 className="login">Login</h2>
                     <form onSubmit={handleSubmit}>
                         <div className="input-email">
-                            <input type="email" 
+                            <input type="email" sName="input-password">
                                 placeholder="Email"
                                 onChange={handleEmail}
-                                value={email} />
-                        </div>
-                        <div className="input-password">
+                                value={email} />nChange={handlePassword}
+                        </div>    value={password} 
+                        <div className="input-password">  />
                             <input type={visible ? "text" : "password"}
-                                placeholder="Password"
-                                onChange={handlePassword}
+                                placeholder="Password"                                    visible? <AiOutlineEye className="eye-icon" onClick={toggleVisibility}/> :
+                                onChange={handlePassword}            <AiOutlineEyeInvisible className="eye-icon" onClick={toggleVisibility}/>
                                 value={password} 
                                 />
                                 {
-                                    visible? <AiOutlineEye className="eye-icon" onClick={toggleVisibility}/> :
+                                    visible? <AiOutlineEye className="eye-icon" onClick={toggleVisibility}/> :message">{error}</p>}
                                     <AiOutlineEyeInvisible className="eye-icon" onClick={toggleVisibility}/>
                                 }
-                            
-                        </div>
-                        {error && <p className="error-message">{error}</p>}
-
+                            rification option when appropriate */}
+                        </div>Email && (
+                        {error && <p className="error-message">{error}</p>}verification-actions">
+(
                         
-                        {/* Show resend verification option when appropriate */}
+                        {/* Show resend verification option when appropriate */}Please check your inbox.
                         {isUnverifiedEmail && (
                             <div className="verification-actions">
                                 {resendStatus.sent ? (
-                                    <div className="success-message">
-                                        Verification email has been sent! Please check your inbox.
-                                    </div>
-                                ) : (
-                                    <button 
-                                        type="button"
+                                    <div className="success-message">"button"
+                                        Verification email has been sent! Please check your inbox.      className="resend-verification-btn"
+                                    </div>      onClick={handleResendVerification}
+                                ) : (              disabled={resendStatus.loading}
+                                    <button             >
+                                        type="button"" : "Resend Verification Email"}
                                         className="resend-verification-btn"
                                         onClick={handleResendVerification}
                                         disabled={resendStatus.loading}
                                     >
                                         {resendStatus.loading ? "Sending..." : "Resend Verification Email"}
-                                    </button>
+                                    </button><Link to="/forgot-password">Forgot Password?</Link>
                                 )}
-                            </div>
-                        )}
-                        
+                            </div>me="login-btn" type="submit" disabled={loading}>
+                        )}  {loading ? 'Logging in...' : 'Login'}
+                            </button>
                         <Link to="/forgot-password">Forgot Password?</Link>
                         <div className="control">
                             <button className="login-btn" type="submit" disabled={loading}>
-                                {loading ? 'Logging in...' : 'Login'}
-                            </button>
-                        </div>
-                        
-                        <div className="or-divider">
-                            <span>OR</span>
-                        </div>
-                        
-                        <GoogleLoginButton onSuccess={() => navigate("/inputMain")} actionType="login" />
-                        
-                        <p>Don't have an account? <span><Link to="/signup">Signup</Link></span></p>
-                    </form>
-                </div>
+                                {loading ? 'Logging in...' : 'Login'} <span>OR</span>
+                            </button>  </div>
+                        </div>      
+                                  <GoogleLoginButton onSuccess={() => navigate("/inputMain")} actionType="login" />
+                        <div className="or-divider">                
+                            <span>OR</span>                       <p>Don't have an account? <span><Link to="/signup">Signup</Link></span></p>
+                        </div>/form>
+
+
+
+
+
+
+
+
+
+
+
+export default Login;}    </>)        </div>            </div>                </div>                    </form>                        <p>Don't have an account? <span><Link to="/signup">Signup</Link></span></p>                                                <GoogleLoginButton onSuccess={() => navigate("/inputMain")} actionType="login" />                                        </div>
             </div>
         </div>
     </>)

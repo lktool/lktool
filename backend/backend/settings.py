@@ -207,9 +207,9 @@ SIMPLE_JWT = {
 # CORS settings - Ensure all necessary endpoints are accessible
 CORS_ALLOWED_ORIGINS = [
     "https://lktools.onrender.com",
+    "https://projectsection-ten.vercel.app",  # Add your Vercel domain
     "http://localhost:5173",
     "http://localhost:3000",
-    "https://projectsection-ten.vercel.app",
 ]
 
 # For HashRouter URLs, you might need these additional settings
