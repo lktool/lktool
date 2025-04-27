@@ -132,9 +132,17 @@ input:hover{
 .eye-icon:hover{
     cursor: pointer;
 }
-.error-message{
-    color: rgb(220, 0, 0);
-    font-size: 17px;
+/* Add input error styling */
+.input-error {
+    border: 1px solid #ff3333 !important;
+    background-color: #fff8f8;
+}
+
+.error-message {
+    color: #ff3333;
+    font-size: 0.85rem;
+    margin: 4px 0;
+    padding: 0;
 }
 
 .verification-actions {

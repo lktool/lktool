@@ -1,6 +1,6 @@
 import './Login.css';
 import { AiOutlineEye, AiOutlineEyeInvisible } from 'react-icons/ai';
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { validateEmail } from "../Utils/validate";
 import GoogleLoginButton from "../components/GoogleLoginButton";
@@ -15,58 +15,53 @@ function Login() {
     const [resendStatus, setResendStatus] = useState({ sent: false, loading: false });
     const [isUnverifiedEmail, setIsUnverifiedEmail] = useState(false);
     const [corsError, setCorsError] = useState(false);
-    const loginAttemptRef = useRef(null); // For debouncing login attempts
-    const debounceTimeout = useRef(null); // For validation debouncing
+    const loginAttemptRef = useRef(null);
     const navigate = useNavigate();
+    
+    // Add validation errors object similar to signup page
+    const [validationErrors, setValidationErrors] = useState({
+        email: '',
+        password: ''
+    });
 
     // Clean up requests when component unmounts
     useEffect(() => {
         return () => {
-            // Clear any pending login attempts
             if (loginAttemptRef.current) {
                 clearTimeout(loginAttemptRef.current);
             }
-            // Clear validation debouncing
-            if (debounceTimeout.current) {
-                clearTimeout(debounceTimeout.current);
-            }
-            // Cancel any active API requests
             authService.cancelActiveRequests();
         };
     }, []);
 
-    // Create a memoized validator function
-    const validateEmailField = useCallback((value) => {
-        if (!value.trim()) {
-            return "Email is required";
-        }
-        if (!validateEmail(value)) {
-            return "Please provide valid Email address";
-        }
-        return "";
-    }, []);
-
-    // Client-side validation function (optimized)
+    // Improved validation that sets field-specific errors
     const validateForm = () => {
+        const errors = {
+            email: '',
+            password: ''
+        };
+        let isValid = true;
+
+        // Email validation
         if (!email.trim()) {
-            setError("Email is required");
-            return false;
-        }
-        
-        if (!validateEmail(email)) {
-            setError("Please provide valid Email address");
-            return false;
+            errors.email = "Email is required";
+            isValid = false;
+        } else if (!validateEmail(email)) {
+            errors.email = "Please provide valid Email address";
+            isValid = false;
         }
 
+        // Password validation
         if (!password) {
-            setError("Password is required");
-            return false;
+            errors.password = "Password is required";
+            isValid = false;
         }
         
-        return true;
+        setValidationErrors(errors);
+        return isValid;
     };
 
-    // Improved authentication checking that requires credentials
+    // Improved authentication checking
     useEffect(() => {
         // First check for redirect reasons
         const redirectReason = localStorage.getItem('auth_redirect_reason');
@@ -82,55 +77,50 @@ function Login() {
         if (expiredToken === 'true') {
             setError('Your session has expired. Please log in again.');
             localStorage.removeItem('expired_token');
-            authService.logout(); // Clear any remaining token
+            authService.logout();
         }
         
-        // CRITICAL FIX: Only check token validity if we didn't come from a protected route
+        // Only check token validity if we didn't come from a protected route
         if (!redirectReason) {
-            // Check token validity but don't auto-redirect if on login page
             authService.checkTokenValidity().then(isValid => {
-                // Only redirect if valid AND user didn't explicitly navigate to login
                 if (isValid && !window.location.href.includes('login')) {
                     navigate('/inputMain');
                 }
             }).catch(() => {
-                // Clear any invalid tokens silently
                 authService.logout();
             });
         }
     }, [navigate]);
 
-    // Debounced email validation on type
-    const handleEmailChange = (event) => {
-        const value = event.target.value;
-        setEmail(value);
+    // Simple change handler without immediate validation
+    function handleEmailChange(event) {
+        setEmail(event.target.value);
         
-        // Clear any existing validation timeout
-        if (debounceTimeout.current) {
-            clearTimeout(debounceTimeout.current);
-        }
-        
-        // Reset unverified status when email changes
+        // Just reset errors and statuses
         setIsUnverifiedEmail(false);
         setResendStatus({ sent: false, loading: false });
         
-        // Remove error as user types
+        // Clear general error
         setError("");
         
-        // Validate after typing stops for 300ms
-        debounceTimeout.current = setTimeout(() => {
-            const emailError = validateEmailField(value);
-            if (emailError) {
-                setError(emailError);
-            }
-        }, 300);
-    };
+        // Clear validation errors when typing
+        setValidationErrors({
+            ...validationErrors,
+            email: ''
+        });
+    }
 
-    // Handle password input with clearing error
     function handlePasswordChange(event) {
         setPassword(event.target.value);
+        
         // Clear error as user types
         setError("");
+        
+        // Clear validation errors when typing
+        setValidationErrors({
+            ...validationErrors,
+            password: ''
+        });
     }
 
     async function handleSubmit(event) {
@@ -154,7 +144,6 @@ function Login() {
         // Use a shorter debounce time for faster response
         loginAttemptRef.current = setTimeout(async () => {
             try {
-                // Use authService with timeout handling
                 const response = await authService.login(email, password);
                 
                 // Only navigate if we have a valid token
@@ -205,7 +194,7 @@ function Login() {
                 setLoading(false);
                 loginAttemptRef.current = null;
             }
-        }, 50); // Use a shorter timeout for more responsive feeling
+        }, 50);
     }
 
     // Async function for resending verification emails
@@ -231,6 +220,11 @@ function Login() {
     function toggleVisibility() {
         setVisible((prev) => !prev);
     }
+    
+    // Display helper function for field errors
+    const getInputClassName = (field) => {
+        return validationErrors[field] ? 'input-error' : '';
+    };
 
     return (<>
         <div className="container2">
@@ -239,23 +233,35 @@ function Login() {
                     <h2 className="login">Login</h2>
                     <form onSubmit={handleSubmit}>
                         <div className="input-email">
-                            <input type="email" 
+                            <input 
+                                type="email" 
                                 placeholder="Email"
                                 onChange={handleEmailChange}
-                                value={email} />
+                                value={email}
+                                className={getInputClassName('email')}
+                            />
+                            {validationErrors.email && 
+                                <p className="error-message">{validationErrors.email}</p>}
                         </div>
                         <div className="input-password">
-                            <input type={visible ? "text" : "password"}
+                            <input 
+                                type={visible ? "text" : "password"}
                                 placeholder="Password"
                                 onChange={handlePasswordChange}
-                                value={password} 
+                                value={password}
+                                className={getInputClassName('password')}
                             />
                             {
                                 visible ? <AiOutlineEye className="eye-icon" onClick={toggleVisibility}/> :
                                 <AiOutlineEyeInvisible className="eye-icon" onClick={toggleVisibility}/>
                             }
+                            {validationErrors.password && 
+                                <p className="error-message">{validationErrors.password}</p>}
                         </div>
-                        {error && <p className="error-message">{error}</p>}
+                        
+                        {/* General error messages */}
+                        {error && !validationErrors.email && !validationErrors.password && 
+                            <p className="error-message">{error}</p>}
 
                         {/* Show CORS error info if detected */}
                         {corsError && (
