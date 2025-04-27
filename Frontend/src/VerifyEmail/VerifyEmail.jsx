@@ -17,13 +17,14 @@ function VerifyEmail() {
             
             // If there are issues with HashRouter parameter extraction
             if (!verificationToken || verificationToken === 'undefined') {
-                // Extract token from hash part for HashRouter
-                const hash = window.location.hash;
-                const match = hash.match(/\/verify-email\/(.+)$/);
+                // Extract token from the regular URL path
+                const path = window.location.pathname;
+                const match = path.match(/\/verify-email\/(.+)$/);
                 if (match && match[1]) {
                     verificationToken = match[1];
                 }
             }
+            
             
             if (!verificationToken) {
                 setStatus('error');

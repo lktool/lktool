@@ -1,37 +1,32 @@
 """
-Email service module for the contact app.
-Provides reusable functions for sending notification emails.
+Email service module for sending notification emails from contact forms.
 """
 import logging
-import threading
 import traceback
 from django.core.mail import EmailMessage
 from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
-def send_notification_email(
-    user_email,
-    url,
-    message,
-    recipient_email=None,
-    subject="New Message from Website User"
-):
+def send_notification_email(user_email, url, message, recipient_email=None, subject="New Message from Website User"):
     """
     Sends an email notification to admin when a user submits a form.
     
     Args:
-        user_email (str): The email address provided by the user (used as reply-to)
-        url (str): The URL provided by the user
-        message (str): The message provided by the user
-        recipient_email (str): Email address to send the notification to (defaults to ADMIN_EMAIL)
-        subject (str): Email subject line
+        user_email: The email address provided by the user (used as reply-to)
+        url: The URL provided by the user
+        message: The message provided by the user
+        recipient_email: Email address to send notification to (defaults to ADMIN_EMAIL from settings)
+        subject: Email subject line (defaults to "New Message from Website User")
+        
+    Returns:
+        bool: True if email was sent successfully, False otherwise
     """
     # Validate inputs
     if not user_email:
         logger.error("Cannot send notification: user_email cannot be empty")
         return False
-    
+        
     # Use ADMIN_EMAIL from settings if no recipient provided
     if recipient_email is None:
         recipient_email = getattr(settings, 'ADMIN_EMAIL', 'mathan21092006@gmail.com')
@@ -69,38 +64,26 @@ def send_notification_email(
     This message was submitted via the form on your website.
     """
     
-    # Use threading to avoid blocking the request
-    thread = threading.Thread(
-        target=_send_email_async,
-        args=(subject, plain_message, from_email, [recipient_email], user_email, html_message)
-    )
-    thread.daemon = True
-    thread.start()
-    
-    return True
-
-def _send_email_async(subject, message, from_email, recipient_list, reply_to, html_message=None):
-    """
-    Internal function to send emails asynchronously with error handling.
-    """
     try:
-        logger.info(f"Sending notification email to: {recipient_list}")
+        logger.info(f"Sending notification email to: {recipient_email}")
         
+        # Create email message
         email = EmailMessage(
             subject=subject,
-            body=html_message if html_message else message,
+            body=html_message,
             from_email=from_email,
-            to=recipient_list,
-            reply_to=[reply_to]
+            to=[recipient_email],
+            reply_to=[user_email]
         )
         
-        if html_message:
-            email.content_subtype = "html"
+        # Set content type to HTML
+        email.content_subtype = "html"
         
+        # Send the email
         email.send(fail_silently=False)
-        
-        logger.info(f"Notification email sent successfully")
+        logger.info("Notification email sent successfully")
         return True
+        
     except Exception as e:
         logger.error(f"Failed to send notification email: {str(e)}")
         
@@ -109,9 +92,9 @@ def _send_email_async(subject, message, from_email, recipient_list, reply_to, ht
             print("\n--------------------------------")
             print("NOTIFICATION EMAIL SENDING ERROR")
             print("--------------------------------")
-            print(f"To: {recipient_list}")
+            print(f"To: {recipient_email}")
             print(f"From: {from_email}")
-            print(f"Reply-To: {reply_to}")
+            print(f"Reply-To: {user_email}")
             print(f"Error: {str(e)}")
             print(traceback.format_exc())
             print("--------------------------------\n")
