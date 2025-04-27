@@ -10,7 +10,13 @@ from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
-def send_notification_email(user_email, url, message, recipient_email=None, subject="New Message from Website User"):
+def send_notification_email(
+    user_email,
+    url,
+    message,
+    recipient_email=None,
+    subject="New Message from Website User"
+):
     """
     Sends an email notification to admin when a user submits a form.
     
@@ -19,21 +25,18 @@ def send_notification_email(user_email, url, message, recipient_email=None, subj
         url (str): The URL provided by the user
         message (str): The message provided by the user
         recipient_email (str): Email address to send the notification to (defaults to ADMIN_EMAIL)
-        subject (str): Email subject line (defaults to "New Message from Website User")
-        
-    Returns:
-        bool: True if email was queued successfully
+        subject (str): Email subject line
     """
     # Validate inputs
     if not user_email:
         logger.error("Cannot send notification: user_email cannot be empty")
         return False
     
-    # Use ADMIN_EMAIL from settings if no recipient provided (default to mathan21092006@gmail.com)
+    # Use ADMIN_EMAIL from settings if no recipient provided
     if recipient_email is None:
         recipient_email = getattr(settings, 'ADMIN_EMAIL', 'mathan21092006@gmail.com')
     
-    # From email should be the app's default sending email (bwork4090@gmail.com)
+    # From email should be the app's default sending email
     from_email = settings.DEFAULT_FROM_EMAIL
     
     # Create HTML message with good formatting
@@ -85,7 +88,7 @@ def _send_email_async(subject, message, from_email, recipient_list, reply_to, ht
         
         email = EmailMessage(
             subject=subject,
-            body=message,
+            body=html_message if html_message else message,
             from_email=from_email,
             to=recipient_list,
             reply_to=[reply_to]
@@ -93,8 +96,7 @@ def _send_email_async(subject, message, from_email, recipient_list, reply_to, ht
         
         if html_message:
             email.content_subtype = "html"
-            email.body = html_message
-            
+        
         email.send(fail_silently=False)
         
         logger.info(f"Notification email sent successfully")
