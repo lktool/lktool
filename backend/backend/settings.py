@@ -12,13 +12,37 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 import os
-from dotenv import load_dotenv
-from decouple import config
 from datetime import timedelta
-import dj_database_url
-import os
 
-load_dotenv()
+# Try to import optional packages, with fallbacks if not installed
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    # dotenv not installed, will use os.environ directly
+    pass
+
+try:
+    from decouple import config
+except ImportError:
+    # decouple not installed, create a simple config function
+    def config(key, default=None):
+        return os.environ.get(key, default)
+
+try:
+    import dj_database_url
+except ImportError:
+    # dj_database_url not installed, create a simple function
+    def dj_database_url_config(**kwargs):
+        return {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    
+    class dj_database_url:
+        @staticmethod
+        def config(default=None, **kwargs):
+            return dj_database_url_config(**kwargs)
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -44,7 +68,6 @@ ALLOWED_HOSTS = [
 AUTH_USER_MODEL = 'users.CustomUser'
 
 # Application definition
-
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -118,19 +141,15 @@ TEMPLATES = [
 WSGI_APPLICATION = "backend.wsgi.application"
 
 
-# Database
-# https://docs.djangoproject.com/en/5.2/ref/settings/#databases
-
-
-
+# Database configuration with connection pooling
 DATABASES = {
-    'default': dj_database_url.config(default=os.environ.get("DATABASE_URL"))
-}
-
-# Database optimization settings
-DATABASE_OPTIONS = {
-    'timeout': 30,  # 30 seconds
-    'connect_timeout': 10,  # 10 seconds
+    'default': {
+        **dj_database_url.config(default=os.environ.get("DATABASE_URL")),
+        'CONN_MAX_AGE': 600,  # Keep connections alive for 10 minutes
+        'OPTIONS': {
+            'connect_timeout': 5,  # Reduce connection timeout to 5 seconds
+        }
+    }
 }
 
 # Password validation
@@ -204,42 +223,22 @@ SIMPLE_JWT = {
     'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=7),
 }
 
-# CORS settings - Ensure all necessary endpoints are accessible
+# Optimize CORS settings for better performance
 CORS_ALLOWED_ORIGINS = [
     "https://lktools.onrender.com",
-    "https://projectsection-ten.vercel.app",  # Add your Vercel domain
+    "https://projectsection-ten.vercel.app",
     "http://localhost:5173",
     "http://localhost:3000",
 ]
 
-# Allow credentials for cross-origin requests
+# Add this for persistent connections
 CORS_ALLOW_CREDENTIALS = True
 
-# For HashRouter URLs, you might need these additional settings
-CORS_ALLOW_METHODS = [
-    'DELETE',
-    'GET',
-    'OPTIONS',
-    'PATCH',
-    'POST',
-    'PUT',
-]
+# Enable preflight caching to reduce OPTIONS requests
+CORS_PREFLIGHT_MAX_AGE = 86400  # 24 hours in seconds - dramatically reduces preflight requests
 
-# Make sure to include Authorization header for JWT
-CORS_ALLOW_HEADERS = [
-    'accept',
-    'accept-encoding',
-    'authorization',
-    'content-type',
-    'dnt',
-    'origin',
-    'user-agent',
-    'x-csrftoken',
-    'x-requested-with',
-]
-
-# Important: Turn off this setting in production
-CORS_ALLOW_ALL_ORIGINS = False  
+# Important: Keep this setting off in production
+CORS_ALLOW_ALL_ORIGINS = False
 
 # Email Configuration - Properly load from environment
 EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')

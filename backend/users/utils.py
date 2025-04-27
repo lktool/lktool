@@ -1,10 +1,11 @@
 import logging
 from django.core.signing import TimestampSigner, BadSignature, SignatureExpired
-from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 from django.conf import settings
 from functools import lru_cache
+import threading
+from django.core.mail import send_mail
 
 logger = logging.getLogger(__name__)
 
@@ -98,17 +99,8 @@ def send_verification_email(user):
         If you didn't register on our site, please ignore this email.
         ''')
         
-        # Create email message
-        email = EmailMultiAlternatives(
-            subject,
-            text_content,
-            settings.DEFAULT_FROM_EMAIL,
-            [user.email]
-        )
-        email.attach_alternative(html_content, "text/html")
-        
-        # Send email and return result
-        sent = email.send(fail_silently=False)
+        # Send email asynchronously
+        sent = send_email_async(subject, text_content, [user.email], html_content)
         
         if sent:
             logger.info(f"Verification email sent successfully to: {user.email}")
@@ -133,3 +125,24 @@ def send_verification_email(user):
         
         # Re-raise or return False
         return False
+
+def send_email_async(subject, message, recipient_list, html_message=None):
+    """Send email asynchronously using threading to prevent blocking the main request"""
+    def _send_email_task():
+        try:
+            send_mail(
+                subject=subject,
+                message=message,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=recipient_list,
+                html_message=html_message,
+                fail_silently=False,
+            )
+        except Exception as e:
+            print(f"Failed to send email: {e}")
+    
+    # Start email sending in a separate thread
+    email_thread = threading.Thread(target=_send_email_task)
+    email_thread.daemon = True  # Thread will exit when main thread exits
+    email_thread.start()
+    return True

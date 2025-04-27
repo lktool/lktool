@@ -1,6 +1,6 @@
 import './Login.css';
 import { AiOutlineEye, AiOutlineEyeInvisible } from 'react-icons/ai';
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { validateEmail } from "../Utils/validate";
 import GoogleLoginButton from "../components/GoogleLoginButton";
@@ -16,9 +16,37 @@ function Login() {
     const [isUnverifiedEmail, setIsUnverifiedEmail] = useState(false);
     const [corsError, setCorsError] = useState(false);
     const loginAttemptRef = useRef(null); // For debouncing login attempts
+    const debounceTimeout = useRef(null); // For validation debouncing
     const navigate = useNavigate();
 
-    // Client-side validation function to avoid unnecessary API calls
+    // Clean up requests when component unmounts
+    useEffect(() => {
+        return () => {
+            // Clear any pending login attempts
+            if (loginAttemptRef.current) {
+                clearTimeout(loginAttemptRef.current);
+            }
+            // Clear validation debouncing
+            if (debounceTimeout.current) {
+                clearTimeout(debounceTimeout.current);
+            }
+            // Cancel any active API requests
+            authService.cancelActiveRequests();
+        };
+    }, []);
+
+    // Create a memoized validator function
+    const validateEmailField = useCallback((value) => {
+        if (!value.trim()) {
+            return "Email is required";
+        }
+        if (!validateEmail(value)) {
+            return "Please provide valid Email address";
+        }
+        return "";
+    }, []);
+
+    // Client-side validation function (optimized)
     const validateForm = () => {
         if (!email.trim()) {
             setError("Email is required");
@@ -72,14 +100,41 @@ function Login() {
         }
     }, [navigate]);
 
+    // Debounced email validation on type
+    const handleEmailChange = (event) => {
+        const value = event.target.value;
+        setEmail(value);
+        
+        // Clear any existing validation timeout
+        if (debounceTimeout.current) {
+            clearTimeout(debounceTimeout.current);
+        }
+        
+        // Reset unverified status when email changes
+        setIsUnverifiedEmail(false);
+        setResendStatus({ sent: false, loading: false });
+        
+        // Remove error as user types
+        setError("");
+        
+        // Validate after typing stops for 300ms
+        debounceTimeout.current = setTimeout(() => {
+            const emailError = validateEmailField(value);
+            if (emailError) {
+                setError(emailError);
+            }
+        }, 300);
+    };
+
+    // Handle password input with clearing error
+    function handlePasswordChange(event) {
+        setPassword(event.target.value);
+        // Clear error as user types
+        setError("");
+    }
+
     async function handleSubmit(event) {
         event.preventDefault();
-
-        // Require both email and password
-        if (!email.trim() || !password.trim()) {
-            setError("Email and password are required");
-            return;
-        }
 
         // Prevent multiple rapid login attempts
         if (loginAttemptRef.current) {
@@ -96,7 +151,7 @@ function Login() {
         setIsUnverifiedEmail(false); 
         setCorsError(false);
 
-        // Debounce login attempts
+        // Use a shorter debounce time for faster response
         loginAttemptRef.current = setTimeout(async () => {
             try {
                 // Use authService with timeout handling
@@ -112,8 +167,13 @@ function Login() {
             catch (err) {
                 console.error("Login error:", err);
                 
+                // Handle canceled requests specifically
+                if (err.name === 'CanceledError' || err.code === 'ERR_CANCELED' || 
+                    (err.message && err.message.includes('cancel'))) {
+                    setError("Login request was canceled. Please try again.");
+                }
                 // Check for CORS or network errors
-                if (err.message && (err.message.includes('CORS') || 
+                else if (err.message && (err.message.includes('CORS') || 
                                     err.message.includes('Network Error'))) {
                     setError("Cannot connect to the server. This may be a CORS or network issue.");
                     setCorsError(true);
@@ -125,6 +185,10 @@ function Login() {
                     setIsUnverifiedEmail(true);
                     setError("Your email address has not been verified. Please verify your email or request a new verification link below.");
                 } 
+                // Handle specific email errors from the server
+                else if (err.response?.data?.email) {
+                    setError(`Email error: ${err.response.data.email[0]}`);
+                }
                 else if (err.message === 'Request timeout') {
                     setError("Login request timed out. Please try again.");
                 } 
@@ -135,15 +199,16 @@ function Login() {
                     setError("Invalid email or password");
                 } 
                 else {
-                    setError("Login failed. Please check your credentials.");
+                    setError(err.message || "Login failed. Please check your credentials.");
                 }
             } finally {
                 setLoading(false);
                 loginAttemptRef.current = null;
             }
-        }, 100); // Small timeout to prevent multiple submissions
+        }, 50); // Use a shorter timeout for more responsive feeling
     }
 
+    // Async function for resending verification emails
     async function handleResendVerification() {
         if (!email || !validateEmail(email)) {
             setError("Please enter a valid email address to resend verification.");
@@ -162,17 +227,6 @@ function Login() {
             setError("Failed to resend verification email. Please try again.");
         }
     }
-
-    function handleEmail(event) {
-        setEmail(event.target.value);
-        // Reset unverified status and resend status when email changes
-        setIsUnverifiedEmail(false);
-        setResendStatus({ sent: false, loading: false });
-    }
-    
-    function handlePassword(event) {
-        setPassword(event.target.value);
-    }
     
     function toggleVisibility() {
         setVisible((prev) => !prev);
@@ -187,13 +241,13 @@ function Login() {
                         <div className="input-email">
                             <input type="email" 
                                 placeholder="Email"
-                                onChange={handleEmail}
+                                onChange={handleEmailChange}
                                 value={email} />
                         </div>
                         <div className="input-password">
                             <input type={visible ? "text" : "password"}
                                 placeholder="Password"
-                                onChange={handlePassword}
+                                onChange={handlePasswordChange}
                                 value={password} 
                             />
                             {

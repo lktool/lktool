@@ -18,40 +18,12 @@ from .utils import verify_email_token, send_verification_email, build_frontend_u
 import threading
 from django.db import transaction
 import logging
+from django.utils.decorators import method_decorator
+from django.views.decorators.cache import cache_page
+from django.views.decorators.vary import vary_on_headers
 
 logger = logging.getLogger(__name__)
 User = get_user_model()
-
-# Function to send email in background
-def send_email_async(subject, message, from_email, recipient_list, html_message=None):
-    try:
-        logger.info(f"Sending email to: {recipient_list} with subject: {subject}")
-        
-        send_mail(
-            subject,
-            message,
-            from_email,
-            recipient_list,
-            fail_silently=False,
-            html_message=html_message
-        )
-        
-        logger.info(f"Email sent successfully to: {recipient_list}")
-    except Exception as e:
-        logger.error(f"Failed to send email: {str(e)}")
-        
-        # Print detailed error for debugging
-        if settings.DEBUG:
-            import traceback
-            print("\n--------------------------------")
-            print("EMAIL SENDING ERROR")
-            print("--------------------------------")
-            print(f"To: {recipient_list}")
-            print(f"Subject: {subject}")
-            print(f"From: {from_email}")
-            print(f"Error: {str(e)}")
-            print(traceback.format_exc())
-            print("--------------------------------\n")
 
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
@@ -307,6 +279,8 @@ class UserProfileView(APIView):
     """
     permission_classes = (permissions.IsAuthenticated,)  # Ensure this is set
          
+    @method_decorator(cache_page(60 * 5))  # Cache for 5 minutes
+    @method_decorator(vary_on_headers('Authorization'))
     def get(self, request):
         if not request.user.is_authenticated:
             return Response({"detail": "Authentication credentials were not provided."},

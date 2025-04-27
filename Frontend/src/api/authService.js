@@ -7,7 +7,7 @@ const apiClient = axios.create({
     headers: {
         'Content-Type': 'application/json',
     },
-    timeout: 20000, // 20 second timeout
+    timeout: 30000, // Increased timeout to 30 seconds
     withCredentials: true,  // Important for CORS with credentials
 });
 
@@ -140,7 +140,38 @@ apiClient.interceptors.request.use(
     }
 );
 
-// Enhanced auth service with better error handling
+// Create a Map to track active requests
+const activeRequests = new Map();
+
+// Add a memory cache for common data
+const memoryCache = {
+    data: new Map(),
+    set(key, value, ttl = 60000) { // Default 1 minute TTL
+        const item = {
+            value,
+            expiry: Date.now() + ttl
+        };
+        this.data.set(key, item);
+    },
+    get(key) {
+        const item = this.data.get(key);
+        if (!item) return null;
+        
+        if (Date.now() > item.expiry) {
+            this.data.delete(key);
+            return null;
+        }
+        
+        return item.value;
+    },
+    delete(key) {
+        this.data.delete(key);
+    },
+    clear() {
+        this.data.clear();
+    }
+};
+
 export const authService = {
     // Register a new user with improved error handling
     async register(email, password, password2) {
@@ -194,55 +225,125 @@ export const authService = {
         }
     },
 
-    // Login user with better error handling
+    // Login user with better error handling and performance
     async login(email, password) {
         try {
-            // Debug info
-            console.log(`Sending login request from ${window.location.origin} to ${getApiUrl(API_CONFIG.AUTH.LOGIN)}`);
+            // Only log in development to reduce console spam
+            if (process.env.NODE_ENV === 'development') {
+                console.log(`Sending login request to ${getApiUrl(API_CONFIG.AUTH.LOGIN)}`);
+            }
             
-            // Use abort controller for timeout
+            // Cancel any existing login requests
+            if (activeRequests.has('login')) {
+                activeRequests.get('login').abort();
+                activeRequests.delete('login');
+            }
+            
+            // Create new AbortController with shorter timeout
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 15000);
+            activeRequests.set('login', controller);
             
-            // FORMAT FIX: Make sure email is trimmed and lowercase for consistency
+            // Reduce timeout to 10 seconds for faster feedback
+            const timeoutId = setTimeout(() => {
+                if (!controller.signal.aborted) {
+                    controller.abort('Request timeout');
+                }
+            }, 10000);
+            
             const formattedEmail = email.trim().toLowerCase();
             
-            // Use regular axios for authentication requests
+            // Add timestamp to prevent caching issues
+            const timestamp = new Date().getTime();
+            const url = `${getApiUrl(API_CONFIG.AUTH.LOGIN)}?_=${timestamp}`;
+            
             const response = await axios.post(
-                getApiUrl(API_CONFIG.AUTH.LOGIN), 
-                { 
-                    email: formattedEmail, 
-                    password: password 
-                },
-                { 
+                url, 
+                { email: formattedEmail, password }, 
+                {
                     headers: { 'Content-Type': 'application/json' },
                     signal: controller.signal,
-                    withCredentials: true // Important for CORS
+                    withCredentials: true,
+                    // Reduce axios timeout to match our manual timeout
+                    timeout: 10000
                 }
             );
             
             clearTimeout(timeoutId);
+            activeRequests.delete('login');
             
             if (response.data.access) {
+                // Store tokens with improved caching
                 tokenCache.setToken(response.data.access);
                 localStorage.setItem('refreshToken', response.data.refresh);
-                
-                // Also store the user's email for later use
                 localStorage.setItem('user_email', formattedEmail);
+                
+                // Pre-fetch user profile data if needed
+                this.prefetchUserData();
             }
             
             return response.data;
         } catch (error) {
             // Enhanced error logging
-            console.error('Login error details:', error.response?.data || error.message);
-            console.error('Full error object:', error);
+            console.log('Login error details:', error.message || 'Unknown error');
+            console.log('Full error object:', error);
             
-            if (error.name === 'AbortError') {
-                throw new Error('Request timeout');
+            // Clean up timeout and active request
+            clearTimeout(timeoutId);
+            activeRequests.delete('login');
+            
+            // Handle specific error types
+            if (error.name === 'AbortError' || error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
+                if (error.message === 'Request timeout') {
+                    throw new Error('Login request timed out. Please try again.');
+                } else {
+                    throw new Error('Login request was canceled. Please try again.');
+                }
+            }
+            
+            // Handle other specific errors from the server
+            if (error.response?.data?.email) {
+                throw new Error(`Email error: ${error.response.data.email[0]}`);
+            } else if (error.response?.data?.detail) {
+                throw new Error(error.response.data.detail);
+            } else if (error.response?.status === 401) {
+                throw new Error("Invalid email or password");
+            } else if (error.message && (error.message.includes('CORS') || error.message.includes('Network Error'))) {
+                throw new Error("Cannot connect to the server. This may be a CORS or network issue.");
             }
             
             throw error;
         }
+    },
+    
+    // Prefetch user data after login to make subsequent pages load faster
+    async prefetchUserData() {
+        try {
+            // Check if we already have cached data
+            if (memoryCache.get('user_profile')) {
+                return memoryCache.get('user_profile');
+            }
+            
+            const response = await apiClient.get(API_CONFIG.AUTH.USER_PROFILE);
+            if (response.data) {
+                // Cache in memory for faster access
+                memoryCache.set('user_profile', response.data, 60000); // 1 minute cache
+                
+                // Also update localStorage for persistence between refreshes
+                localStorage.setItem('user_data', JSON.stringify(response.data));
+                return response.data;
+            }
+        } catch (error) {
+            console.log('Could not prefetch user data:', error.message);
+            // Don't throw - this is just an optimization
+        }
+    },
+    
+    // Clean up any active requests (call this on component unmount)
+    cancelActiveRequests() {
+        activeRequests.forEach((controller, key) => {
+            controller.abort();
+        });
+        activeRequests.clear();
     },
 
     // Enhanced token validation to prevent unauthorized access
