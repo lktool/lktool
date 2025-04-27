@@ -30,7 +30,7 @@ def verify_email_token(token, max_age=86400):  # Default: 24 hours expiry
         return False  # Token invalid
 
 def build_frontend_url(path):
-    """Build a properly formatted frontend URL that works with HashRouter"""
+    """Build a properly formatted frontend URL (no HashRouter, no #)"""
     frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:5173')
     
     # Remove trailing slashes to prevent double slashes
@@ -41,8 +41,8 @@ def build_frontend_url(path):
     if not path.startswith('/'):
         path = '/' + path
     
-    # For HashRouter, include the # in the URL
-    return f"{frontend_url}/#" + path
+    # Directly append path (no '#' anymore)
+    return f"{frontend_url}{path}"
 
 def send_verification_email(user):
     """Send verification email with both HTML and plain text versions"""
