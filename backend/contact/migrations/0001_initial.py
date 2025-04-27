@@ -1,3 +1,4 @@
+# Initial migration for ContactSubmission model
 from django.db import migrations, models
 
 
