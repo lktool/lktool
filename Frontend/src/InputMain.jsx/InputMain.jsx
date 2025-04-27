@@ -2,6 +2,7 @@ import {useState, useEffect} from "react";
 import NavBar from "../NavBar/NavBar";
 import "./InputMain.css";
 import { contactService } from "../api/contactService";
+import { useNavigate } from "react-router-dom";
 
 function InputMain(){
     const [url, setUrl] = useState("");
@@ -9,8 +10,17 @@ function InputMain(){
     const [email, setEmail] = useState("");
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
-    const [loading, setLoading] = useState("");
+    const [loading, setLoading] = useState(false);
     const [csrfError, setCsrfError] = useState(false);
+    const navigate = useNavigate();
+    
+    useEffect(() => {
+        // Try to load user's email if available
+        const storedEmail = localStorage.getItem('user_email');
+        if (storedEmail) {
+            setEmail(storedEmail);
+        }
+    }, []);
 
     function handleUrlChange(event){
         setUrl(event.target.value);
@@ -77,13 +87,13 @@ function InputMain(){
             setSuccess(response.message || "Your message has been sent successfully!");
             setUrl("");
             setMessage("");
-            setEmail("");
+            // Don't clear email for convenience
             
         } catch(err) {
             console.error("Error submitting contact form:", err);
             
             // Handle CSRF errors
-            if (err.isCsrfError) {
+            if (err.isCsrfError || (err.error && err.error.includes('CSRF'))) {
                 setError("CSRF verification failed. Please refresh the page and try again.");
                 setCsrfError(true);
                 return;
@@ -93,8 +103,8 @@ function InputMain(){
             if (err.isAuthError || err.error === 'No authentication token available. Please login again.') {
                 setError("Authentication required. Please log in again.");
                 setTimeout(() => {
-                    window.location.href = "/login"; // Removed hash
-                }, 2000);
+                    navigate("/login");
+                }, 1500);
                 return;
             }
             
@@ -180,7 +190,7 @@ function InputMain(){
                     <p>{error}</p>
                     {csrfError && (
                         <button 
-                            className="refresh-button"
+                            className="refresh-button" 
                             onClick={() => window.location.reload()}
                         >
                             Refresh Page

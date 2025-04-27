@@ -181,9 +181,8 @@ export const authService = {
             // Add debug info for CORS troubleshooting
             console.log(`Sending request from ${window.location.origin} to ${getApiUrl(API_CONFIG.AUTH.SIGNUP)}`);
             
-            // Use controller to implement timeout
+            // Create controller for request cancellation, but without timeout
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
             
             const response = await axios.post(
                 getApiUrl(API_CONFIG.AUTH.SIGNUP), 
@@ -200,8 +199,6 @@ export const authService = {
                 }
             );
             
-            clearTimeout(timeoutId);
-            
             if (response.data.token) {
                 tokenCache.setToken(response.data.token);
             }
@@ -211,10 +208,6 @@ export const authService = {
             // Enhanced error logging
             console.error('Registration error details:', error.response?.data || error.message);
             console.error('Full error object:', error);
-            
-            if (error.name === 'AbortError') {
-                throw new Error('Request timeout');
-            }
             
             // Special handling for CORS errors
             if (error.message && error.message.includes('Network Error')) {
@@ -239,16 +232,9 @@ export const authService = {
                 activeRequests.delete('login');
             }
             
-            // Create new AbortController with shorter timeout
+            // Create new AbortController without timeout
             const controller = new AbortController();
             activeRequests.set('login', controller);
-            
-            // Reduce timeout to 10 seconds for faster feedback
-            const timeoutId = setTimeout(() => {
-                if (!controller.signal.aborted) {
-                    controller.abort('Request timeout');
-                }
-            }, 10000);
             
             const formattedEmail = email.trim().toLowerCase();
             
@@ -262,13 +248,10 @@ export const authService = {
                 {
                     headers: { 'Content-Type': 'application/json' },
                     signal: controller.signal,
-                    withCredentials: true,
-                    // Reduce axios timeout to match our manual timeout
-                    timeout: 10000
+                    withCredentials: true
                 }
             );
             
-            clearTimeout(timeoutId);
             activeRequests.delete('login');
             
             if (response.data.access) {
@@ -287,17 +270,12 @@ export const authService = {
             console.log('Login error details:', error.message || 'Unknown error');
             console.log('Full error object:', error);
             
-            // Clean up timeout and active request
-            clearTimeout(timeoutId);
+            // Clean up active request
             activeRequests.delete('login');
             
-            // Handle specific error types
-            if (error.name === 'AbortError' || error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
-                if (error.message === 'Request timeout') {
-                    throw new Error('Login request timed out. Please try again.');
-                } else {
-                    throw new Error('Login request was canceled. Please try again.');
-                }
+            // Handle specific error types - removed timeout specific error handling
+            if (error.name === 'CanceledError' || error.code === 'ERR_CANCELED') {
+                throw new Error('Login request was canceled. Please try again.');
             }
             
             // Handle other specific errors from the server

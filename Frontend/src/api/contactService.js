@@ -11,18 +11,9 @@ export const contactService = {
     try {
       console.log('Submitting contact form data');
       
-      // Verify authentication before submission
-      const token = localStorage.getItem('token');
-      if (!token) {
-        throw { 
-          error: 'No authentication token available. Please login again.',
-          isAuthError: true
-        };
-      }
-      
-      // FIXED: Use the correct API endpoint path with /api prefix
+      // Use the configured axios instance which already handles authentication
       const response = await axiosInstance.post(
-        '/api/contact/submit/', // Fixed path to match backend URLs
+        '/api/contact/submit/', // Fixed: add the missing /api/ prefix
         {
           linkedin_url: linkedinUrl,
           message,
