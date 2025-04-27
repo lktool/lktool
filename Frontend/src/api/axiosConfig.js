@@ -1,25 +1,66 @@
 import axios from 'axios';
+import { API_CONFIG } from './apiConfig';
 
-// Create axios instance with base URL
+// Function to get CSRF token from cookies
+function getCsrfToken() {
+  const name = 'csrftoken=';
+  const decodedCookie = decodeURIComponent(document.cookie);
+  const cookieArray = decodedCookie.split(';');
+  
+  for (let i = 0; i < cookieArray.length; i++) {
+    let cookie = cookieArray[i].trim();
+    if (cookie.indexOf(name) === 0) {
+      return cookie.substring(name.length, cookie.length);
+    }
+  }
+  return null;
+}
+
+// Create an axios instance with base configuration
 const axiosInstance = axios.create({
-  baseURL: 'https://lktool.onrender.com/api',
+  baseURL: API_CONFIG?.API_URL || 'https://lktool.onrender.com',  // No /api prefix here
   headers: {
     'Content-Type': 'application/json',
   },
-  // Add CORS-specific configuration
-  withCredentials: true
+  timeout: 15000, // 15 second timeout
+  withCredentials: true, // Important for CORS with credentials
 });
 
-// Add request interceptor to add auth token to every request
+// Add request interceptor to include auth token and CSRF token on every request
 axiosInstance.interceptors.request.use(
   (config) => {
-    // Add logging for debugging CORS issues
-    console.log(`Making ${config.method} request to: ${config.url}`);
+    // Get the token from localStorage
+    const token = localStorage.getItem('token');
     
-    const token = localStorage.getItem('token') || localStorage.getItem('accessToken');
+    // If token exists, add it to the headers
     if (token) {
-      config.headers['Authorization'] = `Bearer ${token}`;
+      try {
+        // Try to parse the token in case it's stored as a JSON object
+        let tokenValue = token;
+        try {
+          const parsedToken = JSON.parse(token);
+          if (parsedToken.value) {
+            tokenValue = parsedToken.value;
+          }
+        } catch (e) {
+          // Not JSON, use as is
+        }
+        
+        // Add Authorization header with Bearer token
+        config.headers['Authorization'] = `Bearer ${tokenValue}`;
+      } catch (error) {
+        console.error('Error setting auth header:', error);
+      }
     }
+    
+    // Get CSRF token from cookies and add to headers for non-GET requests
+    if (config.method !== 'get') {
+      const csrfToken = getCsrfToken();
+      if (csrfToken) {
+        config.headers['X-CSRFToken'] = csrfToken;
+      }
+    }
+    
     return config;
   },
   (error) => {
@@ -27,29 +68,28 @@ axiosInstance.interceptors.request.use(
   }
 );
 
-// Add response interceptor with better CORS error handling
+// Response interceptor remains the same
 axiosInstance.interceptors.response.use(
   (response) => {
     return response;
   },
-  (error) => {
-    // Special handling for CORS and network errors
-    if (error.message === 'Network Error') {
-      console.error('CORS or Network Error:', error);
+  async (error) => {
+    // Handle 401 Unauthorized errors
+    if (error.response && error.response.status === 401) {
+      // Clear invalid tokens
+      localStorage.removeItem('token');
+      localStorage.removeItem('refreshToken');
       
-      // Provide better user feedback for CORS issues
-      const customError = new Error(
-        'Unable to connect to the server. This may be due to a CORS policy restriction or network issue.'
-      );
-      customError.isCorsError = true;
-      customError.originalError = error;
-      return Promise.reject(customError);
+      // Add a flag to indicate auth issues
+      error.isAuthError = true;
+      
+      // Store redirect reason
+      localStorage.setItem('auth_redirect_reason', 'login_required');
     }
     
-    // Handle 401 errors (unauthorized)
-    if (error.response && error.response.status === 401) {
-      localStorage.removeItem('token');
-      localStorage.removeItem('accessToken');
+    // Handle CORS errors
+    if (error.message === 'Network Error') {
+      error.isCorsError = true;
     }
     
     return Promise.reject(error);

@@ -1,4 +1,4 @@
-import {useState} from "react";
+import {useState, useEffect} from "react";
 import NavBar from "../NavBar/NavBar";
 import "./InputMain.css";
 import { contactService } from "../api/contactService";
@@ -9,7 +9,8 @@ function InputMain(){
     const [email, setEmail] = useState("");
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState("");
+    const [csrfError, setCsrfError] = useState(false);
 
     function handleUrlChange(event){
         setUrl(event.target.value);
@@ -38,6 +39,7 @@ function InputMain(){
         // Reset messages
         setError("");
         setSuccess("");
+        setCsrfError(false);
         
         // Validate all fields
         if(!url){
@@ -80,8 +82,15 @@ function InputMain(){
         } catch(err) {
             console.error("Error submitting contact form:", err);
             
+            // Handle CSRF errors
+            if (err.isCsrfError) {
+                setError("CSRF verification failed. Please refresh the page and try again.");
+                setCsrfError(true);
+                return;
+            }
+            
             // Handle authentication errors
-            if (err.error === 'No authentication token available. Please login again.') {
+            if (err.isAuthError || err.error === 'No authentication token available. Please login again.') {
                 setError("Authentication required. Please log in again.");
                 setTimeout(() => {
                     window.location.href = "/login"; // Removed hash
@@ -169,6 +178,14 @@ function InputMain(){
             {error && (
                 <div className="inputMain-display-error">
                     <p>{error}</p>
+                    {csrfError && (
+                        <button 
+                            className="refresh-button"
+                            onClick={() => window.location.reload()}
+                        >
+                            Refresh Page
+                        </button>
+                    )}
                 </div>
             )}
             

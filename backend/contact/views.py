@@ -5,6 +5,8 @@ from django.core.mail import EmailMessage
 from django.conf import settings
 import threading
 import logging
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
 
 from .serializers import ContactSerializer
 from .models import ContactSubmission
@@ -47,6 +49,8 @@ def send_contact_email_async(subject, message, from_email, recipient_list, reply
             print(traceback.format_exc())
             print("--------------------------------\n")
 
+# Add CSRF exemption since we're using JWT authentication
+@method_decorator(csrf_exempt, name='dispatch')
 class ContactFormView(APIView):
     """
     View to handle contact form submissions
