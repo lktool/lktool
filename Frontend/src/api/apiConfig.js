@@ -3,7 +3,7 @@ const API_BASE_URL = 'https://lktool.onrender.com';
 
 // API endpoint configuration
 export const API_CONFIG = {
-  API_URL: API_BASE_URL,
+  API_URL: import.meta.env.VITE_API_BASE_URL || 'https://lktool.onrender.com',
   AUTH: {
     SIGNUP: '/api/auth/signup/',
     LOGIN: '/api/auth/login/',

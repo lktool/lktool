@@ -83,9 +83,10 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    'django.middleware.cache.UpdateCacheMiddleware',  # Add at start
+    'django.middleware.cache.UpdateCacheMiddleware',  # This is already first
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
+    'django.middleware.gzip.GZipMiddleware',  # Add GZip here
     'whitenoise.middleware.WhiteNoiseMiddleware',
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -276,3 +277,14 @@ if DEBUG:
     print(f"DEFAULT_FROM_EMAIL: {DEFAULT_FROM_EMAIL}")
     print(f"FRONTEND_URL: {FRONTEND_URL}")
     print("-------------------------\n")
+
+# Add these production security settings at the end of the file
+SECURE_SSL_REDIRECT = True
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+SECURE_HSTS_SECONDS = 31536000
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_HSTS_PRELOAD = True
+
+# If behind a proxy/load balancer (like Render uses)
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
