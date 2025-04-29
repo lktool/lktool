@@ -17,53 +17,64 @@ function Signup() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const signupAttemptRef = useRef(null); // For debouncing signup attempts
-  const [validationErrors, setValidationErrors] = useState({
-    email: '',
-    password: '',
-    confirmPassword: ''
-  });
+  const [formErrors, setFormErrors] = useState([]); // Collect all errors in a single array
 
   const navigate = useNavigate();
 
-  // Enhanced client-side validation
+  // Modified validation to collect all errors in one array
   const validateForm = () => {
-    const errors = {
-      email: '',
-      password: '',
-      confirmPassword: ''
-    };
-    let isValid = true;
+    const errors = [];
 
     // Email validation
     if (!email.trim()) {
-      errors.email = "Email is required";
-      isValid = false;
+      errors.push("Email is required");
     } else if (!validateEmail(email)) {
-      errors.email = "Please provide valid Email address";
-      isValid = false;
+      errors.push("Please provide valid Email address");
     }
 
     // Password validation
     if (!password) {
-      errors.password = "Password is required";
-      isValid = false;
+      errors.push("Password is required");
     } else if (password.length < 8) {
-      errors.password = "Password must be at least 8 characters";
-      isValid = false;
+      errors.push("Password must be at least 8 characters");
     }
 
     // Confirm password validation
     if (!confirmPassword) {
-      errors.confirmPassword = "Please confirm your password";
-      isValid = false;
+      errors.push("Please confirm your password");
     } else if (password !== confirmPassword) {
-      errors.confirmPassword = "Passwords do not match";
-      isValid = false;
+      errors.push("Passwords do not match");
     }
 
-    setValidationErrors(errors);
-    return isValid;
+    setFormErrors(errors);
+    return errors.length === 0;
   };
+
+  function handleEmail(event) {
+    setEmail(event.target.value);
+    setError(null);
+    setFormErrors([]);
+  }
+  
+  function handlePassword(event) {
+    setPassword(event.target.value);
+    setError(null);
+    setFormErrors([]);
+  }
+
+  function handleConfirmPassword(event) {
+    setConfirmPassword(event.target.value);
+    setError(null);
+    setFormErrors([]);
+  }
+  
+  function togglePasswordVisibility() {
+    setPasswordVisible((prev) => !prev);
+  }
+
+  function toggleConfirmVisibility() {
+    setConfirmVisible((prev) => !prev);
+  }
 
   async function handleSubmit(event) {
     event.preventDefault();
@@ -113,31 +124,6 @@ function Signup() {
     }, 100); // Small timeout to prevent multiple submissions
   }
 
-  function handleEmail(event) {
-    setEmail(event.target.value);
-  }
-  
-  function handlePassword(event) {
-    setPassword(event.target.value);
-  }
-
-  function handleConfirmPassword(event) {
-    setConfirmPassword(event.target.value);
-  }
-  
-  function togglePasswordVisibility() {
-    setPasswordVisible((prev) => !prev);
-  }
-
-  function toggleConfirmVisibility() {
-    setConfirmVisible((prev) => !prev);
-  }
-
-  // Display immediate inline validation feedback
-  const getInputClassName = (field) => {
-    return validationErrors[field] ? 'input-error' : '';
-  };
-
   // Display verification instructions if registration was successful
   if (success) {
     return (
@@ -173,9 +159,7 @@ function Signup() {
                 placeholder="Email"
                 onChange={handleEmail}
                 value={email}
-                className={getInputClassName('email')}
               />
-              {validationErrors.email && <p className="error-message">{validationErrors.email}</p>}
             </div>
             <div className="input-password">
               <input
@@ -183,7 +167,6 @@ function Signup() {
                 placeholder="Create password"
                 onChange={handlePassword}
                 value={password}
-                className={getInputClassName('password')}
               />
               {passwordVisible ? (
                 <AiOutlineEye
@@ -196,7 +179,6 @@ function Signup() {
                   onClick={togglePasswordVisibility}
                 />
               )}
-              {validationErrors.password && <p className="error-message">{validationErrors.password}</p>}
             </div>
             <div className="input-password">
               <input
@@ -204,7 +186,6 @@ function Signup() {
                 placeholder="Confirm password"
                 onChange={handleConfirmPassword}
                 value={confirmPassword}
-                className={getInputClassName('confirmPassword')}
               />
               {confirmVisible ? (
                 <AiOutlineEye
@@ -217,9 +198,17 @@ function Signup() {
                   onClick={toggleConfirmVisibility}
                 />
               )}
-              {validationErrors.confirmPassword && <p className="error-message">{validationErrors.confirmPassword}</p>}
             </div>
-            {error && <p className="error-message">{error}</p>}
+            
+            {/* Display all errors at bottom of form */}
+            {(formErrors.length > 0 || error) && (
+              <div className="form-errors">
+                {formErrors.map((err, index) => (
+                  <p key={index} className="error-message">{err}</p>
+                ))}
+                {error && <p className="error-message">{error}</p>}
+              </div>
+            )}
 
             <button className="signup-btn" type="submit" disabled={loading}>
               {loading ? "Signing up..." : "Signup"}
@@ -243,4 +232,5 @@ function Signup() {
     </>
   );
 }
+
 export default Signup;

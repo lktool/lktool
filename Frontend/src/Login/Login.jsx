@@ -18,11 +18,8 @@ function Login() {
     const loginAttemptRef = useRef(null);
     const navigate = useNavigate();
     
-    // Add validation errors object similar to signup page
-    const [validationErrors, setValidationErrors] = useState({
-        email: '',
-        password: ''
-    });
+    // Collect all errors in a single array instead of field-specific objects
+    const [formErrors, setFormErrors] = useState([]);
 
     // Clean up requests when component unmounts
     useEffect(() => {
@@ -34,31 +31,25 @@ function Login() {
         };
     }, []);
 
-    // Improved validation that sets field-specific errors
+    // Modified validation to collect all errors in one array
     const validateForm = () => {
-        const errors = {
-            email: '',
-            password: ''
-        };
-        let isValid = true;
-
+        const errors = [];
+        
         // Email validation
         if (!email.trim()) {
-            errors.email = "Email is required";
-            isValid = false;
+            errors.push("Email is required");
         } else if (!validateEmail(email)) {
-            errors.email = "Please provide valid Email address";
-            isValid = false;
+            errors.push("Please provide valid Email address");
         }
 
         // Password validation
         if (!password) {
-            errors.password = "Password is required";
-            isValid = false;
+            errors.push("Password is required");
         }
         
-        setValidationErrors(errors);
-        return isValid;
+        // Set all errors at once
+        setFormErrors(errors);
+        return errors.length === 0;
     };
 
     // Improved authentication checking
@@ -96,31 +87,17 @@ function Login() {
     function handleEmailChange(event) {
         setEmail(event.target.value);
         
-        // Just reset errors and statuses
+        // Reset errors and statuses
         setIsUnverifiedEmail(false);
         setResendStatus({ sent: false, loading: false });
-        
-        // Clear general error
         setError("");
-        
-        // Clear validation errors when typing
-        setValidationErrors({
-            ...validationErrors,
-            email: ''
-        });
+        setFormErrors([]); // Clear all form errors
     }
 
     function handlePasswordChange(event) {
         setPassword(event.target.value);
-        
-        // Clear error as user types
         setError("");
-        
-        // Clear validation errors when typing
-        setValidationErrors({
-            ...validationErrors,
-            password: ''
-        });
+        setFormErrors([]); // Clear all form errors
     }
 
     async function handleSubmit(event) {
@@ -220,11 +197,6 @@ function Login() {
     function toggleVisibility() {
         setVisible((prev) => !prev);
     }
-    
-    // Display helper function for field errors
-    const getInputClassName = (field) => {
-        return validationErrors[field] ? 'input-error' : '';
-    };
 
     return (<>
         <div className="container2">
@@ -238,10 +210,7 @@ function Login() {
                                 placeholder="Email"
                                 onChange={handleEmailChange}
                                 value={email}
-                                className={getInputClassName('email')}
                             />
-                            {validationErrors.email && 
-                                <p className="error-message">{validationErrors.email}</p>}
                         </div>
                         <div className="input-password">
                             <input 
@@ -249,19 +218,24 @@ function Login() {
                                 placeholder="Password"
                                 onChange={handlePasswordChange}
                                 value={password}
-                                className={getInputClassName('password')}
                             />
                             {
                                 visible ? <AiOutlineEye className="eye-icon" onClick={toggleVisibility}/> :
                                 <AiOutlineEyeInvisible className="eye-icon" onClick={toggleVisibility}/>
                             }
-                            {validationErrors.password && 
-                                <p className="error-message">{validationErrors.password}</p>}
                         </div>
                         
-                        {/* General error messages */}
-                        {error && !validationErrors.email && !validationErrors.password && 
-                            <p className="error-message">{error}</p>}
+                        <Link to="/forgot-password">Forgot Password?</Link>
+                        
+                        {/* Display all errors at bottom of form */}
+                        {(formErrors.length > 0 || error) && (
+                            <div className="form-errors">
+                                {formErrors.map((err, index) => (
+                                    <p key={index} className="error-message">{err}</p>
+                                ))}
+                                {error && <p className="error-message">{error}</p>}
+                            </div>
+                        )}
 
                         {/* Show CORS error info if detected */}
                         {corsError && (
@@ -290,7 +264,6 @@ function Login() {
                             </div>
                         )}
                         
-                        <Link to="/forgot-password">Forgot Password?</Link>
                         <div className="control">
                             <button className="login-btn" type="submit" disabled={loading}>
                                 {loading ? 'Logging in...' : 'Login'}
