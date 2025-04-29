@@ -229,11 +229,10 @@ function Login() {
                         
                         {/* Modified: Display only one error message at a time */}
                         {(formErrors.length > 0 || error) && (
-                            <div className="form-errors">
+                            
                                 <p className="error-message">
                                     {formErrors.length > 0 ? formErrors[0] : error}
-                                </p>
-                            </div>
+                           </p>
                         )}
 
                         {/* Show CORS error info if detected */}

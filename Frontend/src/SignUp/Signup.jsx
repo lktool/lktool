@@ -202,11 +202,11 @@ function Signup() {
             
             {/* Modified: Display only one error message at a time */}
             {(formErrors.length > 0 || error) && (
-              <div className="form-errors">
+              
                 <p className="error-message">
                   {formErrors.length > 0 ? formErrors[0] : error}
                 </p>
-              </div>
+              
             )}
 
             <button className="signup-btn" type="submit" disabled={loading}>
