@@ -200,13 +200,12 @@ function Signup() {
               )}
             </div>
             
-            {/* Display all errors at bottom of form */}
+            {/* Modified: Display only one error message at a time */}
             {(formErrors.length > 0 || error) && (
               <div className="form-errors">
-                {formErrors.map((err, index) => (
-                  <p key={index} className="error-message">{err}</p>
-                ))}
-                {error && <p className="error-message">{error}</p>}
+                <p className="error-message">
+                  {formErrors.length > 0 ? formErrors[0] : error}
+                </p>
               </div>
             )}
 
