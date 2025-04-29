@@ -130,12 +130,12 @@ input[type="text"]:focus,input[type="password"]:focus,input[type="email"]:focus 
 .eye-icon:hover{
     cursor: pointer;
 }
-/* Updated error styling with more visible background */
+/* Fixed error styling with clean background */
 .form-errors {
   margin-top: 15px;
   margin-bottom: 15px;
   padding: 12px 16px;
-  background-color: rgba(254, 236, 234, 0.9); /* More visible pink/red background with higher opacity */
+  background-color: #fff; /* Clean white background */
   border-radius: 6px;
   border-left: 4px solid #e74c3c;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
