@@ -1,12 +1,7 @@
 from django.urls import path
 from rest_framework_simplejwt.views import TokenRefreshView
-from .views import (
-    RegisterView, CustomTokenObtainPairView,
-    PasswordResetView, PasswordResetConfirmView,
-    UserProfileView, EmailVerificationView, ResendVerificationEmailView,
-    VerifyTokenView, CheckEmailStatusView  # Add it to the imports
-)
-from .google_auth import GoogleAuthView
+# Add the missing import for LoginView - fix the NameError 
+from .views import LoginView, CustomTokenObtainPairView, RegisterView, UserView, VerifyEmailView, ResendVerificationView
 
 urlpatterns = [
     path('auth/signup/', RegisterView.as_view(), name='auth_register'),

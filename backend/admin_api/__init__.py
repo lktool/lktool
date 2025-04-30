@@ -1,1 +1,1 @@
-# Initialize admin_api package
+# Admin API package initialization

@@ -5,6 +5,7 @@ import { getApiUrl } from './apiConfig';
 const ADMIN_ENDPOINTS = {
   FORM_SUBMISSIONS: '/api/admin/submissions/',
   FORM_SUBMISSION_DETAIL: '/api/admin/submissions/:id/',
+  ADMIN_STATS: '/api/admin/stats/'
 };
 
 // Create authenticated admin API client
@@ -24,10 +25,11 @@ export const adminService = {
    * Get all form submissions
    * @returns {Promise<Array>} Array of form submissions
    */
-  async getFormSubmissions() {
+  async getFormSubmissions(queryString = '') {
     try {
       const apiClient = createAdminApiClient();
-      const response = await apiClient.get(getApiUrl(ADMIN_ENDPOINTS.FORM_SUBMISSIONS));
+      const endpoint = `${ADMIN_ENDPOINTS.FORM_SUBMISSIONS}${queryString}`;
+      const response = await apiClient.get(getApiUrl(endpoint));
       return response.data;
     } catch (error) {
       console.error('Error fetching form submissions:', error);
@@ -43,23 +45,6 @@ export const adminService = {
   },
 
   /**
-   * Get a single form submission by ID
-   * @param {number} id - The submission ID
-   * @returns {Promise<Object>} The form submission
-   */
-  async getFormSubmission(id) {
-    try {
-      const apiClient = createAdminApiClient();
-      const url = ADMIN_ENDPOINTS.FORM_SUBMISSION_DETAIL.replace(':id', id);
-      const response = await apiClient.get(getApiUrl(url));
-      return response.data;
-    } catch (error) {
-      console.error(`Error fetching form submission ${id}:`, error);
-      throw error;
-    }
-  },
-  
-  /**
    * Update a submission's processed status
    * @param {number} id - The submission ID
    * @param {boolean} isProcessed - New processed status
@@ -74,6 +59,25 @@ export const adminService = {
     } catch (error) {
       console.error(`Error updating form submission ${id}:`, error);
       throw error;
+    }
+  },
+
+  /**
+   * Get admin dashboard statistics
+   * @returns {Promise<Object>} Statistics object
+   */
+  async getStats() {
+    try {
+      const apiClient = createAdminApiClient();
+      const response = await apiClient.get(getApiUrl(ADMIN_ENDPOINTS.ADMIN_STATS));
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching admin stats:', error);
+      return {
+        total_submissions: mockSubmissions.length,
+        processed_submissions: mockSubmissions.filter(s => s.is_processed).length,
+        pending_submissions: mockSubmissions.filter(s => !s.is_processed).length
+      };
     }
   }
 };

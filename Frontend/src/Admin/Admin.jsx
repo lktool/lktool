@@ -16,9 +16,9 @@ function Admin() {
   const [dataLoading, setDataLoading] = useState(false);
   const [filter, setFilter] = useState('all');
   
-  // Admin credentials - hardcoded (in a real app, this would be server-side)
-  const ADMIN_EMAIL = "admin@example.com";
-  const ADMIN_PASSWORD = "admin123";
+  // Admin credentials - update to your preferred values
+  const ADMIN_EMAIL = "admin@lktool.com";
+  const ADMIN_PASSWORD = "adminLK@123";
   
   // Check if admin is already logged in
   useEffect(() => {
