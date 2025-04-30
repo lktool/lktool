@@ -1,11 +1,21 @@
 from django.urls import path
 from rest_framework_simplejwt.views import TokenRefreshView
-# Add the missing import for LoginView - fix the NameError 
-from .views import LoginView, CustomTokenObtainPairView, RegisterView, UserView, VerifyEmailView, ResendVerificationView
+# Fix missing imports for views being referenced in urlpatterns
+from .views import (
+    CustomTokenObtainPairView, 
+    RegisterView, 
+    UserProfileView,
+    EmailVerificationView, 
+    ResendVerificationEmailView,
+    PasswordResetView,
+    PasswordResetConfirmView,
+    GoogleAuthView,
+    VerifyTokenView
+)
 
 urlpatterns = [
     path('auth/signup/', RegisterView.as_view(), name='auth_register'),
-    path('auth/login/', LoginView.as_view(), name='login'),
+    path('auth/login/', CustomTokenObtainPairView.as_view(), name='login'),
     path('auth/refresh/', TokenRefreshView.as_view(), name='auth_refresh'),
     path('auth/password-reset/', PasswordResetView.as_view(), name='password_reset'),
     path('auth/password-reset/<str:uidb64>/<str:token>/', 
