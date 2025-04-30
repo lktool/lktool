@@ -58,6 +58,7 @@ SECRET_KEY = "django-insecure-95udpxakz7tgh4@clqs(jqq=coel+k(ik@@2%4gg@g=00)96on
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False  # Turn off debug in production
 
+# Update ALLOWED_HOSTS to include all necessary domains
 ALLOWED_HOSTS = [
     'lktool.onrender.com',  # Your backend domain
     'localhost',
@@ -278,7 +279,10 @@ if DEBUG:
     print(f"FRONTEND_URL: {FRONTEND_URL}")
     print("-------------------------\n")
 
-# Add these production security settings at the end of the file
+# Remove the existing security settings which have syntax errors (they're using backticks)
+# And replace them with properly formatted security settings:
+
+# Production security settings
 SECURE_SSL_REDIRECT = True
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
@@ -288,3 +292,16 @@ SECURE_HSTS_PRELOAD = True
 
 # If behind a proxy/load balancer (like Render uses)
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+# Additional security settings
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+
+# Trust the Vercel frontend origin for CSRF
+CSRF_TRUSTED_ORIGINS = [
+    'https://projectsection-ten.vercel.app',
+    'https://lktools.onrender.com',
+]
+
+# Set X-Frame-Options to deny by default
+X_FRAME_OPTIONS = 'DENY'

@@ -10,7 +10,7 @@ from .google_auth import GoogleAuthView
 
 urlpatterns = [
     path('auth/signup/', RegisterView.as_view(), name='auth_register'),
-    path('auth/login/', CustomTokenObtainPairView.as_view(), name='auth_login'),
+    path('auth/login/', LoginView.as_view(), name='login'),
     path('auth/refresh/', TokenRefreshView.as_view(), name='auth_refresh'),
     path('auth/password-reset/', PasswordResetView.as_view(), name='password_reset'),
     path('auth/password-reset/<str:uidb64>/<str:token>/', 
