@@ -1,6 +1,6 @@
 from django.urls import path
 from rest_framework_simplejwt.views import TokenRefreshView
-# Fix missing imports for views being referenced in urlpatterns
+# Fix import error by only importing views that actually exist
 from .views import (
     CustomTokenObtainPairView, 
     RegisterView, 
@@ -9,7 +9,7 @@ from .views import (
     ResendVerificationEmailView,
     PasswordResetView,
     PasswordResetConfirmView,
-    GoogleAuthView,
+    # GoogleAuthView,  # Removed - this view doesn't exist
     VerifyTokenView
 )
 
@@ -21,7 +21,8 @@ urlpatterns = [
     path('auth/password-reset/<str:uidb64>/<str:token>/', 
          PasswordResetConfirmView.as_view(), name='password_reset_confirm'),
     path('auth/user/', UserProfileView.as_view(), name='user_profile'),
-    path('auth/google/', GoogleAuthView.as_view(), name='google_auth'),
+    # Comment out this path until GoogleAuthView is implemented
+    # path('auth/google/', GoogleAuthView.as_view(), name='google_auth'),
     path('auth/verify-email/', EmailVerificationView.as_view(), name='verify_email'),
     path('auth/resend-verification/', ResendVerificationEmailView.as_view(), name='resend_verification'),
     path('auth/verify-token/', VerifyTokenView.as_view(), name='verify_token'),
