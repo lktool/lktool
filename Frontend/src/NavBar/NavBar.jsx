@@ -1,9 +1,10 @@
 import "./NavBar.css";
-import {useNavigate} from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 
-function NavBar(){
+function NavBar() {
     const navigate = useNavigate();
+    const location = useLocation(); // Get current path
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     
     useEffect(() => {
@@ -12,23 +13,37 @@ function NavBar(){
         setIsLoggedIn(!!token);
     }, []);
 
-    function handleAdmin(){
-        // FIX: Always navigate to /admin route, not /formData
+    function handleAdmin() {
         navigate('/admin');
     }
     
-    function handleLogout(){
+    function handleHome() {
+        navigate('/');
+    }
+    
+    function handleFormData() {
+        navigate('/formData');
+    }
+    
+    function handleLogout() {
         // Clear user authentication data
         localStorage.removeItem('token');
+        localStorage.removeItem('adminToken');
         setIsLoggedIn(false);
         // Redirect to login page
         navigate('/login');
     }
+    
+    // Hide navbar on specific pages where it's not needed
+    const hideNavbarPaths = ['/login', '/signup', '/forgot-password'];
+    if (hideNavbarPaths.includes(location.pathname)) {
+        return null;
+    }
 
-    return (<>
+    return (
         <div className="navbar-container">
             <div className="navbar-content">
-                <div className="navbar-title">
+                <div className="navbar-title" onClick={handleHome}>
                     <h2>LK Tool Box</h2>
                 </div>
                 <div className="navbar-profiles-controls">
@@ -36,14 +51,19 @@ function NavBar(){
                         <a href="#" onClick={(e) => {e.preventDefault(); handleAdmin();}}>Admin</a>
                     </div>
                     {isLoggedIn && (
-                        <div className="navbar-Logout">
-                            <a href="" onClick={(e) => {e.preventDefault(); handleLogout();}}>Logout</a>
-                        </div>
+                        <>
+                            <div className="navbar-account">
+                                <a href="#" onClick={(e) => {e.preventDefault(); handleFormData();}}>Form Data</a>
+                            </div>
+                            <div className="navbar-Logout">
+                                <a href="#" onClick={(e) => {e.preventDefault(); handleLogout();}}>Logout</a>
+                            </div>
+                        </>
                     )}
                 </div>
             </div>
         </div>
-    </>);
+    );
 }
 
 export default NavBar;

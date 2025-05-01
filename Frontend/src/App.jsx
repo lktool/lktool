@@ -12,11 +12,15 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import VerifyEmail from "./VerifyEmail/VerifyEmail";  
 import FormData from "./FormData/FormDate";
 import AdminRoute from "./components/AdminRoute";
+import NavBar from "./NavBar/NavBar"; // Import NavBar component
 
 function App() {
   return (
     <>
       <Router>
+        {/* Add NavBar here so it appears on ALL pages */}
+        <NavBar />
+        
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<Landing />} />
