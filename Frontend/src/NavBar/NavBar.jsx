@@ -13,7 +13,7 @@ function NavBar(){
     }, []);
 
     function handleAdmin(){
-        navigate('/formData');
+        navigate('/admin');
     }
     
     function handleLogout(){
