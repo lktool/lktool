@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { adminService } from '../api/adminService';
 import './Admin.css';
 import LoadingSpinner from '../components/LoadingSpinner';
+import axios from 'axios';
 
 function Admin() {
   // Authentication state
@@ -27,7 +27,7 @@ function Admin() {
     setIsLoading(false);
   }, [navigate]);
   
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
@@ -39,25 +39,44 @@ function Admin() {
       return;
     }
     
-    // HARDCODED CREDENTIALS - match what's in Django settings.py
-    const ADMIN_EMAIL = "admin@gmail.com";
-    const ADMIN_PASSWORD = "adminLK@123";
-    
-    // Check credentials
-    if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
-      // Store admin authentication token
-      localStorage.setItem('adminToken', 'admin-auth-token');
-      setIsAuthenticated(true);
-      navigate('/formData');
-    } else {
-      setError('Invalid admin credentials');
+    try {
+      // IMPORTANT: Match exact credential format from backend settings.py
+      const response = await axios.post(
+        '/api/admin/login/', 
+        { 
+          email, 
+          password 
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+      
+      if (response.data && response.data.token) {
+        // Store the admin token
+        localStorage.setItem('adminToken', response.data.token);
+        setIsAuthenticated(true);
+        navigate('/formData');
+      } else {
+        setError('Authentication failed. Please try again.');
+      }
+    } catch (err) {
+      console.error('Admin login error:', err);
+      if (err.response?.data?.detail) {
+        setError(err.response.data.detail);
+      } else {
+        setError('Invalid credentials or server error.');
+      }
+    } finally {
       setLoading(false);
     }
   };
   
   // Show loading screen while checking auth state
   if (isLoading) {
-    return <LoadingSpinner size="large" text="Checking authentication..." />;
+    return <div className="admin-container"><LoadingSpinner size="large" text="Checking authentication..." /></div>;
   }
   
   // If not authenticated, show admin login form
@@ -104,7 +123,7 @@ function Admin() {
   }
   
   // This shouldn't be seen since we navigate away after login
-  return <LoadingSpinner size="large" text="Redirecting to Form Data..." />;
+  return <div className="admin-container"><LoadingSpinner size="large" text="Redirecting to Form Data..." /></div>;
 }
 
 export default Admin;
