@@ -136,7 +136,7 @@ function InputMain(){
     }
     
     return (<>
-        <NavBar/>
+{/*         <NavBar/> */}
         <div className="inputMain-container">
             <div className="inputMain-content">
                 <h2>Welcome to LK Tool Box</h2>
