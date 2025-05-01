@@ -19,7 +19,7 @@ function App() {
     <>
       <Router>
         {/* Add NavBar here so it appears on ALL pages */}
-        <NavBar />
+        {/* <NavBar /> */}
         
         <Routes>
           {/* Public Routes */}

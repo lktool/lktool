@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import "./FormData.css";
+import NavBar from '../NavBar/NavBar';
 
 const FormData = () => {
   const [form, setForm] = useState({
@@ -46,6 +47,8 @@ const FormData = () => {
   };
 
   return (
+    <>
+    <NavBar />
     <form onSubmit={handleSubmit} className="classroom-form-data">
       <h2 className="classroom-heading">LinkedIn Profile Analyzer</h2>
 
@@ -157,6 +160,7 @@ const FormData = () => {
         Submit Profile Analysis
       </button>
     </form>
+    </>
   );
 };
 
