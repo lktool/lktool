@@ -13,7 +13,8 @@ function NavBar(){
     }, []);
 
     function handleAdmin(){
-        navigate('/formData');
+        // Changed this from formData to admin
+        navigate('/admin');
     }
     
     function handleLogout(){
@@ -32,7 +33,7 @@ function NavBar(){
                 </div>
                 <div className="navbar-profiles-controls">
                     <div className="navbar-account">
-                        <a href="" onClick={handleAdmin}>Admin</a>
+                        <a href="" onClick={(e) => {e.preventDefault(); handleAdmin();}}>Admin</a>
                     </div>
                     {isLoggedIn && (
                         <div className="navbar-Logout">
