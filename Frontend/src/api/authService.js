@@ -260,6 +260,9 @@ export const authService = {
                 localStorage.setItem('refreshToken', response.data.refresh);
                 localStorage.setItem('user_email', formattedEmail);
                 
+                // Notify about authentication change
+                window.dispatchEvent(new Event('authChange'));
+                
                 // Pre-fetch user profile data if needed
                 this.prefetchUserData();
             }
@@ -356,6 +359,9 @@ export const authService = {
         // Clear any session storage as well
         sessionStorage.removeItem('token');
         sessionStorage.removeItem('auth_state');
+        
+        // Notify about authentication change
+        window.dispatchEvent(new Event('authChange'));
     },
 
     // Password reset request with improved error handling

@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import "./Signup.css";
-import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
+import { AiOutlineEye, AiOutlineEyeInvisible, AiOutlineMail } from "react-icons/ai";
 import React from "react";
 import { validateEmail } from "../Utils/validate";
 import { Link, useNavigate } from "react-router-dom";
@@ -99,7 +99,7 @@ function Signup() {
       try {
         // Pass confirmPassword as third parameter with timeout handling
         await authService.register(email, password, confirmPassword);
-        setSuccess(true); // Show verification needed message instead of redirecting
+        setSuccess(true); // Show verification needed message
       } catch (err) {
         console.error("Registration error:", err);
         if (err.message === 'Request timeout') {
@@ -128,11 +128,12 @@ function Signup() {
   if (success) {
     return (
       <div className="container1">
-        <div className="inside1 verification-message">
-          <h1>Registration Successful!</h1>
-          <p>A verification link has been sent to your email.</p>
-          <p>Please check your inbox and click the link to verify your account.</p>
-          <p>If you don't receive the email within a few minutes, check your spam folder.</p>
+        <div className="verification-message">
+          <AiOutlineMail className="email-icon" />
+          <h1>Registration Successful</h1>
+          <p>A verification link has been sent to <span className="email-highlight">{email}</span></p>
+          <p><strong>Please check your inbox</strong> and click the link to verify your account.</p>
+          <p>If you don't receive the email within a few minutes, check your spam folder or click below to resend.</p>
           <div className="verification-actions">
             <button 
               onClick={() => authService.resendVerification(email)}

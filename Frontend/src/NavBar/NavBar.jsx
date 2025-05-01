@@ -32,6 +32,33 @@ function NavBar() {
         
     }, [location.pathname]);
 
+    // Add check for token changes
+    useEffect(() => {
+        const checkAuthStatus = () => {
+            // Check user login status
+            const userToken = localStorage.getItem('token');
+            setIsUserLoggedIn(!!userToken);
+            
+            // Check admin login status
+            const adminToken = localStorage.getItem('adminToken');
+            setIsAdminLoggedIn(!!adminToken);
+        };
+        
+        // Initial check
+        checkAuthStatus();
+        
+        // Set up event listener for storage changes (login/logout in other tabs)
+        window.addEventListener('storage', checkAuthStatus);
+        
+        // Custom event for auth changes within the same tab
+        window.addEventListener('authChange', checkAuthStatus);
+        
+        return () => {
+            window.removeEventListener('storage', checkAuthStatus);
+            window.removeEventListener('authChange', checkAuthStatus);
+        };
+    }, []);
+
     function handleAdmin() {
         navigate('/admin');
     }
@@ -57,6 +84,9 @@ function NavBar() {
         localStorage.removeItem('token');
         setIsUserLoggedIn(false);
         navigate('/login');
+        
+        // Dispatch custom event to notify other components
+        window.dispatchEvent(new Event('authChange'));
     }
     
     function handleAdminLogout() {
@@ -64,6 +94,9 @@ function NavBar() {
         localStorage.removeItem('adminToken');
         setIsAdminLoggedIn(false);
         navigate('/admin');
+        
+        // Dispatch custom event to notify other components
+        window.dispatchEvent(new Event('authChange'));
     }
     
     // Hide navbar on specific pages where it's not needed
