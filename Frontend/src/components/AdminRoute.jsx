@@ -1,6 +1,5 @@
 import { Navigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { adminService } from '../api/adminService';
 import LoadingSpinner from './LoadingSpinner';
 
 function AdminRoute({ children }) {
@@ -10,8 +9,8 @@ function AdminRoute({ children }) {
   useEffect(() => {
     // Check if admin is authenticated
     const checkAdminAuth = () => {
-      const isAdmin = adminService.isAuthenticated();
-      setIsAuthenticated(isAdmin);
+      const adminToken = localStorage.getItem('adminToken');
+      setIsAuthenticated(!!adminToken);
       setIsLoading(false);
     };
     
@@ -26,11 +25,12 @@ function AdminRoute({ children }) {
     );
   }
 
+  // If not authenticated as admin, redirect to admin login page
   if (!isAuthenticated) {
-    // Redirect to admin login
     return <Navigate to="/admin" replace />;
   }
 
+  // If authenticated, render the protected content
   return children;
 }
 

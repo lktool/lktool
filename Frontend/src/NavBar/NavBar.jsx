@@ -13,6 +13,7 @@ function NavBar(){
     }, []);
 
     function handleAdmin(){
+        // FIX: Always navigate to /admin route, not /formData
         navigate('/admin');
     }
     
@@ -32,7 +33,7 @@ function NavBar(){
                 </div>
                 <div className="navbar-profiles-controls">
                     <div className="navbar-account">
-                        <a href="" onClick={handleAdmin}>Admin</a>
+                        <a href="#" onClick={(e) => {e.preventDefault(); handleAdmin();}}>Admin</a>
                     </div>
                     {isLoggedIn && (
                         <div className="navbar-Logout">
