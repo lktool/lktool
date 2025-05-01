@@ -9,6 +9,14 @@ function Admin() {
   const [submissions, setSubmissions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [filter, setFilter] = useState('all');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+
+  // Admin credentials - ensure these match your backend settings exactly
+  // These will be overridden by environment variables in production
+  const ADMIN_EMAIL = "admin@lktool.com";
+  const ADMIN_PASSWORD = "adminLK@123";
 
   // Check if admin is already logged in
   useEffect(() => {
@@ -54,6 +62,51 @@ function Admin() {
   const handleLogout = () => {
     adminService.logout();
     setIsAuthenticated(false);
+  };
+
+  const handleLogin = (e) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+    
+    // Simple validation
+    if (!email || !password) {
+      setError('Please enter both email and password');
+      setLoading(false);
+      return;
+    }
+    
+    console.log("Attempting admin login with:", email);  // Add temporary debugging
+
+    // Handle admin login with improved error handling
+    setTimeout(async () => {
+      try {
+        // Direct API call instead of using adminService for better debugging
+        const response = await fetch(`${window.location.protocol}//${window.location.hostname}${window.location.hostname === 'localhost' ? ':8000' : ''}/api/admin/login/`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ email, password })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+          setIsAuthenticated(true);
+          localStorage.setItem('adminToken', data.token);
+          setLoading(false);
+          fetchSubmissions();
+        } else {
+          setError(data.detail || 'Login failed');
+          setLoading(false);
+        }
+      } catch (err) {
+        console.error("Admin login error:", err);
+        setError('Server error. Please try again later.');
+        setLoading(false);
+      }
+    }, 500);
   };
 
   // Return login screen if not authenticated

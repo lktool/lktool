@@ -308,5 +308,5 @@ CSRF_TRUSTED_ORIGINS = [
 X_FRAME_OPTIONS = 'DENY'
 
 # Admin Credentials (loaded from environment variables)
-ADMIN_EMAIL = os.environ.get('ADMIN_EMAIL', 'admin@lktool.com')
+ADMIN_EMAIL = os.environ.get('ADMIN_EMAIL', 'admin@gmail.com')
 ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'adminLK@123')

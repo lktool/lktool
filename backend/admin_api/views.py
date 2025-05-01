@@ -19,8 +19,20 @@ class AdminLoginView(APIView):
         email = request.data.get('email')
         password = request.data.get('password')
         
+        # Add detailed error handling and logging
+        if not email or not password:
+            return Response(
+                {"detail": "Email and password are required"}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+            
+        # Debug log the email provided (temporarily for troubleshooting)
+        print(f"Admin login attempt with email: {email}")
+        print(f"Expected admin email from settings: {settings.ADMIN_EMAIL}")
+        
         # Compare with hardcoded admin credentials
         if email != settings.ADMIN_EMAIL or password != settings.ADMIN_PASSWORD:
+            # More specific error message
             return Response(
                 {"detail": "Invalid admin credentials"}, 
                 status=status.HTTP_401_UNAUTHORIZED
