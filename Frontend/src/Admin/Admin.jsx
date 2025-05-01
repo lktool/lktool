@@ -5,35 +5,28 @@ import './Admin.css';
 import LoadingSpinner from '../components/LoadingSpinner';
 
 function Admin() {
+  // Authentication state
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  
+  // Login form state
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   
   const navigate = useNavigate();
-
-  // Admin credentials
-  const ADMIN_EMAIL = "admin@gmail.com";
-  const ADMIN_PASSWORD = "adminLK@123";
-
+  
   // Check if admin is already logged in
   useEffect(() => {
-    const checkAuth = () => {
-      const isAdmin = adminService.isAdminAuthenticated();
-      setIsAuthenticated(isAdmin);
-      
-      if (isAdmin) {
-        // Redirect to FormData if already authenticated
-        navigate('/formData');
-      }
-      setIsLoading(false);
-    };
-    
-    checkAuth();
+    const adminToken = localStorage.getItem('adminToken');
+    if (adminToken) {
+      setIsAuthenticated(true);
+      navigate('/formData');
+    }
+    setIsLoading(false);
   }, [navigate]);
-
+  
   const handleLogin = (e) => {
     e.preventDefault();
     setError('');
@@ -46,38 +39,35 @@ function Admin() {
       return;
     }
     
-    // Check against hardcoded credentials
+    // HARDCODED CREDENTIALS - match what's in Django settings.py
+    const ADMIN_EMAIL = "admin@gmail.com";
+    const ADMIN_PASSWORD = "adminLK@123";
+    
+    // Check credentials
     if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
-      // Store admin token
-      const adminToken = 'admin-token'; // In a real app, use a proper token
-      localStorage.setItem('adminToken', adminToken);
-      
-      // Set authenticated state
+      // Store admin authentication token
+      localStorage.setItem('adminToken', 'admin-auth-token');
       setIsAuthenticated(true);
-      
-      // Redirect to FormData page
       navigate('/formData');
     } else {
       setError('Invalid admin credentials');
       setLoading(false);
     }
   };
-
-  // Show loading spinner while checking auth
+  
+  // Show loading screen while checking auth state
   if (isLoading) {
-    return (
-      <div className="admin-loading">
-        <LoadingSpinner size="large" text="Loading..." />
-      </div>
-    );
+    return <LoadingSpinner size="large" text="Checking authentication..." />;
   }
-
-  // Return admin login form if not authenticated
+  
+  // If not authenticated, show admin login form
   if (!isAuthenticated) {
     return (
       <div className="admin-container">
         <div className="admin-login-card">
           <h2>Admin Login</h2>
+          <p>Please enter your admin credentials</p>
+          
           <form onSubmit={handleLogin}>
             <div className="form-group">
               <label>Email</label>
@@ -85,7 +75,7 @@ function Admin() {
                 type="email" 
                 value={email} 
                 onChange={(e) => setEmail(e.target.value)} 
-                placeholder="Enter admin email"
+                placeholder="Admin Email"
               />
             </div>
             <div className="form-group">
@@ -94,10 +84,12 @@ function Admin() {
                 type="password" 
                 value={password} 
                 onChange={(e) => setPassword(e.target.value)} 
-                placeholder="Enter admin password"
+                placeholder="Admin Password"
               />
             </div>
-            {error && <p className="error-message">{error}</p>}
+            
+            {error && <div className="admin-error">{error}</div>}
+            
             <button 
               type="submit" 
               disabled={loading} 
@@ -110,13 +102,9 @@ function Admin() {
       </div>
     );
   }
-
-  // This should never be seen as we redirect on login success
-  return (
-    <div className="admin-redirect">
-      <LoadingSpinner size="large" text="Redirecting to Form Data..." />
-    </div>
-  );
+  
+  // This shouldn't be seen since we navigate away after login
+  return <LoadingSpinner size="large" text="Redirecting to Form Data..." />;
 }
 
 export default Admin;

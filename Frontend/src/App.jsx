@@ -40,14 +40,9 @@ function App() {
             } 
           />
           
-          <Route 
-            path="/admin" 
-            element={
-              <ProtectedRoute allowedRoles={['admin']}>
-                <Admin />
-              </ProtectedRoute>
-            } 
-          />
+          {/* CRITICAL FIX: Remove ProtectedRoute from Admin component so it shows its own login */}
+          <Route path="/admin" element={<Admin />} />
+          
           <Route path="/formData" element={
             <ProtectedRoute>
               <FormData/> 
