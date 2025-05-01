@@ -48,7 +48,6 @@ const FormData = () => {
 
   return (
     <>
-    <NavBar />
     <form onSubmit={handleSubmit} className="classroom-form-data">
       <h2 className="classroom-heading">LinkedIn Profile Analyzer</h2>
 

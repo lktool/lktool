@@ -105,6 +105,18 @@ function NavBar() {
                         </>
                     )}
 
+                    {/* Admin Login page - show Login, Signup options too */}
+                    {location.pathname === '/admin' && !isAdminLoggedIn && (
+                        <>
+                            <div className="navbar-account">
+                                <a href="#" onClick={(e) => {e.preventDefault(); handleLogin();}}>Login</a>
+                            </div>
+                            <div className="navbar-account">
+                                <a href="#" onClick={(e) => {e.preventDefault(); handleSignup();}}>Signup</a>
+                            </div>
+                        </>
+                    )}
+
                     {/* InputMain page - show ONLY Logout */}
                     {isInputMain && isUserLoggedIn && (
                         <div className="navbar-Logout">
