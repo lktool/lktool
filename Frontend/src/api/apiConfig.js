@@ -28,8 +28,27 @@ export const OAUTH_CONFIG = {
   }
 };
 
-// Helper function to get complete API URL
-export const getApiUrl = (endpoint) => `${API_BASE_URL}${endpoint}`;
+// API configuration with proper URLs for development and production
+
+// Get the correct base URL depending on environment
+export const getApiUrl = (endpoint) => {
+  // Use absolute URL in production, relative in development
+  const baseUrl = process.env.NODE_ENV === 'production' 
+    ? 'https://lktool.onrender.com' // Your backend domain
+    : 'http://localhost:8000'; // Local development backend
+  
+  // Make sure endpoint starts with a slash
+  const formattedEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+  
+  return `${baseUrl}${formattedEndpoint}`;
+};
+
+// Admin API endpoints
+export const ADMIN_ENDPOINTS = {
+  LOGIN: '/api/admin/login/',
+  SUBMISSIONS: '/api/admin/submissions/',
+  UPDATE_SUBMISSION: '/api/admin/submissions/:id/'
+};
 
 // Helper function to build URLs with path parameters
 export const buildApiUrl = (urlTemplate, params) => {

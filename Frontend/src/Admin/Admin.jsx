@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import './Admin.css';
 import LoadingSpinner from '../components/LoadingSpinner';
 import axios from 'axios';
+import { getApiUrl, ADMIN_ENDPOINTS } from '../api/apiConfig';
 
 function Admin() {
   // Authentication state
@@ -40,17 +41,11 @@ function Admin() {
     }
     
     try {
-      // IMPORTANT: Match exact credential format from backend settings.py
       const response = await axios.post(
-        '/api/admin/login/', 
-        { 
-          email, 
-          password 
-        },
+        getApiUrl(ADMIN_ENDPOINTS.LOGIN), 
+        { email, password },
         {
-          headers: {
-            'Content-Type': 'application/json'
-          }
+          headers: { 'Content-Type': 'application/json' }
         }
       );
       
@@ -64,10 +59,13 @@ function Admin() {
       }
     } catch (err) {
       console.error('Admin login error:', err);
-      if (err.response?.data?.detail) {
+      
+      if (err.response?.status === 405) {
+        setError('API endpoint method not allowed. Please contact support.');
+      } else if (err.response?.data?.detail) {
         setError(err.response.data.detail);
       } else {
-        setError('Invalid credentials or server error.');
+        setError('Login failed. Please try again.');
       }
     } finally {
       setLoading(false);
