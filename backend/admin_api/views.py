@@ -7,7 +7,7 @@ import jwt
 from datetime import datetime, timedelta
 
 from contact.models import ContactSubmission
-from contact.serializers import ContactSubmissionSerializer
+from contact.serializers import ContactSerializer  # Fixed import name
 
 class AdminLoginView(APIView):
     """
@@ -72,14 +72,14 @@ class FormSubmissionListView(APIView):
             
         submissions = ContactSubmission.objects.all().order_by('-created_at')
         
-        # Filter by status if requested - FIX: Apply filter BEFORE serializing
+        # Filter by status if requested - Apply filter BEFORE serializing
         status_filter = request.query_params.get('status')
         if status_filter == 'processed':
             submissions = submissions.filter(is_processed=True)
         elif status_filter == 'pending':
             submissions = submissions.filter(is_processed=False)
         
-        serializer = ContactSubmissionSerializer(submissions, many=True)
+        serializer = ContactSerializer(submissions, many=True)  # Fixed serializer name
         return Response(serializer.data)
         
 class UpdateSubmissionStatusView(APIView):
@@ -102,7 +102,7 @@ class UpdateSubmissionStatusView(APIView):
             submission.is_processed = bool(is_processed)
             submission.save(update_fields=['is_processed'])
             
-        serializer = ContactSubmissionSerializer(submission)
+        serializer = ContactSerializer(submission)  # Fixed serializer name
         return Response(serializer.data)
 
 class AdminStatsView(APIView):

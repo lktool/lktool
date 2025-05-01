@@ -95,7 +95,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    'admin_api.views.AdminAuthMiddleware',  # Register the admin auth middleware
+    'admin_api.middleware.AdminAuthMiddleware',  # Updated path - moved middleware to its own file
     'django.middleware.cache.FetchFromCacheMiddleware',
 ]
 
