@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { adminService } from '../api/adminService';
 import './Admin.css';
 import LoadingSpinner from '../components/LoadingSpinner';
-import axios from 'axios';
-import { getApiUrl, ADMIN_ENDPOINTS } from '../api/apiConfig';
 
 function Admin() {
   // Authentication state
@@ -20,12 +19,18 @@ function Admin() {
   
   // Check if admin is already logged in
   useEffect(() => {
-    const adminToken = localStorage.getItem('adminToken');
-    if (adminToken) {
-      setIsAuthenticated(true);
-      navigate('/formData');
-    }
-    setIsLoading(false);
+    const checkAuth = () => {
+      const isAdmin = adminService.isAuthenticated();
+      setIsAuthenticated(isAdmin);
+      
+      if (isAdmin) {
+        // Redirect to admin dashboard if already logged in
+        navigate('/admin/dashboard');
+      }
+      setIsLoading(false);
+    };
+    
+    checkAuth();
   }, [navigate]);
   
   const handleLogin = async (e) => {
@@ -33,7 +38,6 @@ function Admin() {
     setError('');
     setLoading(true);
     
-    // Simple validation
     if (!email || !password) {
       setError('Please enter both email and password');
       setLoading(false);
@@ -41,43 +45,31 @@ function Admin() {
     }
     
     try {
-      const response = await axios.post(
-        getApiUrl(ADMIN_ENDPOINTS.LOGIN), 
-        { email, password },
-        {
-          headers: { 'Content-Type': 'application/json' }
-        }
-      );
+      const success = await adminService.login(email, password);
       
-      if (response.data && response.data.token) {
-        // Store the admin token
-        localStorage.setItem('adminToken', response.data.token);
+      if (success) {
         setIsAuthenticated(true);
-        navigate('/formData');
+        navigate('/admin/dashboard');
       } else {
-        setError('Authentication failed. Please try again.');
+        setError('Authentication failed. Please check your credentials.');
       }
     } catch (err) {
       console.error('Admin login error:', err);
       
-      if (err.response?.status === 405) {
-        setError('API endpoint method not allowed. Please contact support.');
-      } else if (err.response?.data?.detail) {
-        setError(err.response.data.detail);
+      if (err.response?.status === 401) {
+        setError('Invalid admin credentials');
       } else {
-        setError('Login failed. Please try again.');
+        setError('Login failed. Please try again later.');
       }
     } finally {
       setLoading(false);
     }
   };
   
-  // Show loading screen while checking auth state
   if (isLoading) {
     return <div className="admin-container"><LoadingSpinner size="large" text="Checking authentication..." /></div>;
   }
   
-  // If not authenticated, show admin login form
   if (!isAuthenticated) {
     return (
       <div className="admin-container">
@@ -120,8 +112,7 @@ function Admin() {
     );
   }
   
-  // This shouldn't be seen since we navigate away after login
-  return <div className="admin-container"><LoadingSpinner size="large" text="Redirecting to Form Data..." /></div>;
+  return <div className="admin-container"><LoadingSpinner size="large" text="Redirecting to Admin Dashboard..." /></div>;
 }
 
 export default Admin;

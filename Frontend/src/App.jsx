@@ -11,6 +11,7 @@ import NotFound from "./components/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
 import VerifyEmail from "./VerifyEmail/VerifyEmail";  
 import FormData from "./FormData/FormDate";
+import AdminRoute from "./components/AdminRoute";
 
 function App() {
   return (
@@ -40,9 +41,17 @@ function App() {
             } 
           />
           
-          {/* CRITICAL FIX: Remove ProtectedRoute from Admin component so it shows its own login */}
+          {/* Admin Login (Public) */}
           <Route path="/admin" element={<Admin />} />
           
+          {/* Protected Admin Routes */}
+          <Route path="/admin/dashboard" element={
+            <AdminRoute>
+              <FormData />
+            </AdminRoute>
+          } />
+          
+          {/* Regular User Protected Routes */}
           <Route path="/formData" element={
             <ProtectedRoute>
               <FormData/> 
