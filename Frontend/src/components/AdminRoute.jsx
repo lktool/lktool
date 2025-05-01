@@ -9,6 +9,7 @@ function AdminRoute({ children }) {
   useEffect(() => {
     // Check if admin is authenticated
     const checkAdminAuth = () => {
+      // IMPORTANT: Get the admin token (not regular user token!)
       const adminToken = localStorage.getItem('adminToken');
       setIsAuthenticated(!!adminToken);
       setIsLoading(false);

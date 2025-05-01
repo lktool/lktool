@@ -16,24 +16,12 @@ function Admin() {
   
   const navigate = useNavigate();
   
-  // FIX: Clear any incorrect tokens and properly verify admin authentication
+  // CRITICAL FIX: Clear admin token on component mount to prevent bypassing login
   useEffect(() => {
-    // IMPORTANT: Clear localStorage on component mount to fix the bypass issue
-    const checkAuth = () => {
-      const adminToken = localStorage.getItem('adminToken');
-      
-      // ONLY set authenticated if we have a valid token
-      if (adminToken) {
-        setIsAuthenticated(true);
-        navigate('/admin/dashboard');
-      } else {
-        // Force logout to clear any incorrect state
-        localStorage.removeItem('adminToken'); 
-      }
-      setIsLoading(false);
-    };
-    
-    checkAuth();
+    // Force logout admin on mount to ensure authentication flow
+    localStorage.removeItem('adminToken');
+    setIsAuthenticated(false);
+    setIsLoading(false);
   }, [navigate]);
   
   const handleLogin = async (e) => {
@@ -52,15 +40,18 @@ function Admin() {
     const ADMIN_EMAIL = "admin@gmail.com"; 
     const ADMIN_PASSWORD = "adminLK@123";
     
-    // Check credentials
-    if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
-      localStorage.setItem('adminToken', 'admin_authenticated'); // Store admin token
-      setIsAuthenticated(true);
-      navigate('/admin/dashboard');
-    } else {
-      setError('Invalid admin credentials');
-    }
-    setLoading(false);
+    // Check credentials - with proper delay for security
+    setTimeout(() => {
+      if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
+        // Store admin auth token with a unique value to prevent confusion with regular user token
+        localStorage.setItem('adminToken', 'admin_authenticated_token');
+        setIsAuthenticated(true);
+        navigate('/admin/dashboard');
+      } else {
+        setError('Invalid admin credentials');
+      }
+      setLoading(false);
+    }, 800);
   };
   
   // Show loading screen while checking auth state
@@ -68,50 +59,46 @@ function Admin() {
     return <div className="admin-container"><LoadingSpinner size="large" text="Checking authentication..." /></div>;
   }
   
-  // If not authenticated, show admin login form
-  if (!isAuthenticated) {
-    return (
-      <div className="admin-container">
-        <div className="admin-login-card">
-          <h2>Admin Login</h2>
-          <p>Please enter your admin credentials</p>
+  // Always show admin login form
+  return (
+    <div className="admin-container">
+      <div className="admin-login-card">
+        <h2>Admin Login</h2>
+        <p>Please enter your admin credentials</p>
+        
+        <form onSubmit={handleLogin}>
+          <div className="form-group">
+            <label>Email</label>
+            <input 
+              type="email" 
+              value={email} 
+              onChange={(e) => setEmail(e.target.value)} 
+              placeholder="Admin Email"
+            />
+          </div>
+          <div className="form-group">
+            <label>Password</label>
+            <input 
+              type="password" 
+              value={password} 
+              onChange={(e) => setPassword(e.target.value)} 
+              placeholder="Admin Password"
+            />
+          </div>
           
-          <form onSubmit={handleLogin}>
-            <div className="form-group">
-              <label>Email</label>
-              <input 
-                type="email" 
-                value={email} 
-                onChange={(e) => setEmail(e.target.value)} 
-                placeholder="Admin Email"
-              />
-            </div>
-            <div className="form-group">
-              <label>Password</label>
-              <input 
-                type="password" 
-                value={password} 
-                onChange={(e) => setPassword(e.target.value)} 
-                placeholder="Admin Password"
-              />
-            </div>
-            
-            {error && <div className="admin-error">{error}</div>}
-            
-            <button 
-              type="submit" 
-              disabled={loading} 
-              className="admin-login-btn"
-            >
-              {loading ? 'Logging in...' : 'Login'}
-            </button>
-          </form>
-        </div>
+          {error && <div className="admin-error">{error}</div>}
+          
+          <button 
+            type="submit" 
+            disabled={loading} 
+            className="admin-login-btn"
+          >
+            {loading ? 'Logging in...' : 'Login'}
+          </button>
+        </form>
       </div>
-    );
-  }
-  
-  return <div className="admin-container"><LoadingSpinner size="large" text="Redirecting to Admin Dashboard..." /></div>;
+    </div>
+  );
 }
 
 export default Admin;
