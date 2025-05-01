@@ -84,10 +84,10 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    'django.middleware.cache.UpdateCacheMiddleware',  # This is already first
+    'django.middleware.cache.UpdateCacheMiddleware',
     "corsheaders.middleware.CorsMiddleware",
     "django.middleware.security.SecurityMiddleware",
-    'django.middleware.gzip.GZipMiddleware',  # Add GZip here
+    'django.middleware.gzip.GZipMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
@@ -95,7 +95,8 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    'django.middleware.cache.FetchFromCacheMiddleware',  # Add at end
+    'admin_api.views.AdminAuthMiddleware',  # Register the admin auth middleware
+    'django.middleware.cache.FetchFromCacheMiddleware',
 ]
 
 ROOT_URLCONF = "backend.urls"
@@ -305,3 +306,7 @@ CSRF_TRUSTED_ORIGINS = [
 
 # Set X-Frame-Options to deny by default
 X_FRAME_OPTIONS = 'DENY'
+
+# Admin Credentials (loaded from environment variables)
+ADMIN_EMAIL = os.environ.get('ADMIN_EMAIL', 'admin@lktool.com')
+ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', 'adminLK@123')

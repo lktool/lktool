@@ -40,14 +40,9 @@ function App() {
             } 
           />
           
-          <Route 
-            path="/admin" 
-            element={
-              <ProtectedRoute allowedRoles={['admin']}>
-                <Admin />
-              </ProtectedRoute>
-            } 
-          />
+          {/* Admin Route - separate from regular users */}
+          <Route path="/admin" element={<Admin />} />
+          
           <Route path="/formData" element={
             <ProtectedRoute>
               <FormData/> 

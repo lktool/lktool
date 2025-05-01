@@ -1,60 +1,125 @@
 from rest_framework import generics, status
 from rest_framework.response import Response
+from rest_framework.views import APIView
 from rest_framework.permissions import IsAdminUser
-from rest_framework.decorators import api_view, permission_classes
+from django.conf import settings
+import jwt
+from datetime import datetime, timedelta
+
 from contact.models import ContactSubmission
 from contact.serializers import ContactSubmissionSerializer
 
-class FormSubmissionListView(generics.ListAPIView):
+class AdminLoginView(APIView):
     """
-    View to list all contact form submissions for admin users.
+    Secure admin login endpoint that uses hardcoded credentials from settings
     """
-    queryset = ContactSubmission.objects.all().order_by('-created_at')
-    serializer_class = ContactSubmissionSerializer
-    permission_classes = [IsAdminUser]
+    permission_classes = []
     
-    def get_queryset(self):
-        """Allow filtering by processed status"""
-        queryset = super().get_queryset()
-        status = self.request.query_params.get('status')
+    def post(self, request):
+        email = request.data.get('email')
+        password = request.data.get('password')
         
-        if status == 'processed':
-            return queryset.filter(is_processed=True)
-        elif status == 'pending':
-            return queryset.filter(is_processed=False)
+        # Compare with hardcoded admin credentials
+        if email != settings.ADMIN_EMAIL or password != settings.ADMIN_PASSWORD:
+            return Response(
+                {"detail": "Invalid admin credentials"}, 
+                status=status.HTTP_401_UNAUTHORIZED
+            )
             
-        return queryset
+        # Generate admin-specific token
+        payload = {
+            'user_type': 'admin',
+            'exp': datetime.utcnow() + timedelta(hours=24)
+        }
+        
+        token = jwt.encode(payload, settings.SECRET_KEY, algorithm='HS256')
+        
+        return Response({
+            'token': token,
+            'message': 'Admin login successful'
+        })
 
-class FormSubmissionDetailView(generics.RetrieveUpdateAPIView):
+class AdminAuthMiddleware:
     """
-    View to retrieve or update a specific contact form submission for admin users.
+    Custom middleware to verify admin tokens
     """
-    queryset = ContactSubmission.objects.all()
-    serializer_class = ContactSubmissionSerializer
-    permission_classes = [IsAdminUser]
-    
-    def patch(self, request, *args, **kwargs):
-        """Allow partial updates for processed status"""
-        instance = self.get_object()
+    def __init__(self, get_response):
+        self.get_response = get_response
         
-        # Only allow updating the is_processed field
-        if 'is_processed' in request.data:
-            instance.is_processed = request.data['is_processed']
-            instance.save(update_fields=['is_processed'])
+    def __call__(self, request):
+        admin_auth_header = request.META.get('HTTP_ADMIN_AUTHORIZATION')
+        if admin_auth_header and admin_auth_header.startswith('Bearer '):
+            token = admin_auth_header.split(' ')[1]
+            try:
+                payload = jwt.decode(token, settings.SECRET_KEY, algorithms=['HS256'])
+                if payload.get('user_type') == 'admin':
+                    request.is_admin = True
+            except jwt.PyJWTError:
+                request.is_admin = False
+        else:
+            request.is_admin = False
             
-        serializer = self.get_serializer(instance)
+        return self.get_response(request)
+        
+class FormSubmissionListView(APIView):
+    """
+    View to list all contact form submissions for admin
+    """
+    def get(self, request):
+        # Check if user is admin
+        if not getattr(request, 'is_admin', False):
+            return Response({"detail": "Admin authentication required"}, status=status.HTTP_401_UNAUTHORIZED)
+            
+        submissions = ContactSubmission.objects.all().order_by('-created_at')
+        
+        # Filter by status if requested - FIX: Apply filter BEFORE serializing
+        status_filter = request.query_params.get('status')
+        if status_filter == 'processed':
+            submissions = submissions.filter(is_processed=True)
+        elif status_filter == 'pending':
+            submissions = submissions.filter(is_processed=False)
+        
+        serializer = ContactSubmissionSerializer(submissions, many=True)
+        return Response(serializer.data)
+        
+class UpdateSubmissionStatusView(APIView):
+    """
+    View to update a submission's processed status
+    """
+    def patch(self, request, pk):
+        # Check if user is admin
+        if not getattr(request, 'is_admin', False):
+            return Response({"detail": "Admin authentication required"}, status=status.HTTP_401_UNAUTHORIZED)
+            
+        try:
+            submission = ContactSubmission.objects.get(pk=pk)
+        except ContactSubmission.DoesNotExist:
+            return Response({"detail": "Submission not found"}, status=status.HTTP_404_NOT_FOUND)
+            
+        # Update is_processed status
+        is_processed = request.data.get('is_processed')
+        if is_processed is not None:
+            submission.is_processed = bool(is_processed)
+            submission.save(update_fields=['is_processed'])
+            
+        serializer = ContactSubmissionSerializer(submission)
         return Response(serializer.data)
 
-@api_view(['GET'])
-@permission_classes([IsAdminUser])
-def admin_stats(request):
-    """Get basic stats about submissions for admin dashboard"""
-    total_count = ContactSubmission.objects.count()
-    processed_count = ContactSubmission.objects.filter(is_processed=True).count()
-    pending_count = total_count - processed_count
-    
-    return Response({
-        'total_submissions': total_count,
-        'processed_submissions': processed_count,
-        'pending_submissions': pending_count
-    })
+class AdminStatsView(APIView):
+    """
+    View to get statistics for the admin dashboard
+    """
+    def get(self, request):
+        # Check if user is admin
+        if not getattr(request, 'is_admin', False):
+            return Response({"detail": "Admin authentication required"}, status=status.HTTP_401_UNAUTHORIZED)
+        
+        total_count = ContactSubmission.objects.count()
+        processed_count = ContactSubmission.objects.filter(is_processed=True).count()
+        pending_count = total_count - processed_count
+        
+        return Response({
+            'total': total_count,
+            'processed': processed_count,
+            'pending': pending_count
+        })

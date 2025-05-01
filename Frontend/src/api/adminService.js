@@ -3,109 +3,90 @@ import { getApiUrl } from './apiConfig';
 
 // Admin API endpoints
 const ADMIN_ENDPOINTS = {
-  FORM_SUBMISSIONS: '/api/admin/submissions/',
-  FORM_SUBMISSION_DETAIL: '/api/admin/submissions/:id/',
-  ADMIN_STATS: '/api/admin/stats/'
+  LOGIN: '/api/admin/login/',
+  SUBMISSIONS: '/api/admin/submissions/',
+  UPDATE_SUBMISSION: '/api/admin/submissions/:id/'
 };
 
-// Create authenticated admin API client
+// Create admin API client with admin token
 const createAdminApiClient = () => {
-  const token = localStorage.getItem('token');
+  const adminToken = localStorage.getItem('adminToken');
   
   return axios.create({
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': token ? `Bearer ${token}` : ''
+      'Admin-Authorization': adminToken ? `Bearer ${adminToken}` : ''
     }
   });
 };
 
 export const adminService = {
   /**
-   * Get all form submissions
-   * @returns {Promise<Array>} Array of form submissions
+   * Admin login using hardcoded credentials
    */
-  async getFormSubmissions(queryString = '') {
+  async login(email, password) {
     try {
-      const apiClient = createAdminApiClient();
-      const endpoint = `${ADMIN_ENDPOINTS.FORM_SUBMISSIONS}${queryString}`;
-      const response = await apiClient.get(getApiUrl(endpoint));
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching form submissions:', error);
+      const response = await axios.post(
+        getApiUrl(ADMIN_ENDPOINTS.LOGIN),
+        { email, password },
+        { headers: { 'Content-Type': 'application/json' } }
+      );
       
-      // For development, return mock data if API fails
-      if (process.env.NODE_ENV === 'development') {
-        console.log('Returning mock data since API failed');
-        return mockSubmissions;
+      if (response.data.token) {
+        localStorage.setItem('adminToken', response.data.token);
+        return true;
       }
-      
+      return false;
+    } catch (error) {
+      console.error('Admin login error:', error);
       throw error;
     }
   },
-
+  
   /**
-   * Update a submission's processed status
-   * @param {number} id - The submission ID
-   * @param {boolean} isProcessed - New processed status
-   * @returns {Promise<Object>} Updated submission
+   * Check if admin is authenticated
+   */
+  isAdminAuthenticated() {
+    return !!localStorage.getItem('adminToken');
+  },
+  
+  /**
+   * Admin logout
+   */
+  logout() {
+    localStorage.removeItem('adminToken');
+  },
+  
+  /**
+   * Get all submissions
+   */
+  async getSubmissions(statusFilter = '') {
+    try {
+      const url = `${ADMIN_ENDPOINTS.SUBMISSIONS}${statusFilter ? '?status=' + statusFilter : ''}`;
+      const apiClient = createAdminApiClient();
+      const response = await apiClient.get(getApiUrl(url));
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching submissions:', error);
+      throw error;
+    }
+  },
+  
+  /**
+   * Update submission status
    */
   async updateSubmissionStatus(id, isProcessed) {
     try {
+      const url = ADMIN_ENDPOINTS.UPDATE_SUBMISSION.replace(':id', id);
       const apiClient = createAdminApiClient();
-      const url = ADMIN_ENDPOINTS.FORM_SUBMISSION_DETAIL.replace(':id', id);
-      const response = await apiClient.patch(getApiUrl(url), { is_processed: isProcessed });
+      const response = await apiClient.patch(
+        getApiUrl(url),
+        { is_processed: isProcessed }
+      );
       return response.data;
     } catch (error) {
-      console.error(`Error updating form submission ${id}:`, error);
+      console.error('Error updating submission:', error);
       throw error;
-    }
-  },
-
-  /**
-   * Get admin dashboard statistics
-   * @returns {Promise<Object>} Statistics object
-   */
-  async getStats() {
-    try {
-      const apiClient = createAdminApiClient();
-      const response = await apiClient.get(getApiUrl(ADMIN_ENDPOINTS.ADMIN_STATS));
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching admin stats:', error);
-      return {
-        total_submissions: mockSubmissions.length,
-        processed_submissions: mockSubmissions.filter(s => s.is_processed).length,
-        pending_submissions: mockSubmissions.filter(s => !s.is_processed).length
-      };
     }
   }
 };
-
-// Mock data for development/testing
-const mockSubmissions = [
-  {
-    id: 1,
-    email: 'user1@example.com',
-    linkedin_url: 'https://linkedin.com/in/user1',
-    message: 'I am interested in your services. Please contact me to discuss further.',
-    created_at: '2025-04-25T10:30:00Z',
-    is_processed: false
-  },
-  {
-    id: 2,
-    email: 'user2@example.com',
-    linkedin_url: 'https://linkedin.com/in/user2',
-    message: 'Looking for a consultation about your LinkedIn services.',
-    created_at: '2025-04-24T14:20:00Z',
-    is_processed: true
-  },
-  {
-    id: 3,
-    email: 'user3@example.com',
-    linkedin_url: 'https://linkedin.com/in/user3',
-    message: 'Can you help me optimize my LinkedIn profile? I need professional assistance.',
-    created_at: '2025-04-23T09:15:00Z',
-    is_processed: false
-  }
-];

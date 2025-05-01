@@ -77,31 +77,3 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
         if attrs['password'] != attrs['password2']:
             raise serializers.ValidationError({"password": "Password fields didn't match."})
         return attrs
-
-class LoginSerializer(serializers.Serializer):
-    email = serializers.EmailField()
-    password = serializers.CharField(style={'input_type': 'password'})
-    
-    def validate(self, attrs):
-        email = attrs.get('email')
-        password = attrs.get('password')
-        
-        if not email or not password:
-            raise serializers.ValidationError('Email and password are required')
-        
-        User = get_user_model()
-        
-        try:
-            user = User.objects.get(email=email)
-            
-            if not user.check_password(password):
-                raise serializers.ValidationError('Incorrect password.')
-                
-            if not user.is_active:
-                raise serializers.ValidationError('Account is inactive. Please verify your email.')
-                
-            attrs['user'] = user
-            return attrs
-            
-        except ObjectDoesNotExist:
-            raise serializers.ValidationError('No account found with this email.')

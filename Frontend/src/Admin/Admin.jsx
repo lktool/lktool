@@ -1,135 +1,66 @@
 import React, { useState, useEffect } from 'react';
+import AdminLogin from './AdminLogin';
 import { adminService } from '../api/adminService';
 import './Admin.css';
 import LoadingSpinner from '../components/LoadingSpinner';
 
 function Admin() {
-  // Admin authentication state
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
-  
-  // Form data state
   const [submissions, setSubmissions] = useState([]);
-  const [dataLoading, setDataLoading] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [filter, setFilter] = useState('all');
-  
-  // Admin credentials - update to your preferred values
-  const ADMIN_EMAIL = "admin@lktool.com";
-  const ADMIN_PASSWORD = "adminLK@123";
-  
+
   // Check if admin is already logged in
   useEffect(() => {
-    const adminAuth = localStorage.getItem('adminAuth');
-    if (adminAuth === 'true') {
-      setIsAuthenticated(true);
-      fetchFormData();
-    }
-  }, []);
-  
-  const handleLogin = (e) => {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
-    
-    // Simple validation
-    if (!email || !password) {
-      setError('Please enter both email and password');
-      setLoading(false);
-      return;
-    }
-    
-    // Check against hardcoded credentials
-    if (email === ADMIN_EMAIL && password === ADMIN_PASSWORD) {
-      setTimeout(() => {
-        setIsAuthenticated(true);
-        localStorage.setItem('adminAuth', 'true');
-        setLoading(false);
-        fetchFormData();
-      }, 1000); // Adding slight delay for UX
-    } else {
-      setTimeout(() => {
-        setError('Invalid email or password');
-        setLoading(false);
-      }, 1000);
-    }
-  };
-  
-  const fetchFormData = async () => {
-    setDataLoading(true);
-    try {
-      let url = '';
-      if (filter !== 'all') {
-        url = `?status=${filter}`;
-      }
+    const checkAuth = () => {
+      const isAdmin = adminService.isAdminAuthenticated();
+      setIsAuthenticated(isAdmin);
       
-      const data = await adminService.getFormSubmissions(url);
+      if (isAdmin) {
+        fetchSubmissions();
+      }
+    };
+    
+    checkAuth();
+  }, []);
+
+  const fetchSubmissions = async () => {
+    setLoading(true);
+    try {
+      const data = await adminService.getSubmissions(filter !== 'all' ? filter : '');
       setSubmissions(data);
     } catch (error) {
-      console.error("Error fetching form data:", error);
+      console.error("Error fetching submissions:", error);
     } finally {
-      setDataLoading(false);
+      setLoading(false);
     }
   };
   
-  // Add status update function
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchSubmissions();
+    }
+  }, [filter, isAuthenticated]);
+
   const handleStatusChange = async (id, newStatus) => {
     try {
       await adminService.updateSubmissionStatus(id, newStatus);
-      // Refresh data after update
-      fetchFormData();
+      fetchSubmissions(); // Refresh data
     } catch (error) {
-      console.error("Error updating submission status:", error);
+      console.error("Error updating status:", error);
     }
   };
-  
+
   const handleLogout = () => {
+    adminService.logout();
     setIsAuthenticated(false);
-    localStorage.removeItem('adminAuth');
-    setEmail('');
-    setPassword('');
   };
 
+  // Return login screen if not authenticated
   if (!isAuthenticated) {
-    return (
-      <div className="admin-container">
-        <div className="admin-login-card">
-          <h2>Admin Login</h2>
-          <form onSubmit={handleLogin}>
-            <div className="form-group">
-              <label>Email</label>
-              <input 
-                type="email" 
-                value={email} 
-                onChange={(e) => setEmail(e.target.value)} 
-                placeholder="Enter admin email"
-              />
-            </div>
-            <div className="form-group">
-              <label>Password</label>
-              <input 
-                type="password" 
-                value={password} 
-                onChange={(e) => setPassword(e.target.value)} 
-                placeholder="Enter admin password"
-              />
-            </div>
-            {error && <p className="error-message">{error}</p>}
-            <button 
-              type="submit" 
-              disabled={loading} 
-              className="admin-login-btn"
-            >
-              {loading ? 'Logging in...' : 'Login'}
-            </button>
-          </form>
-        </div>
-      </div>
-    );
+    return <AdminLogin onLoginSuccess={() => setIsAuthenticated(true)} />;
   }
-  
+
   return (
     <div className="admin-dashboard">
       <header className="admin-header">
@@ -161,9 +92,9 @@ function Admin() {
           </button>
         </div>
         
-        {dataLoading ? (
+        {loading ? (
           <div className="loading-container">
-            <LoadingSpinner size="large" text="Loading form data..." />
+            <LoadingSpinner size="large" text="Loading submissions..." />
           </div>
         ) : submissions.length > 0 ? (
           <div className="submissions-table-container">
@@ -220,7 +151,7 @@ function Admin() {
           </div>
         ) : (
           <div className="no-data">
-            <p>No form submissions found</p>
+            <p>No submissions found</p>
           </div>
         )}
       </main>
