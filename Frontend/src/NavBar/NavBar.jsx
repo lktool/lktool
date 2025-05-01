@@ -9,6 +9,7 @@ function NavBar() {
     const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
     const [isLandingPage, setIsLandingPage] = useState(false);
     const [isAdminPage, setIsAdminPage] = useState(false);
+    const [isInputMain, setIsInputMain] = useState(false);
     
     // Check authentication state when component mounts or location changes
     useEffect(() => {
@@ -25,6 +26,9 @@ function NavBar() {
         
         // Check if we're on admin pages
         setIsAdminPage(location.pathname.startsWith('/admin'));
+        
+        // Check if we're on inputMain page
+        setIsInputMain(location.pathname === '/inputMain');
         
     }, [location.pathname]);
 
@@ -75,23 +79,41 @@ function NavBar() {
                     <h2>LK Tool Box</h2>
                 </div>
                 <div className="navbar-profiles-controls">
-                    {/* Landing page & logged out users - show Admin, Login, Signup */}
-                    {isLandingPage && !isUserLoggedIn && !isAdminLoggedIn && (
+                    {/* Landing page - show Admin, Login, Signup */}
+                    {isLandingPage && (
                         <>
                             <div className="navbar-account">
                                 <a href="#" onClick={(e) => {e.preventDefault(); handleAdmin();}}>Admin</a>
                             </div>
-                            <div className="navbar-account">
-                                <a href="#" onClick={(e) => {e.preventDefault(); handleLogin();}}>Login</a>
-                            </div>
-                            <div className="navbar-account">
-                                <a href="#" onClick={(e) => {e.preventDefault(); handleSignup();}}>Signup</a>
-                            </div>
+                            
+                            {!isUserLoggedIn && (
+                                <>
+                                    <div className="navbar-account">
+                                        <a href="#" onClick={(e) => {e.preventDefault(); handleLogin();}}>Login</a>
+                                    </div>
+                                    <div className="navbar-account">
+                                        <a href="#" onClick={(e) => {e.preventDefault(); handleSignup();}}>Signup</a>
+                                    </div>
+                                </>
+                            )}
+                            
+                            {isUserLoggedIn && (
+                                <div className="navbar-Logout">
+                                    <a href="#" onClick={(e) => {e.preventDefault(); handleUserLogout();}}>Logout</a>
+                                </div>
+                            )}
                         </>
                     )}
 
-                    {/* Regular user is logged in - show Form Data & Logout */}
-                    {isUserLoggedIn && !isAdminPage && (
+                    {/* InputMain page - show ONLY Logout */}
+                    {isInputMain && isUserLoggedIn && (
+                        <div className="navbar-Logout">
+                            <a href="#" onClick={(e) => {e.preventDefault(); handleUserLogout();}}>Logout</a>
+                        </div>
+                    )}
+                    
+                    {/* FormData page - show Form Data & Logout */}
+                    {isUserLoggedIn && !isInputMain && !isAdminPage && !isLandingPage && (
                         <>
                             <div className="navbar-account">
                                 <a href="#" onClick={(e) => {e.preventDefault(); handleFormData();}}>Form Data</a>
@@ -114,13 +136,6 @@ function NavBar() {
                                 <a href="#" onClick={(e) => {e.preventDefault(); handleAdminLogout();}}>Admin Logout</a>
                             </div>
                         </>
-                    )}
-                    
-                    {/* If we're not on landing page and not logged in, show login button */}
-                    {!isLandingPage && !isUserLoggedIn && !isAdminLoggedIn && !isAdminPage && (
-                        <div className="navbar-account">
-                            <a href="#" onClick={(e) => {e.preventDefault(); handleLogin();}}>Login</a>
-                        </div>
                     )}
                 </div>
             </div>
