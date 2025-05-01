@@ -9,6 +9,7 @@
     position: sticky;
     top: 0;
     z-index: 1000;
+    min-height: 70px;
 }
 
 .navbar-content {
@@ -52,6 +53,12 @@ a:hover {
 
 .navbar-account:hover, .navbar-Logout:hover {
     transform: translateY(-2px);
+}
+
+/* Add style for active link */
+.navbar-account.active a {
+    background-color: rgba(255, 255, 255, 0.2);
+    font-weight: 700;
 }
 
 /* Responsive adjustments */
