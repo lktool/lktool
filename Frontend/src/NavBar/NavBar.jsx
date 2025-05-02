@@ -98,6 +98,10 @@ function NavBar() {
         // Dispatch custom event to notify other components
         window.dispatchEvent(new Event('authChange'));
     }
+
+    function handleMySubmissions() {
+        navigate('/my-submissions');
+    }
     
     // Hide navbar on specific pages where it's not needed
     const hideNavbarPaths = ['/forgot-password'];
@@ -174,6 +178,13 @@ function NavBar() {
                                 <a href="#" onClick={(e) => {e.preventDefault(); handleUserLogout();}}>Logout</a>
                             </div>
                         </>
+                    )}
+
+                    {/* Add My Submissions button to navbar for logged in users */}
+                    {isUserLoggedIn && !isAdminPage && (
+                        <div className="navbar-account">
+                            <a href="#" onClick={(e) => {e.preventDefault(); handleMySubmissions();}}>My Submissions</a>
+                        </div>
                     )}
                     
                     {/* Admin is logged in & on admin page - show Admin Dashboard & Admin Logout */}

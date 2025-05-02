@@ -13,6 +13,7 @@ import VerifyEmail from "./VerifyEmail/VerifyEmail";
 import FormData from "./FormData/FormDate";
 import AdminRoute from "./components/AdminRoute";
 import NavBar from "./NavBar/NavBar"; // Import NavBar component
+import UserSubmissions from "./UserSubmissions/UserSubmissions"; // Import UserSubmissions component
 
 function App() {
   return (
@@ -45,6 +46,16 @@ function App() {
             } 
           />
           
+          {/* Add User Submissions Route */}
+          <Route 
+            path="/my-submissions" 
+            element={
+              <ProtectedRoute>
+                <UserSubmissions />
+              </ProtectedRoute>
+            } 
+          />
+
           {/* Admin Login (Public) */}
           <Route path="/admin" element={<Admin />} />
           

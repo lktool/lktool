@@ -1,0 +1,125 @@
+.submissions-container {
+  max-width: 900px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+
+.submissions-container h1 {
+  margin-bottom: 1.5rem;
+  color: #2c3e50;
+  font-weight: 600;
+}
+
+.submissions-count {
+  margin-bottom: 1.5rem;
+  color: #555;
+}
+
+.no-submissions {
+  padding: 2rem;
+  text-align: center;
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  color: #666;
+}
+
+.submissions-list {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.submission-card {
+  background-color: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.submission-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.12);
+}
+
+.submission-header {
+  padding: 1rem;
+  background-color: #f5f5f5;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #eee;
+}
+
+.submission-date {
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.submission-status {
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0.3rem 0.8rem;
+  border-radius: 20px;
+  text-transform: uppercase;
+}
+
+.submission-status.pending {
+  background-color: #fff8e1;
+  color: #f57c00;
+}
+
+.submission-status.processed {
+  background-color: #e8f5e9;
+  color: #388e3c;
+}
+
+.submission-body {
+  padding: 1rem;
+}
+
+.submission-field {
+  margin-bottom: 1rem;
+}
+
+.submission-field label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.3rem;
+  color: #555;
+}
+
+.submission-field p {
+  margin: 0;
+  color: #333;
+}
+
+.submission-message {
+  white-space: pre-wrap;
+  background-color: #f9f9f9;
+  padding: 0.75rem;
+  border-radius: 4px;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .submissions-list {
+    grid-template-columns: 1fr;
+  }
+  
+  .submission-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .submission-status {
+    margin-top: 0.5rem;
+  }
+}
+
+@media (min-width: 769px) {
+  .submissions-list {
+    grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+  }
+}
