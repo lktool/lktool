@@ -12,6 +12,7 @@ function NavBar() {
     const [isInputMain, setIsInputMain] = useState(false);
     const [isLoginPage, setIsLoginPage] = useState(false);
     const [isSignupPage, setIsSignupPage] = useState(false);
+    const [isMySubmissionsPage, setIsMySubmissionsPage] = useState(false);
     
     // Check authentication state when component mounts or location changes
     useEffect(() => {
@@ -29,6 +30,7 @@ function NavBar() {
         setIsInputMain(location.pathname === '/inputMain');
         setIsLoginPage(location.pathname === '/login');
         setIsSignupPage(location.pathname === '/signup');
+        setIsMySubmissionsPage(location.pathname === '/my-submissions');
         
     }, [location.pathname]);
 
@@ -68,7 +70,12 @@ function NavBar() {
     }
     
     function handleFormData() {
-        navigate('/formData');
+        // Redirect to admin login if not admin
+        if (!isAdminLoggedIn) {
+            navigate('/admin');
+        } else {
+            navigate('/admin/dashboard');
+        }
     }
     
     function handleLogin() {
@@ -169,7 +176,8 @@ function NavBar() {
                     )}
                     
                     {/* FormData page - show Form Data & Logout */}
-                    {isUserLoggedIn && !isInputMain && !isAdminPage && !isLandingPage && (
+                    {isUserLoggedIn && !isInputMain && !isAdminPage && 
+                     !isLandingPage && !isMySubmissionsPage && (
                         <>
                             <div className="navbar-account">
                                 <a href="#" onClick={(e) => {e.preventDefault(); handleFormData();}}>Form Data</a>
@@ -180,8 +188,15 @@ function NavBar() {
                         </>
                     )}
                     
-                    {/* Add My Submissions button for authenticated users on non-admin pages */}
-                    {isUserLoggedIn && !isAdminPage && !isLandingPage && (
+                    {/* My Submissions page - show ONLY My Submissions & Logout */}
+                    {isUserLoggedIn && isMySubmissionsPage && (
+                        <div className="navbar-Logout">
+                            <a href="#" onClick={(e) => {e.preventDefault(); handleUserLogout();}}>Logout</a>
+                        </div>
+                    )}
+                    
+                    {/* Add My Submissions button for authenticated users on appropriate pages */}
+                    {isUserLoggedIn && !isAdminPage && !isLandingPage && !isMySubmissionsPage && (
                         <div className="navbar-account">
                             <a href="#" onClick={(e) => {e.preventDefault(); handleMySubmissions();}}>
                                 My Submissions
