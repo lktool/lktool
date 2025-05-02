@@ -109,6 +109,10 @@ function NavBar() {
     function handleMySubmissions() {
         navigate('/my-submissions');
     }
+
+    function handleInputMain() {
+        navigate('/inputMain');
+    }
     
     // Hide navbar on specific pages where it's not needed
     const hideNavbarPaths = ['/forgot-password'];
@@ -188,11 +192,16 @@ function NavBar() {
                         </>
                     )}
                     
-                    {/* My Submissions page - show ONLY My Submissions & Logout */}
+                    {/* My Submissions page - show InputMain & Logout */}
                     {isUserLoggedIn && isMySubmissionsPage && (
-                        <div className="navbar-Logout">
-                            <a href="#" onClick={(e) => {e.preventDefault(); handleUserLogout();}}>Logout</a>
-                        </div>
+                        <>
+                            <div className="navbar-account">
+                                <a href="#" onClick={(e) => {e.preventDefault(); handleInputMain();}}>Input Main</a>
+                            </div>
+                            <div className="navbar-Logout">
+                                <a href="#" onClick={(e) => {e.preventDefault(); handleUserLogout();}}>Logout</a>
+                            </div>
+                        </>
                     )}
                     
                     {/* Add My Submissions button for authenticated users on appropriate pages */}

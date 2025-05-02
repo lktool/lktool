@@ -67,11 +67,11 @@ function App() {
           } />
           
           {/* Regular User Protected Routes */}
-          <Route path="/formData" element={
+{/*           <Route path="/formData" element={
             <ProtectedRoute>
               <FormData/> 
             </ProtectedRoute>}>
-            </Route>
+            </Route> */}
           
           {/* Not Found Route - will redirect to home */}
           <Route path="/not-found" element={<NotFound />} />
