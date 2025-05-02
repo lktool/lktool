@@ -16,8 +16,8 @@ function UserSubmissions() {
         setSubmissions(data);
         setError(null);
       } catch (err) {
-        console.error("Failed to fetch submissions:", err);
-        setError("Failed to load your submission history. Please try again later.");
+        console.error('Failed to fetch submissions:', err);
+        setError('Unable to load your submissions. Please try again later.');
       } finally {
         setLoading(false);
       }
@@ -27,15 +27,19 @@ function UserSubmissions() {
   }, []);
 
   if (loading) {
-    return <div className="submissions-container">
-      <LoadingSpinner size="large" text="Loading your submissions..." />
-    </div>;
+    return (
+      <div className="submissions-container">
+        <LoadingSpinner size="large" text="Loading your submissions..." />
+      </div>
+    );
   }
 
   if (error) {
-    return <div className="submissions-container">
-      <div className="error-message">{error}</div>
-    </div>;
+    return (
+      <div className="submissions-container">
+        <div className="error-message">{error}</div>
+      </div>
+    );
   }
 
   return (
@@ -65,11 +69,6 @@ function UserSubmissions() {
                 </div>
                 
                 <div className="submission-body">
-                  <div className="submission-field">
-                    <label>Email:</label>
-                    <p>{submission.email}</p>
-                  </div>
-                  
                   <div className="submission-field">
                     <label>LinkedIn URL:</label>
                     <a href={submission.linkedin_url} target="_blank" rel="noopener noreferrer">

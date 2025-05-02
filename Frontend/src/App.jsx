@@ -46,7 +46,7 @@ function App() {
             } 
           />
           
-          {/* Add User Submissions Route */}
+          {/* New User Submissions Route */}
           <Route 
             path="/my-submissions" 
             element={
@@ -55,7 +55,7 @@ function App() {
               </ProtectedRoute>
             } 
           />
-
+          
           {/* Admin Login (Public) */}
           <Route path="/admin" element={<Admin />} />
           

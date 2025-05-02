@@ -88,7 +88,7 @@
   color: #555;
 }
 
-.submission-field p {
+.submission-field p, .submission-field a {
   margin: 0;
   color: #333;
 }
@@ -106,15 +106,6 @@
 @media (max-width: 768px) {
   .submissions-list {
     grid-template-columns: 1fr;
-  }
-  
-  .submission-header {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-  
-  .submission-status {
-    margin-top: 0.5rem;
   }
 }
 

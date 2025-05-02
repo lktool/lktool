@@ -179,11 +179,13 @@ function NavBar() {
                             </div>
                         </>
                     )}
-
-                    {/* Add My Submissions button to navbar for logged in users */}
-                    {isUserLoggedIn && !isAdminPage && (
+                    
+                    {/* Add My Submissions button for authenticated users on non-admin pages */}
+                    {isUserLoggedIn && !isAdminPage && !isLandingPage && (
                         <div className="navbar-account">
-                            <a href="#" onClick={(e) => {e.preventDefault(); handleMySubmissions();}}>My Submissions</a>
+                            <a href="#" onClick={(e) => {e.preventDefault(); handleMySubmissions();}}>
+                                My Submissions
+                            </a>
                         </div>
                     )}
                     
