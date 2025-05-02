@@ -129,17 +129,23 @@ function Signup() {
     return (
       <div className="container1">
         <div className="verification-message">
-          <AiOutlineMail className="email-icon" />
-          <h1>Registration Successful</h1>
-          <p>A verification link has been sent to <span className="email-highlight">{email}</span></p>
-          <p><strong>Please check your inbox</strong> and click the link to verify your account.</p>
-          <p>If you don't receive the email within a few minutes, check your spam folder or click below to resend.</p>
+          <div className="email-icon">
+            <AiOutlineMail />
+          </div>
+          <h1>Verify Your Email</h1>
+          <p>We've sent a verification link to:</p>
+          <p><span className="email-highlight">{email}</span></p>
+          <p><strong>Check your inbox</strong> and click the link to complete your registration.</p>
+          <p>Don't see it? Check your spam folder or request a new link.</p>
           <div className="verification-actions">
             <button 
-              onClick={() => authService.resendVerification(email)}
+              onClick={() => {
+                authService.resendVerification(email);
+                alert('Verification email resent!');
+              }}
               className="resend-btn"
             >
-              Resend Verification Email
+              Resend Email
             </button>
             <Link to="/login" className="login-link">Go to Login</Link>
           </div>
