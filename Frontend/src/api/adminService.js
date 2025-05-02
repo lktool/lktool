@@ -1,16 +1,14 @@
 import axios from 'axios';
 
-// Base URL configuration
-const BASE_URL = process.env.NODE_ENV === 'production'
-  ? 'https://lktool.onrender.com'
-  : 'http://localhost:8000';
+// Backend URL
+const BACKEND_URL = 'https://lktool.onrender.com';
 
-// Admin API endpoints
+// Admin-specific API endpoints
 const ADMIN_ENDPOINTS = {
-  LOGIN: `${BASE_URL}/api/admin/login/`,
-  SUBMISSIONS: `${BASE_URL}/api/admin/submissions/`,
-  SUBMISSION_DETAIL: `${BASE_URL}/api/admin/submissions/:id/`,
-  STATS: `${BASE_URL}/api/admin/stats/`
+  LOGIN: `${BACKEND_URL}/api/admin/login/`,
+  SUBMISSIONS: `${BACKEND_URL}/api/admin/submissions/`,
+  SUBMISSION_DETAIL: `${BACKEND_URL}/api/admin/submissions/:id/`,
+  STATS: `${BACKEND_URL}/api/admin/stats/`,
 };
 
 // Create an API client with admin authorization header
@@ -20,25 +18,29 @@ const createAdminClient = () => {
   return axios.create({
     headers: {
       'Content-Type': 'application/json',
-      'Admin-Authorization': token ? `Bearer ${token}` : ''
+      'Admin-Authorization': token ? `Bearer ${token}` : '',
     }
   });
 };
 
 export const adminService = {
   /**
-   * Admin login
+   * Admin login with direct connection to backend
    * @param {string} email - Admin email
    * @param {string} password - Admin password
-   * @returns {Promise<Object>} Login response with token
+   * @returns {Promise<boolean>} Success flag
    */
   async login(email, password) {
     try {
+      console.log(`Attempting admin login to ${ADMIN_ENDPOINTS.LOGIN}`);
+      
       const response = await axios.post(
         ADMIN_ENDPOINTS.LOGIN,
         { email, password },
         { headers: { 'Content-Type': 'application/json' } }
       );
+      
+      console.log('Admin login response:', response);
       
       // Store the admin token on successful login
       if (response.data && response.data.token) {
@@ -47,30 +49,32 @@ export const adminService = {
       }
       return false;
     } catch (error) {
-      console.error('Admin login error:', error);
+      console.error('Admin login error:', error.response || error);
       throw error;
     }
   },
   
   /**
    * Check if admin is authenticated
-   * @returns {boolean} True if admin is authenticated
+   * @returns {boolean} Authentication status
    */
   isAuthenticated() {
     return !!localStorage.getItem('adminToken');
   },
   
   /**
-   * Logout admin
+   * Admin logout
    */
   logout() {
     localStorage.removeItem('adminToken');
+    // Notify components about auth state change
+    window.dispatchEvent(new Event('authChange'));
   },
   
   /**
-   * Get all form submissions
-   * @param {string} filter - Optional filter for submissions ('all', 'pending', 'processed')
-   * @returns {Promise<Array>} Array of form submissions
+   * Get form submissions with optional filtering
+   * @param {string} filter - Filter submissions (processed, pending, all)
+   * @returns {Promise<Array>} List of submissions
    */
   async getSubmissions(filter = '') {
     try {
@@ -87,7 +91,7 @@ export const adminService = {
   /**
    * Update submission status
    * @param {number} id - Submission ID
-   * @param {boolean} isProcessed - New processed status
+   * @param {boolean} isProcessed - Processed flag
    * @returns {Promise<Object>} Updated submission
    */
   async updateSubmissionStatus(id, isProcessed) {
@@ -97,13 +101,13 @@ export const adminService = {
       const response = await apiClient.patch(url, { is_processed: isProcessed });
       return response.data;
     } catch (error) {
-      console.error('Error updating submission status:', error);
+      console.error('Error updating submission:', error);
       throw error;
     }
   },
   
   /**
-   * Get admin dashboard statistics
+   * Get dashboard statistics
    * @returns {Promise<Object>} Dashboard statistics
    */
   async getStats() {

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { adminService } from '../api/adminService';
+import { adminService } from '../api/adminService'; // Import our dedicated admin service
 import './AdminLogin.css';
 
 function AdminLogin({ onLoginSuccess }) {
@@ -20,15 +20,25 @@ function AdminLogin({ onLoginSuccess }) {
     setError('');
     
     try {
+      console.log(`Attempting admin login with email: ${email}`);
       const success = await adminService.login(email, password);
+      
       if (success) {
+        console.log('Admin login successful!');
         onLoginSuccess();
       } else {
         setError('Invalid credentials');
       }
     } catch (err) {
-      setError('Login failed. Please try again.');
-      console.error('Admin login error:', err);
+      console.error('Admin login error details:', err);
+      
+      if (err.response?.status === 401) {
+        setError('Invalid admin credentials');
+      } else if (err.message && err.message.includes('Network Error')) {
+        setError('Network error. Please check your connection.');
+      } else {
+        setError('Login failed. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
