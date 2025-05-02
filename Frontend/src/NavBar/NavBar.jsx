@@ -10,6 +10,8 @@ function NavBar() {
     const [isLandingPage, setIsLandingPage] = useState(false);
     const [isAdminPage, setIsAdminPage] = useState(false);
     const [isInputMain, setIsInputMain] = useState(false);
+    const [isLoginPage, setIsLoginPage] = useState(false);
+    const [isSignupPage, setIsSignupPage] = useState(false);
     
     // Check authentication state when component mounts or location changes
     useEffect(() => {
@@ -21,14 +23,12 @@ function NavBar() {
         const adminToken = localStorage.getItem('adminToken');
         setIsAdminLoggedIn(!!adminToken);
         
-        // Check if we're on landing page
+        // Check which page we're on
         setIsLandingPage(location.pathname === '/');
-        
-        // Check if we're on admin pages
         setIsAdminPage(location.pathname.startsWith('/admin'));
-        
-        // Check if we're on inputMain page
         setIsInputMain(location.pathname === '/inputMain');
+        setIsLoginPage(location.pathname === '/login');
+        setIsSignupPage(location.pathname === '/signup');
         
     }, [location.pathname]);
 
@@ -100,7 +100,7 @@ function NavBar() {
     }
     
     // Hide navbar on specific pages where it's not needed
-    const hideNavbarPaths = ['/login', '/signup', '/forgot-password'];
+    const hideNavbarPaths = ['/forgot-password'];
     if (hideNavbarPaths.includes(location.pathname)) {
         return null;
     }
@@ -136,6 +136,13 @@ function NavBar() {
                                 </div>
                             )}
                         </>
+                    )}
+
+                    {/* Login/Signup pages - show ONLY Admin link */}
+                    {(isLoginPage || isSignupPage) && (
+                        <div className="navbar-account">
+                            <a href="#" onClick={(e) => {e.preventDefault(); handleAdmin();}}>Admin</a>
+                        </div>
                     )}
 
                     {/* Admin Login page - show Login, Signup options too */}
