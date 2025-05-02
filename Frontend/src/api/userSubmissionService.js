@@ -15,8 +15,23 @@ export const userSubmissionService = {
     try {
       // Get the authentication token
       const token = localStorage.getItem('token');
+      
+      // Check for token before making request
       if (!token) {
-        throw new Error('Authentication required');
+        console.error('No authentication token found');
+        return [];
+      }
+      
+      // Handle JWT token format - some tokens are stored as JSON objects
+      let authToken = token;
+      try {
+        // Check if token is stored as JSON
+        const parsedToken = JSON.parse(token);
+        if (parsedToken && parsedToken.value) {
+          authToken = parsedToken.value;
+        }
+      } catch (e) {
+        // Token is a plain string, which is fine
       }
       
       // Make authenticated request to get user submissions
@@ -25,7 +40,7 @@ export const userSubmissionService = {
         {
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
+            'Authorization': `Bearer ${authToken}`
           }
         }
       );
@@ -33,7 +48,8 @@ export const userSubmissionService = {
       return response.data;
     } catch (error) {
       console.error('Error fetching user submissions:', error);
-      throw error;
+      // Return empty array instead of throwing to avoid crashing the component
+      return [];
     }
   }
 };

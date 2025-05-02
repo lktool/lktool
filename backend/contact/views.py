@@ -7,10 +7,11 @@ from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.http import HttpResponse
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAdminUser
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from django.core.mail import send_mail
 import json
 import traceback
+from django.db import models
 
 from .serializers import ContactSerializer
 from .models import ContactSubmission
@@ -118,3 +119,19 @@ def test_email(request):
             content_type="application/json",
             status=500
         )
+
+class UserSubmissionsView(APIView):
+    """
+    API endpoint that allows users to view their own form submissions
+    """
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request):
+        # Get submissions for the current authenticated user
+        submissions = ContactSubmission.objects.filter(
+            # Match either by user foreign key or email field
+            models.Q(user=request.user) | models.Q(email=request.user.email)
+        ).order_by('-created_at')
+        
+        serializer = ContactSerializer(submissions, many=True)
+        return Response(serializer.data)
