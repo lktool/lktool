@@ -35,7 +35,7 @@ class ContactFormView(APIView):
                 submission = serializer.save()
                 
                 # Get admin email from settings
-                admin_email = getattr(settings, 'ADMIN_EMAIL', 'mathan21092006@gmail.com')
+                admin_email = getattr(settings, 'ADMIN_EMAIL')
                 
                 # Log the email details for debugging
                 logger.info(f"Contact form submission: {submission.id}")
