@@ -14,6 +14,7 @@ class ContactSubmission(models.Model):
     email = models.EmailField()
     created_at = models.DateTimeField(auto_now_add=True)
     is_processed = models.BooleanField(default=False)
+    # Add JSON field for storing analyses
     analysis = models.JSONField(null=True, blank=True)
 
     def __str__(self):
