@@ -240,6 +240,22 @@ CORS_ALLOW_CREDENTIALS = True
 # Enable preflight caching to reduce OPTIONS requests
 CORS_PREFLIGHT_MAX_AGE = 86400  # 24 hours in seconds - dramatically reduces preflight requests
 
+# Add allowed headers to fix CORS issue
+CORS_ALLOW_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+    'cache-control',  # Add this header
+    'pragma',         # Add this header
+    'expires',        # Add this header
+]
+
 # Important: Keep this setting off in production
 CORS_ALLOW_ALL_ORIGINS = False
 
