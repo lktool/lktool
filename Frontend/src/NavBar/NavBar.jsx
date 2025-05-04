@@ -113,6 +113,10 @@ function NavBar() {
     function handleInputMain() {
         navigate('/inputMain');
     }
+
+    function handleMyAnalyses() {
+        navigate('/my-analyses');
+    }
     
     // Hide navbar on specific pages where it's not needed
     const hideNavbarPaths = ['/forgot-password'];
@@ -209,6 +213,15 @@ function NavBar() {
                         <div className="navbar-account">
                             <a href="#" onClick={(e) => {e.preventDefault(); handleMySubmissions();}}>
                                 My Submissions
+                            </a>
+                        </div>
+                    )}
+
+                    {/* Add My Analyses link for users with processed submissions */}
+                    {isUserLoggedIn && !isAdminPage && (
+                        <div className="navbar-account">
+                            <a href="#" onClick={(e) => {e.preventDefault(); handleMyAnalyses();}}>
+                                My Analyses
                             </a>
                         </div>
                     )}

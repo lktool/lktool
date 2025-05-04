@@ -7,11 +7,12 @@ from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.http import HttpResponse
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAdminUser, IsAuthenticated
+from rest_framework.permissions import IsAdminUser, IsAuthenticated, AllowAny
 from django.core.mail import send_mail
 import json
 import traceback
 from django.db import models
+from django.db.models import Q
 
 from .serializers import ContactSerializer
 from .models import ContactSubmission
@@ -19,56 +20,23 @@ from .email_service import send_notification_email
 
 logger = logging.getLogger(__name__)
 
-@method_decorator(csrf_exempt, name='dispatch')
 class ContactFormView(APIView):
     """
-    View to handle contact form submissions
+    API endpoint for submitting contact forms
     """
-    permission_classes = (permissions.IsAuthenticated,)
+    permission_classes = [AllowAny]
     
     def post(self, request):
-        serializer = ContactSerializer(data=request.data)
-        
+        # Add user to request data if authenticated
+        data = request.data.copy()
+        if request.user.is_authenticated:
+            data['email'] = request.user.email
+            
+        serializer = ContactSerializer(data=data)
         if serializer.is_valid():
-            try:
-                # Save the submission to database
-                submission = serializer.save()
-                
-                # Get admin email from settings
-                admin_email = getattr(settings, 'ADMIN_EMAIL')
-                
-                # Log the email details for debugging
-                logger.info(f"Contact form submission: {submission.id}")
-                logger.info(f"Admin email from settings: {admin_email}")
-                logger.info(f"From email: {settings.DEFAULT_FROM_EMAIL}")
-                
-                # Send email notification using our service
-                email_sent = send_notification_email(
-                    user_email=submission.email,
-                    url=submission.linkedin_url,
-                    message=submission.message,
-                    recipient_email=admin_email,
-                    subject="New Message from Website User"
-                )
-                
-                if email_sent:
-                    logger.info("Email notification sent successfully")
-                else:
-                    logger.warning("Failed to send email notification, but submission was saved")
-                
-                # Always return success if the form was saved, even if email failed
-                return Response({
-                    "message": "Your message has been received. We'll contact you soon.",
-                    "email_sent": email_sent
-                }, status=status.HTTP_201_CREATED)
-                
-            except Exception as e:
-                logger.error(f"Error processing contact form: {str(e)}")
-                return Response({
-                    "error": "An error occurred while processing your request. Please try again later."
-                }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            serializer.save()
+            return Response({"message": "Form submitted successfully!"}, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET'])
 @permission_classes([IsAdminUser])
@@ -122,16 +90,41 @@ def test_email(request):
 
 class UserSubmissionsView(APIView):
     """
-    API endpoint that allows users to view their own form submissions
+    API endpoint for users to view their own submissions
     """
     permission_classes = [IsAuthenticated]
     
     def get(self, request):
-        # Get submissions for the current authenticated user
-        submissions = ContactSubmission.objects.filter(
-            # Match either by user foreign key or email field
-            models.Q(user=request.user) | models.Q(email=request.user.email)
-        ).order_by('-created_at')
+        # Get current user's email
+        user_email = request.user.email
         
+        # Fetch submissions matching the user's email
+        submissions = ContactSubmission.objects.filter(email=user_email).order_by('-created_at')
         serializer = ContactSerializer(submissions, many=True)
         return Response(serializer.data)
+
+class UserAnalysesView(APIView):
+    """API endpoint for users to view analyses of their submissions"""
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request):
+        # Get current user's email
+        user_email = request.user.email
+        
+        # Fetch submissions with analyses
+        submissions = ContactSubmission.objects.filter(
+            email=user_email, 
+            is_processed=True,
+            analysis__isnull=False
+        ).order_by('-created_at')
+        
+        data = []
+        for submission in submissions:
+            data.append({
+                'id': submission.id,
+                'linkedin_url': submission.linkedin_url,
+                'created_at': submission.created_at,
+                'analysis': submission.analysis
+            })
+        
+        return Response(data)

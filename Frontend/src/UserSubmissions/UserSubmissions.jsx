@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { userSubmissionService } from '../api/userSubmissionService';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import LoadingSpinner from '../components/LoadingSpinner';
 import './UserSubmissions.css';
 
@@ -9,21 +9,49 @@ function UserSubmissions() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    async function fetchUserSubmissions() {
+    async function fetchSubmissions() {
       try {
         setLoading(true);
-        const data = await userSubmissionService.getUserSubmissions();
-        setSubmissions(data);
+        
+        // Get authentication token
+        const token = localStorage.getItem('token');
+        if (!token) {
+          throw new Error('No authentication token found');
+        }
+        
+        // Parse token if it's stored as JSON
+        let authToken = token;
+        try {
+          const parsedToken = JSON.parse(token);
+          if (parsedToken && parsedToken.value) {
+            authToken = parsedToken.value;
+          }
+        } catch (e) {
+          // Token is a plain string, which is fine
+        }
+        
+        // Fetch user's submissions
+        const response = await axios.get(
+          'https://lktool.onrender.com/api/contact/user-submissions/', 
+          {
+            headers: {
+              'Authorization': `Bearer ${authToken}`,
+              'Content-Type': 'application/json'
+            }
+          }
+        );
+        
+        setSubmissions(response.data);
         setError(null);
       } catch (err) {
-        console.error('Failed to fetch submissions:', err);
-        setError('Unable to load your submissions. Please try again later.');
+        console.error('Error fetching user submissions:', err);
+        setError('Failed to load your submissions. Please try again later.');
       } finally {
         setLoading(false);
       }
     }
-
-    fetchUserSubmissions();
+    
+    fetchSubmissions();
   }, []);
 
   if (loading) {
@@ -44,27 +72,28 @@ function UserSubmissions() {
 
   return (
     <div className="submissions-container">
-      <h1>Your Submission History</h1>
+      <h1>My Submissions</h1>
       
       {submissions.length === 0 ? (
         <div className="no-submissions">
           <p>You haven't made any submissions yet.</p>
+          <p>Go to the Input page to submit your LinkedIn profile for analysis.</p>
         </div>
       ) : (
         <>
           <p className="submissions-count">
-            You have made {submissions.length} submission{submissions.length !== 1 ? 's' : ''}.
+            You have submitted {submissions.length} profile{submissions.length !== 1 ? 's' : ''} for analysis.
           </p>
           
           <div className="submissions-list">
             {submissions.map((submission) => (
-              <div className="submission-card" key={submission.id}>
+              <div className="submission-card" key={submission.id || submission.created_at}>
                 <div className="submission-header">
                   <span className="submission-date">
-                    {new Date(submission.created_at).toLocaleDateString()}
+                    {new Date(submission.created_at).toLocaleDateString()} at {new Date(submission.created_at).toLocaleTimeString()}
                   </span>
                   <span className={`submission-status ${submission.is_processed ? 'processed' : 'pending'}`}>
-                    {submission.is_processed ? 'Processed' : 'Pending'}
+                    {submission.is_processed ? 'Processed' : 'Pending Review'}
                   </span>
                 </div>
                 
@@ -76,10 +105,12 @@ function UserSubmissions() {
                     </a>
                   </div>
                   
-                  <div className="submission-field">
-                    <label>Message:</label>
-                    <p className="submission-message">{submission.message}</p>
-                  </div>
+                  {submission.message && (
+                    <div className="submission-field">
+                      <label>Message:</label>
+                      <p className="submission-message">{submission.message}</p>
+                    </div>
+                  )}
                 </div>
               </div>
             ))}

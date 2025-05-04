@@ -5,9 +5,16 @@ from rest_framework.permissions import IsAdminUser
 from django.conf import settings
 import jwt
 from datetime import datetime, timedelta
+import json
 
 from contact.models import ContactSubmission
 from contact.serializers import ContactSerializer  # Fixed import name
+
+from django.contrib.auth import get_user_model
+from .models import ProfileAnalysis
+from .serializers import UserSerializer, ContactSubmissionSerializer, ProfileAnalysisSerializer
+
+User = get_user_model()
 
 class AdminLoginView(APIView):
     """
@@ -71,6 +78,7 @@ class AdminAuthMiddleware:
 class FormSubmissionListView(APIView):
     """
     View to list all contact form submissions for admin
+    Also handles LinkedIn analysis submission
     """
     def get(self, request):
         # Check if user is admin
@@ -89,6 +97,38 @@ class FormSubmissionListView(APIView):
         serializer = ContactSerializer(submissions, many=True)  # Fixed serializer name
         return Response(serializer.data)
         
+    def post(self, request):
+        """Handle LinkedIn profile analysis submission"""
+        # Check if user is admin
+        if not getattr(request, 'is_admin', False):
+            return Response({"detail": "Admin authentication required"}, status=status.HTTP_401_UNAUTHORIZED)
+        
+        try:
+            # Get required data
+            user_id = request.data.get('user')
+            submission_id = request.data.get('submission')
+            analysis_data = request.data.get('data')
+            
+            # Validate data
+            if not user_id or not submission_id or not analysis_data:
+                return Response({"detail": "Missing required fields"}, status=status.HTTP_400_BAD_REQUEST)
+                
+            # Get the submission
+            try:
+                submission = ContactSubmission.objects.get(id=submission_id)
+            except ContactSubmission.DoesNotExist:
+                return Response({"detail": "Submission not found"}, status=status.HTTP_404_NOT_FOUND)
+            
+            # Store analysis as JSON field
+            submission.analysis = analysis_data
+            # Mark as processed
+            submission.is_processed = True
+            submission.save(update_fields=['analysis', 'is_processed'])
+            
+            return Response({"message": "Analysis saved successfully"}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({"detail": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 class UpdateSubmissionStatusView(APIView):
     """
     View to update a submission's processed status
@@ -130,3 +170,65 @@ class AdminStatsView(APIView):
             'processed': processed_count,
             'pending': pending_count
         })
+
+class UserListView(APIView):
+    """
+    View to list all users for admin selection
+    """
+    def get(self, request):
+        # Check if user is admin
+        if not getattr(request, 'is_admin', False):
+            return Response({"detail": "Admin authentication required"}, status=status.HTTP_401_UNAUTHORIZED)
+            
+        users = User.objects.all().order_by('-date_joined')
+        data = [{"id": user.id, "email": user.email} for user in users]
+        return Response(data)
+
+class UserSubmissionsView(APIView):
+    """
+    View to list submissions for a specific user
+    """
+    def get(self, request, user_id):
+        # Check if user is admin
+        if not getattr(request, 'is_admin', False):
+            return Response({"detail": "Admin authentication required"}, status=status.HTTP_401_UNAUTHORIZED)
+            
+        try:
+            user = User.objects.get(id=user_id)
+            submissions = ContactSubmission.objects.filter(email=user.email).order_by('-created_at')
+            data = []
+            for sub in submissions:
+                data.append({
+                    "id": sub.id,
+                    "email": sub.email,
+                    "linkedin_url": sub.linkedin_url,
+                    "created_at": sub.created_at,
+                    "is_processed": sub.is_processed
+                })
+            return Response(data)
+        except User.DoesNotExist:
+            return Response({"detail": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+
+class ProfileAnalysisView(APIView):
+    """
+    View to submit and retrieve LinkedIn profile analyses
+    """
+    def post(self, request):
+        # Check if user is admin
+        if not getattr(request, 'is_admin', False):
+            return Response({"detail": "Admin authentication required"}, status=status.HTTP_401_UNAUTHORIZED)
+            
+        serializer = ProfileAnalysisSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+    def get(self, request):
+        # Check if user is admin
+        if not getattr(request, 'is_admin', False):
+            return Response({"detail": "Admin authentication required"}, status=status.HTTP_401_UNAUTHORIZED)
+            
+        analyses = ProfileAnalysis.objects.all().order_by('-created_at')
+        serializer = ProfileAnalysisSerializer(analyses, many=True)
+        return Response(serializer.data)
