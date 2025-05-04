@@ -27,18 +27,23 @@ class ContactFormView(APIView):
     permission_classes = [AllowAny]
     
     def post(self, request):
-        # IMPORTANT: Create a copy of request data to modify
+        # Create a copy of request data to modify
         data = request.data.copy()
         
-        # If user is authenticated, use their email from their account
+        # If user is authenticated, ensure we use their authenticated email
         if request.user.is_authenticated:
-            # Log the association for debugging
-            print(f"Associating submission with authenticated user: {request.user.email}")
-            data['email'] = request.user.email
+            # Use the exact authenticated email (don't rely on form input)
+            user_email = request.user.email
+            print(f"Associating submission with authenticated user: {user_email}")
+            data['email'] = user_email
             
+        # Debug the submission data
+        print(f"Processing submission with data: {data}")
+        
         serializer = ContactSerializer(data=data)
         if serializer.is_valid():
             submission = serializer.save()
+            print(f"Created submission ID {submission.id} for email {submission.email}")
             
             # Send email notification to admin
             try:
@@ -73,6 +78,9 @@ class ContactFormView(APIView):
                 # Continue even if email fails - don't impact user experience
             
             return Response({"message": "Form submitted successfully!"}, status=status.HTTP_201_CREATED)
+        
+        # Debug validation errors
+        print(f"Validation errors: {serializer.errors}")
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET'])
@@ -132,15 +140,21 @@ class UserSubmissionsView(APIView):
     permission_classes = [IsAuthenticated]
     
     def get(self, request):
-        # CRITICAL FIX: Get submissions ONLY for the authenticated user's email
+        # Get the authenticated user's email
         user_email = request.user.email
         
-        # Strict filtering - ONLY match the exact authenticated user's email
+        # Debug the user email and query
+        print(f"Fetching submissions for authenticated user: {user_email}")
+        
+        # FIXED: Use case-insensitive email comparison and exact match
         submissions = ContactSubmission.objects.filter(email__iexact=user_email).order_by('-created_at')
         
-        # Debug logging to verify filtering
-        print(f"User {user_email} retrieved {submissions.count()} submissions")
+        # Debug the query results
+        print(f"Found {submissions.count()} submissions for {user_email}")
+        for sub in submissions:
+            print(f" - Submission ID: {sub.id}, Email: {sub.email}")
         
+        # Make sure serializer includes necessary fields
         serializer = ContactSerializer(submissions, many=True)
         return Response(serializer.data)
 
@@ -154,7 +168,7 @@ class UserAnalysesView(APIView):
         
         # Fetch submissions with analyses
         submissions = ContactSubmission.objects.filter(
-            email=user_email, 
+            email__iexact=user_email, 
             is_processed=True,
             analysis__isnull=False
         ).order_by('-created_at')

@@ -350,18 +350,30 @@ export const authService = {
         }
     },
 
-    // Enhanced logout to clear all auth data
+    // Modified logout to only affect current user
     logout() {
-        localStorage.removeItem('token');
-        localStorage.removeItem('refreshToken');
-        localStorage.removeItem('user_data');
+        // Store user identifier before clearing
+        const currentUserEmail = localStorage.getItem('user_email');
         
-        // Clear any session storage as well
-        sessionStorage.removeItem('token');
-        sessionStorage.removeItem('auth_state');
-        
-        // Notify about authentication change
-        window.dispatchEvent(new Event('authChange'));
+        // Only clear tokens for current user
+        if (currentUserEmail) {
+            console.log(`Logging out current user: ${currentUserEmail}`);
+            
+            // Remove only current user's authentication data
+            localStorage.removeItem('token');
+            localStorage.removeItem('refreshToken');
+            localStorage.removeItem('user_data');
+            localStorage.removeItem('user_email');
+            
+            // Clear any session storage as well
+            sessionStorage.removeItem('token');
+            sessionStorage.removeItem('auth_state');
+            
+            // Use a user-specific event to prevent affecting other users
+            window.dispatchEvent(new CustomEvent('authChange', {
+                detail: { email: currentUserEmail }
+            }));
+        }
     },
 
     // Password reset request with improved error handling

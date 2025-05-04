@@ -34,7 +34,7 @@ function NavBar() {
         
     }, [location.pathname]);
 
-    // Add check for token changes
+    // Add check for token changes with user-specific events
     useEffect(() => {
         const checkAuthStatus = () => {
             // Check user login status
@@ -52,12 +52,20 @@ function NavBar() {
         // Set up event listener for storage changes (login/logout in other tabs)
         window.addEventListener('storage', checkAuthStatus);
         
-        // Custom event for auth changes within the same tab
-        window.addEventListener('authChange', checkAuthStatus);
+        // Custom event for auth changes within the same tab - with user specificity
+        const handleAuthChange = (event) => {
+            // Only update if this is the current user's event
+            const currentUserEmail = localStorage.getItem('user_email');
+            if (!event.detail || !event.detail.email || event.detail.email === currentUserEmail) {
+                checkAuthStatus();
+            }
+        };
+        
+        window.addEventListener('authChange', handleAuthChange);
         
         return () => {
             window.removeEventListener('storage', checkAuthStatus);
-            window.removeEventListener('authChange', checkAuthStatus);
+            window.removeEventListener('authChange', handleAuthChange);
         };
     }, []);
 

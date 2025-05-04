@@ -16,4 +16,5 @@ class ContactSerializer(serializers.ModelSerializer):
     def validate_email(self, value):
         if not value:
             raise serializers.ValidationError("Email address is required.")
-        return value
+        # Normalize email to lowercase for consistency
+        return value.lower()
