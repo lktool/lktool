@@ -30,6 +30,10 @@ function UserSubmissions() {
           // Token is a plain string, which is fine
         }
         
+        // Log the user email to verify correct user
+        const userEmail = localStorage.getItem('user_email');
+        console.log(`Fetching submissions for user: ${userEmail}`);
+        
         // Fetch user's submissions
         const response = await axios.get(
           'https://lktool.onrender.com/api/contact/user-submissions/', 
@@ -41,6 +45,7 @@ function UserSubmissions() {
           }
         );
         
+        console.log(`Retrieved ${response.data.length} submissions`);
         setSubmissions(response.data);
         setError(null);
       } catch (err) {

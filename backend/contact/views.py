@@ -27,9 +27,13 @@ class ContactFormView(APIView):
     permission_classes = [AllowAny]
     
     def post(self, request):
-        # Add user to request data if authenticated
+        # IMPORTANT: Create a copy of request data to modify
         data = request.data.copy()
+        
+        # If user is authenticated, use their email from their account
         if request.user.is_authenticated:
+            # Log the association for debugging
+            print(f"Associating submission with authenticated user: {request.user.email}")
             data['email'] = request.user.email
             
         serializer = ContactSerializer(data=data)
@@ -128,11 +132,15 @@ class UserSubmissionsView(APIView):
     permission_classes = [IsAuthenticated]
     
     def get(self, request):
-        # Get current user's email
+        # CRITICAL FIX: Get submissions ONLY for the authenticated user's email
         user_email = request.user.email
         
-        # Fetch submissions matching the user's email
-        submissions = ContactSubmission.objects.filter(email=user_email).order_by('-created_at')
+        # Strict filtering - ONLY match the exact authenticated user's email
+        submissions = ContactSubmission.objects.filter(email__iexact=user_email).order_by('-created_at')
+        
+        # Debug logging to verify filtering
+        print(f"User {user_email} retrieved {submissions.count()} submissions")
+        
         serializer = ContactSerializer(submissions, many=True)
         return Response(serializer.data)
 
