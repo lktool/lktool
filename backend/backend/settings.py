@@ -280,8 +280,30 @@ if DEBUG:
     print(f"FRONTEND_URL: {FRONTEND_URL}")
     print("-------------------------\n")
 
-# Remove the existing security settings which have syntax errors (they're using backticks)
-# And replace them with properly formatted security settings:
+# Enhanced email logging
+if not DEBUG and os.environ.get('EMAIL_HOST_USER') and os.environ.get('EMAIL_HOST_PASSWORD'):
+    print("\n--- Production Email Configuration ---")
+    print(f"EMAIL_HOST: {EMAIL_HOST}")
+    print(f"EMAIL_PORT: {EMAIL_PORT}")
+    print(f"EMAIL_HOST_USER: {EMAIL_HOST_USER}")
+    print(f"DEFAULT_FROM_EMAIL: {DEFAULT_FROM_EMAIL}")
+    print(f"ADMIN_EMAIL: {ADMIN_EMAIL}")
+    print("-----------------------------------\n")
+    
+    # Test email configuration on startup
+    try:
+        from django.core.mail import send_mail
+        print("Testing email configuration...")
+        send_mail(
+            subject="LK Tool Box - Email Configuration Test",
+            message="This is an automated test email to confirm email configuration is working properly.",
+            from_email=DEFAULT_FROM_EMAIL,
+            recipient_list=[ADMIN_EMAIL],
+            fail_silently=False,
+        )
+        print("Test email sent successfully")
+    except Exception as e:
+        print(f"WARNING: Email configuration test failed: {e}")
 
 # Production security settings
 SECURE_SSL_REDIRECT = True

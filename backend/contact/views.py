@@ -34,7 +34,40 @@ class ContactFormView(APIView):
             
         serializer = ContactSerializer(data=data)
         if serializer.is_valid():
-            serializer.save()
+            submission = serializer.save()
+            
+            # Send email notification to admin
+            try:
+                subject = f"New LinkedIn Profile Submission: {submission.email}"
+                message = f"""
+                A new LinkedIn profile has been submitted:
+                
+                Email: {submission.email}
+                LinkedIn URL: {submission.linkedin_url}
+                
+                Message:
+                {submission.message}
+                
+                You can review this submission in the admin dashboard.
+                """
+                from_email = settings.DEFAULT_FROM_EMAIL
+                recipient_list = [settings.ADMIN_EMAIL]
+                
+                # Log email attempt
+                print(f"Attempting to send email to {recipient_list} from {from_email}")
+                
+                send_mail(
+                    subject=subject,
+                    message=message,
+                    from_email=from_email,
+                    recipient_list=recipient_list,
+                    fail_silently=False,
+                )
+                print("Email sent successfully")
+            except Exception as e:
+                print(f"Failed to send email notification: {e}")
+                # Continue even if email fails - don't impact user experience
+            
             return Response({"message": "Form submitted successfully!"}, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 

@@ -1,211 +1,152 @@
-import {useState, useEffect} from "react";
-import NavBar from "../NavBar/NavBar";
-import "./InputMain.css";
-import { contactService } from "../api/contactService";
-import { useNavigate } from "react-router-dom";
+import { useState } from 'react';
+import axios from 'axios';
+import './InputMain.css';
+import LoadingSpinner from '../components/LoadingSpinner';
 
-function InputMain(){
-    const [url, setUrl] = useState("");
-    const [message, setMessage] = useState("");
-    const [email, setEmail] = useState("");
-    const [error, setError] = useState("");
-    const [success, setSuccess] = useState("");
+function InputMain() {
+    const [formData, setFormData] = useState({
+        linkedin_url: '',
+        message: ''
+    });
     const [loading, setLoading] = useState(false);
-    const [csrfError, setCsrfError] = useState(false);
-    const navigate = useNavigate();
-    
-    useEffect(() => {
-        // Try to load user's email if available
-        const storedEmail = localStorage.getItem('user_email');
-        if (storedEmail) {
-            setEmail(storedEmail);
-        }
-    }, []);
+    const [error, setError] = useState('');
+    const [success, setSuccess] = useState(false);
 
-    function handleUrlChange(event){
-        setUrl(event.target.value);
-    }
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setFormData((prev) => ({
+            ...prev,
+            [name]: value
+        }));
+        setError(''); // Clear error when user edits
+    };
 
-    function handleMessageChange(event){
-        setMessage(event.target.value);
-    }
-
-    function handleEmailChange(event){
-        setEmail(event.target.value);
-    }
-
-    function validateEmail(email) {
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        return emailRegex.test(email);
-    }
-
-    function validateLinkedInUrl(url) {
-        return url.includes("linkedin.com");
-    }
-
-    async function handleSubmit(event){
-        event.preventDefault();
+    const handleSubmit = async (e) => {
+        e.preventDefault();
         
-        // Reset messages
-        setError("");
-        setSuccess("");
-        setCsrfError(false);
-        
-        // Validate all fields
-        if(!url){
-            setError("Please enter LinkedIn URL");
+        // Basic validation
+        if (!formData.linkedin_url) {
+            setError('LinkedIn URL is required');
             return;
         }
         
-        if(!validateLinkedInUrl(url)){
-            setError("Please enter a valid LinkedIn URL");
-            return;
-        }
-        
-        if(!message){
-            setError("Please enter a message");
-            return;
-        }
-        
-        if(!email){
-            setError("Please enter an email address");
-            return;
-        }
-        
-        if(!validateEmail(email)){
-            setError("Please enter a valid email address");
+        if (!formData.linkedin_url.includes('linkedin.com')) {
+            setError('Please enter a valid LinkedIn URL');
             return;
         }
 
-        try{
-            setLoading(true);
+        setLoading(true);
+        setError('');
+        
+        try {
+            const token = localStorage.getItem('token');
+            let authHeader = {};
             
-            // Use contactService instead of direct axios call
-            const response = await contactService.submitContactForm(url, message, email);
-            
-            // Show success message and clear form
-            setSuccess(response.message || "Your message has been sent successfully!");
-            setUrl("");
-            setMessage("");
-            // Don't clear email for convenience
-            
-        } catch(err) {
-            console.error("Error submitting contact form:", err);
-            
-            // Handle CSRF errors
-            if (err.isCsrfError || (err.error && err.error.includes('CSRF'))) {
-                setError("CSRF verification failed. Please refresh the page and try again.");
-                setCsrfError(true);
-                return;
-            }
-            
-            // Handle authentication errors
-            if (err.isAuthError || err.error === 'No authentication token available. Please login again.') {
-                setError("Authentication required. Please log in again.");
-                setTimeout(() => {
-                    navigate("/login");
-                }, 1500);
-                return;
-            }
-            
-            // Handle CORS-specific errors
-            if (err.isCorsError) {
-                setError("Server connection error. The server may be unreachable or not configured correctly.");
-                return;
-            }
-            
-            // Handle other error types
-            if (typeof err === 'object') {
-                if (err.linkedin_url) {
-                    setError(err.linkedin_url[0]);
-                } else if (err.message) {
-                    setError(err.message[0]);
-                } else if (err.email) {
-                    setError(err.email[0]);
-                } else if (err.error) {
-                    setError(err.error);
-                } else {
-                    setError("Failed to process your request. Please try again.");
+            if (token) {
+                // Parse token if stored as JSON
+                try {
+                    const parsedToken = JSON.parse(token);
+                    if (parsedToken.value) {
+                        authHeader = { 'Authorization': `Bearer ${parsedToken.value}` };
+                    } else {
+                        authHeader = { 'Authorization': `Bearer ${token}` };
+                    }
+                } catch {
+                    authHeader = { 'Authorization': `Bearer ${token}` };
                 }
-            } else {
-                setError("Failed to process your request. Please try again.");
             }
+            
+            const response = await axios.post(
+                'https://lktool.onrender.com/api/contact/submit/',
+                formData,
+                {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...authHeader
+                    }
+                }
+            );
+            
+            console.log('Submission response:', response.data);
+            
+            // Reset form on success
+            setFormData({
+                linkedin_url: '',
+                message: ''
+            });
+            
+            setSuccess(true);
+            
+            // Reset success message after 5 seconds
+            setTimeout(() => {
+                setSuccess(false);
+            }, 5000);
+            
+        } catch (err) {
+            console.error('Error submitting form:', err);
+            setError(err.response?.data?.message || 'Something went wrong. Please try again.');
         } finally {
             setLoading(false);
         }
-    }
-    
-    return (<>
-{/*         <NavBar/> */}
-        <div className="inputMain-container">
-            <div className="inputMain-content">
-                <h2>Welcome to LK Tool Box</h2>
-                <p>Enter your information</p>
-            </div>
-            <div className="inputMain-form">
-                <div className="input-group">
-                    <label htmlFor="url">LinkedIn URL</label>
-                    <input 
-                        id="url"
-                        type="text" 
-                        placeholder="Enter LinkedIn URL" 
-                        value={url}
-                        onChange={handleUrlChange}
+    };
+
+    return (
+        <div className="input-main-container">
+            <h1>LinkedIn Profile Submission</h1>
+            
+            {success && (
+                <div className="success-message">
+                    Submission successful! You'll receive a confirmation email shortly.
+                </div>
+            )}
+            
+            {error && (
+                <div className="error-message">
+                    {error}
+                </div>
+            )}
+            
+            <form onSubmit={handleSubmit} className="submission-form">
+                <div className="form-group">
+                    <label htmlFor="linkedin_url">LinkedIn Profile URL</label>
+                    <input
+                        type="text"
+                        id="linkedin_url"
+                        name="linkedin_url"
+                        value={formData.linkedin_url}
+                        onChange={handleChange}
+                        placeholder="https://www.linkedin.com/in/yourprofile"
+                        disabled={loading}
                     />
                 </div>
                 
-                <div className="input-group">
-                    <label htmlFor="message">Message</label>
-                    <textarea 
+                <div className="form-group">
+                    <label htmlFor="message">Additional Information (Optional)</label>
+                    <textarea
                         id="message"
-                        placeholder="Enter your message" 
-                        value={message}
-                        onChange={handleMessageChange}
-                        rows="4"
-                    />
-                </div>
-                
-                <div className="input-group">
-                    <label htmlFor="email">Email</label>
-                    <input 
-                        id="email"
-                        type="email" 
-                        placeholder="Enter your email" 
-                        value={email}
-                        onChange={handleEmailChange}
-                    />
+                        name="message"
+                        value={formData.message}
+                        onChange={handleChange}
+                        placeholder="Any specific details you'd like us to know"
+                        rows="5"
+                        disabled={loading}
+                    ></textarea>
                 </div>
                 
                 <button 
-                    className="inputMain-add-button" 
-                    onClick={handleSubmit}
+                    type="submit" 
+                    className="submit-button"
                     disabled={loading}
                 >
-                    {loading ? "Sending..." : "Submit"}
-                </button>
-            </div>
-            
-            {error && (
-                <div className="inputMain-display-error">
-                    <p>{error}</p>
-                    {csrfError && (
-                        <button 
-                            className="refresh-button" 
-                            onClick={() => window.location.reload()}
-                        >
-                            Refresh Page
-                        </button>
+                    {loading ? (
+                        <LoadingSpinner size="small" text="" textVisible={false} />
+                    ) : (
+                        'Submit Profile'
                     )}
-                </div>
-            )}
-            
-            {success && (
-                <div className="inputMain-display-success">
-                    <p>{success}</p>
-                </div>
-            )}
+                </button>
+            </form>
         </div>
-    </>);
+    );
 }
 
 export default InputMain;
