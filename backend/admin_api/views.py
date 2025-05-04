@@ -181,9 +181,7 @@ class UserListView(APIView):
         return Response(data)
 
 class UserSubmissionsView(APIView):
-    """
-    View to list submissions for a specific user
-    """
+    """View to fetch submissions for a specific user"""
     def get(self, request, user_id):
         # Check if user is admin
         if not getattr(request, 'is_admin', False):
@@ -191,7 +189,13 @@ class UserSubmissionsView(APIView):
             
         try:
             user = User.objects.get(id=user_id)
-            submissions = ContactSubmission.objects.filter(email=user.email).order_by('-created_at')
+            # First try to get submissions by user FK relation
+            submissions = ContactSubmission.objects.filter(user=user).order_by('-created_at')
+            
+            # If that doesn't work, try by email
+            if submissions.count() == 0:
+                submissions = ContactSubmission.objects.filter(email=user.email).order_by('-created_at')
+                
             data = []
             for sub in submissions:
                 data.append({
@@ -199,7 +203,8 @@ class UserSubmissionsView(APIView):
                     "email": sub.email,
                     "linkedin_url": sub.linkedin_url,
                     "created_at": sub.created_at,
-                    "is_processed": sub.is_processed
+                    "is_processed": sub.is_processed,
+                    "has_analysis": sub.analysis is not None
                 })
             return Response(data)
         except User.DoesNotExist:

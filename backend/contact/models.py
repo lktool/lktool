@@ -2,6 +2,7 @@ from django.db import models
 from django.conf import settings
 
 class ContactSubmission(models.Model):
+    # User field already exists in DB, so keep this definition as-is
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL, 
         on_delete=models.SET_NULL, 
@@ -14,7 +15,7 @@ class ContactSubmission(models.Model):
     email = models.EmailField()
     created_at = models.DateTimeField(auto_now_add=True)
     is_processed = models.BooleanField(default=False)
-    # Add JSON field for storing analyses
+    # Add analysis field only
     analysis = models.JSONField(null=True, blank=True)
 
     def __str__(self):
