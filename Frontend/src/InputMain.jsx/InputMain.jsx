@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import axios from 'axios';
-import './InputMain.css';
+import './InputMain.css'; // Ensure CSS is correctly imported
 import LoadingSpinner from '../components/LoadingSpinner';
 
 function InputMain() {
@@ -92,11 +92,11 @@ function InputMain() {
 
     return (
         <div className="input-main-container">
-            <h1>LinkedIn Profile Submission</h1>
+            <h1>Submit Your LinkedIn Profile</h1>
             
             {success && (
                 <div className="success-message">
-                    Submission successful! You'll receive a confirmation email shortly.
+                    Your LinkedIn profile has been submitted successfully!
                 </div>
             )}
             
