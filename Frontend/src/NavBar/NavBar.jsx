@@ -38,8 +38,21 @@ function NavBar() {
     useEffect(() => {
         const checkAuthStatus = () => {
             // Check user login status
-            const userToken = localStorage.getItem('token');
-            setIsUserLoggedIn(!!userToken);
+            const token = localStorage.getItem('token');
+            let userEmail = null;
+            
+            if (token) {
+                try {
+                    // Try to parse the token to get user info
+                    const tokenData = JSON.parse(token);
+                    userEmail = tokenData.email;
+                } catch (e) {
+                    // Fallback if token isn't in JSON format
+                    userEmail = localStorage.getItem('user_email');
+                }
+            }
+            
+            setIsUserLoggedIn(!!token);
             
             // Check admin login status
             const adminToken = localStorage.getItem('adminToken');
@@ -49,18 +62,29 @@ function NavBar() {
         // Initial check
         checkAuthStatus();
         
-        // Set up event listener for storage changes (login/logout in other tabs)
-        window.addEventListener('storage', checkAuthStatus);
-        
-        // Custom event for auth changes within the same tab - with user specificity
+        // Custom event handler for auth changes
         const handleAuthChange = (event) => {
-            // Only update if this is the current user's event
-            const currentUserEmail = localStorage.getItem('user_email');
-            if (!event.detail || !event.detail.email || event.detail.email === currentUserEmail) {
+            // Get the current user email from local storage
+            let currentUserEmail = null;
+            const token = localStorage.getItem('token');
+            
+            if (token) {
+                try {
+                    const tokenData = JSON.parse(token);
+                    currentUserEmail = tokenData.email;
+                } catch (e) {
+                    currentUserEmail = localStorage.getItem('user_email');
+                }
+            }
+            
+            // Only update state if this event is for the current user
+            if (event.detail && event.detail.email === currentUserEmail) {
                 checkAuthStatus();
             }
         };
         
+        // Set up event listeners
+        window.addEventListener('storage', checkAuthStatus);
         window.addEventListener('authChange', handleAuthChange);
         
         return () => {
@@ -95,13 +119,21 @@ function NavBar() {
     }
     
     function handleUserLogout() {
-        // Clear user authentication data only
+        // Get current user email before logout
+        const userEmail = localStorage.getItem('user_email');
+        
+        // Clear user authentication data
         localStorage.removeItem('token');
         setIsUserLoggedIn(false);
         navigate('/login');
         
-        // Dispatch custom event to notify other components
-        window.dispatchEvent(new Event('authChange'));
+        // Dispatch custom event with user specificity
+        window.dispatchEvent(new CustomEvent('authChange', {
+            detail: { 
+                email: userEmail,
+                action: 'logout'
+            }
+        }));
     }
     
     function handleAdminLogout() {

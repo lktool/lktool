@@ -7,57 +7,65 @@ function UserSubmissions() {
   const [submissions, setSubmissions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [lastRefresh, setLastRefresh] = useState(new Date());
 
-  useEffect(() => {
-    async function fetchSubmissions() {
-      try {
-        setLoading(true);
-        
-        // Get authentication token
-        const token = localStorage.getItem('token');
-        if (!token) {
-          throw new Error('No authentication token found');
-        }
-        
-        // Parse token if it's stored as JSON
-        let authToken = token;
-        try {
-          const parsedToken = JSON.parse(token);
-          if (parsedToken && parsedToken.value) {
-            authToken = parsedToken.value;
-          }
-        } catch (e) {
-          // Token is a plain string, which is fine
-        }
-        
-        // Log the user email to verify correct user
-        const userEmail = localStorage.getItem('user_email');
-        console.log(`Fetching submissions for user: ${userEmail}`);
-        
-        // Fetch user's submissions
-        const response = await axios.get(
-          'https://lktool.onrender.com/api/contact/user-submissions/', 
-          {
-            headers: {
-              'Authorization': `Bearer ${authToken}`,
-              'Content-Type': 'application/json'
-            }
-          }
-        );
-        
-        console.log(`Retrieved ${response.data.length} submissions`);
-        setSubmissions(response.data);
-        setError(null);
-      } catch (err) {
-        console.error('Error fetching user submissions:', err);
-        setError('Failed to load your submissions. Please try again later.');
-      } finally {
-        setLoading(false);
+  const fetchSubmissions = async () => {
+    try {
+      setLoading(true);
+      
+      // Get authentication token
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No authentication token found');
       }
+      
+      // Parse token if it's stored as JSON
+      let authToken = token;
+      try {
+        const parsedToken = JSON.parse(token);
+        if (parsedToken && parsedToken.value) {
+          authToken = parsedToken.value;
+        }
+      } catch (e) {
+        // Token is a plain string, which is fine
+      }
+
+      // Add cache-busting timestamp to force fresh data
+      const timestamp = new Date().getTime();
+      
+      // Fetch user's submissions
+      const response = await axios.get(
+        `https://lktool.onrender.com/api/contact/user-submissions/?_=${timestamp}`, 
+        {
+          headers: {
+            'Authorization': `Bearer ${authToken}`,
+            'Content-Type': 'application/json',
+            'Cache-Control': 'no-cache, no-store'
+          }
+        }
+      );
+      
+      console.log(`Retrieved ${response.data.length} submissions at ${new Date().toLocaleTimeString()}`);
+      setSubmissions(response.data);
+      setLastRefresh(new Date());
+      setError(null);
+    } catch (err) {
+      console.error('Error fetching user submissions:', err);
+      setError('Failed to load your submissions. Please try again.');
+    } finally {
+      setLoading(false);
     }
-    
+  };
+  
+  // Fetch submissions initially
+  useEffect(() => {
     fetchSubmissions();
   }, []);
+
+  // Add a refresh button
+  const handleRefresh = () => {
+    fetchSubmissions();
+  };
 
   if (loading) {
     return (
@@ -77,8 +85,21 @@ function UserSubmissions() {
 
   return (
     <div className="submissions-container">
-      <h1>My Submissions</h1>
+      <div className="submissions-header">
+        <h1>My Submissions</h1>
+        <button 
+          className="refresh-button" 
+          onClick={handleRefresh}
+          disabled={loading}
+        >
+          {loading ? 'Refreshing...' : 'Refresh'}
+        </button>
+      </div>
       
+      <div className="last-refresh">
+        Last updated: {lastRefresh.toLocaleTimeString()}
+      </div>
+
       {submissions.length === 0 ? (
         <div className="no-submissions">
           <p>You haven't made any submissions yet.</p>

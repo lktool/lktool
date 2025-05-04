@@ -13,12 +13,15 @@ const apiClient = axios.create({
 
 // Token storage with TTL for caching
 const tokenCache = {
-    setToken(token, ttl = 3600000) { // Default 1 hour TTL
+    setToken(token, email, ttl = 3600000) { // Default 1 hour TTL
         const item = {
             value: token,
+            email: email,
             expiry: Date.now() + ttl
         };
         localStorage.setItem('token', JSON.stringify(item));
+        // Also store email separately for easy access
+        localStorage.setItem('user_email', email);
     },
     getToken() {
         const itemStr = localStorage.getItem('token');
@@ -38,6 +41,17 @@ const tokenCache = {
         } catch (e) {
             // Handle legacy format
             return localStorage.getItem('token');
+        }
+    },
+    getUserEmail() {
+        const itemStr = localStorage.getItem('token');
+        if (!itemStr) return null;
+        
+        try {
+            const item = JSON.parse(itemStr);
+            return item.email;
+        } catch (e) {
+            return localStorage.getItem('user_email');
         }
     }
 };
@@ -255,13 +269,14 @@ export const authService = {
             activeRequests.delete('login');
             
             if (response.data.access) {
-                // Store tokens with improved caching
-                tokenCache.setToken(response.data.access);
+                // Store token with user email
+                tokenCache.setToken(response.data.access, formattedEmail);
                 localStorage.setItem('refreshToken', response.data.refresh);
-                localStorage.setItem('user_email', formattedEmail);
                 
-                // Notify about authentication change
-                window.dispatchEvent(new Event('authChange'));
+                // Dispatch user-specific auth change event
+                window.dispatchEvent(new CustomEvent('authChange', {
+                    detail: { email: formattedEmail, action: 'login' }
+                }));
                 
                 // Pre-fetch user profile data if needed
                 this.prefetchUserData();
@@ -352,26 +367,22 @@ export const authService = {
 
     // Modified logout to only affect current user
     logout() {
-        // Store user identifier before clearing
-        const currentUserEmail = localStorage.getItem('user_email');
+        // Get the current user email
+        const currentUserEmail = tokenCache.getUserEmail() || localStorage.getItem('user_email');
         
-        // Only clear tokens for current user
         if (currentUserEmail) {
-            console.log(`Logging out current user: ${currentUserEmail}`);
+            console.log(`Logging out user: ${currentUserEmail}`);
             
-            // Remove only current user's authentication data
+            // Only clear tokens for current user
             localStorage.removeItem('token');
             localStorage.removeItem('refreshToken');
-            localStorage.removeItem('user_data');
-            localStorage.removeItem('user_email');
             
-            // Clear any session storage as well
-            sessionStorage.removeItem('token');
-            sessionStorage.removeItem('auth_state');
-            
-            // Use a user-specific event to prevent affecting other users
+            // Dispatch user-specific logout event
             window.dispatchEvent(new CustomEvent('authChange', {
-                detail: { email: currentUserEmail }
+                detail: { 
+                    email: currentUserEmail,
+                    action: 'logout' 
+                }
             }));
         }
     },
