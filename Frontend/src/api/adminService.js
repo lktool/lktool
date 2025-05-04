@@ -119,11 +119,31 @@ export const adminService = {
      */
     async getUsers() {
         try {
-            const apiClient = createAdminClient();
+            // Add debugging to see what's happening
+            console.log('Fetching users list...');
+            
+            const adminToken = localStorage.getItem('adminToken');
+            if (!adminToken) {
+                console.error('No admin token found');
+                return [];
+            }
+            
+            console.log('Admin token found, requesting users list');
+            
+            const apiClient = axios.create({
+                baseURL: BACKEND_URL,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${adminToken}`
+                }
+            });
+            
             const response = await apiClient.get('/api/admin/users/');
+            console.log('Users fetched successfully:', response.data);
             return response.data;
         } catch (error) {
-            console.error('Error fetching users:', error);
+            console.error('Error fetching users:', error.response?.data || error.message);
+            console.error('Error details:', error);
             return [];
         }
     },

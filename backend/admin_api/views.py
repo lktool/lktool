@@ -168,17 +168,33 @@ class AdminStatsView(APIView):
         })
 
 class UserListView(APIView):
-    """
-    View to list all users for admin selection
-    """
+    """View to list all users for admin selection"""
+    
     def get(self, request):
         # Check if user is admin
         if not getattr(request, 'is_admin', False):
             return Response({"detail": "Admin authentication required"}, status=status.HTTP_401_UNAUTHORIZED)
             
-        users = User.objects.all().order_by('-date_joined')
-        data = [{"id": user.id, "email": user.email} for user in users]
-        return Response(data)
+        try:
+            # Get all users and serialize basic info
+            users = User.objects.all().order_by('-date_joined')
+            
+            # For debugging
+            print(f"Found {users.count()} users to return")
+            
+            # Return basic user info
+            data = [
+                {
+                    "id": user.id, 
+                    "email": user.email,
+                    "username": user.username if hasattr(user, 'username') else None
+                } 
+                for user in users
+            ]
+            return Response(data)
+        except Exception as e:
+            print(f"Error in UserListView: {str(e)}")
+            return Response({"detail": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class UserSubmissionsView(APIView):
     """View to fetch submissions for a specific user"""

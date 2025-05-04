@@ -47,11 +47,28 @@ const FormData = () => {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
+        setMessage({ text: 'Fetching users...', type: 'info' });
+        
+        // Check if admin is logged in
+        const adminToken = localStorage.getItem('adminToken');
+        if (!adminToken) {
+          setMessage({ text: 'Admin authentication required', type: 'error' });
+          return;
+        }
+        
         const userData = await adminService.getUsers();
-        setUsers(userData);
+        
+        if (Array.isArray(userData) && userData.length > 0) {
+          console.log(`Successfully loaded ${userData.length} users`);
+          setUsers(userData);
+          setMessage({ text: '', type: '' }); // Clear message on success
+        } else {
+          console.warn('No users returned from API:', userData);
+          setMessage({ text: 'No users found. Please check API configuration.', type: 'warning' });
+        }
       } catch (err) {
         console.error('Failed to fetch users:', err);
-        setMessage({ text: 'Error loading users', type: 'error' });
+        setMessage({ text: `Error loading users: ${err.message || 'Unknown error'}`, type: 'error' });
       }
     };
 
@@ -167,11 +184,13 @@ const FormData = () => {
               id="user-select"
               value={selectedUser}
               onChange={handleUserChange}
-              disabled={loading}
+              disabled={loading || users.length === 0}
               className="classroom-select"
             >
-              <option value="">Select a user</option>
-              {users.map(user => (
+              <option value="">
+                {users.length === 0 ? 'No users available' : 'Select a user'}
+              </option>
+              {Array.isArray(users) && users.map(user => (
                 <option key={user.id} value={user.id}>
                   {user.email || user.username || `User #${user.id}`}
                 </option>
