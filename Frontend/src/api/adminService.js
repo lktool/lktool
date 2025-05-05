@@ -3,9 +3,12 @@ import axios from 'axios';
 // Backend URL
 const BACKEND_URL = 'https://lktool.onrender.com';
 
-// Create admin client with token
+// Create admin client with token - Fixed token handling
 const createAdminClient = () => {
     const token = localStorage.getItem('adminToken');
+    
+    // Debug token retrieval
+    console.log('Admin token from storage:', token ? `${token.substr(0, 10)}...` : 'none');
     
     return axios.create({
         baseURL: BACKEND_URL,
@@ -33,11 +36,12 @@ export const adminService = {
                 { headers: { 'Content-Type': 'application/json' } }
             );
             
-            console.log('Admin login response:', response);
-            
-            // Store the admin token on successful login
+            // Store the admin token on successful login - Make sure format is consistent
             if (response.data && response.data.token) {
-                localStorage.setItem('adminToken', response.data.token);
+                // Store raw token string, not JSON object
+                const token = response.data.token;
+                console.log(`Setting admin token: ${token.substr(0, 10)}...`);
+                localStorage.setItem('adminToken', token);
                 return true;
             }
             return false;
@@ -114,12 +118,11 @@ export const adminService = {
     },
 
     /**
-     * Get list of all users
+     * Get list of all users with improved token handling
      * @returns {Promise<Array>} Array of users
      */
     async getUsers() {
         try {
-            // Add debugging to see what's happening
             console.log('Fetching users list...');
             
             const adminToken = localStorage.getItem('adminToken');
@@ -128,22 +131,31 @@ export const adminService = {
                 return [];
             }
             
-            console.log('Admin token found, requesting users list');
+            console.log(`Admin token found (${adminToken.substr(0, 10)}...), requesting users list`);
             
-            const apiClient = axios.create({
-                baseURL: BACKEND_URL,
+            // Create new request manually instead of using createAdminClient helper
+            const response = await axios.get(`${BACKEND_URL}/api/admin/users/`, {
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${adminToken}`
                 }
             });
             
-            const response = await apiClient.get('/api/admin/users/');
-            console.log('Users fetched successfully:', response.data);
+            console.log('Users fetched successfully:', response.data.length);
             return response.data;
         } catch (error) {
             console.error('Error fetching users:', error.response?.data || error.message);
-            console.error('Error details:', error);
+            
+            // Special handling for token issues
+            if (error.response?.status === 401) {
+                console.error('Admin token invalid or expired. Please re-login.');
+                // Force logout
+                localStorage.removeItem('adminToken');
+                setTimeout(() => {
+                    window.location.href = '/admin';
+                }, 1000);
+            }
+            
             return [];
         }
     },
