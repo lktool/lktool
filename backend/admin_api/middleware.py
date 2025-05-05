@@ -11,27 +11,44 @@ class AdminAuthMiddleware:
     """
     def __init__(self, get_response):
         self.get_response = get_response
-        
+
     def __call__(self, request):
-        # Check both headers to be more flexible
-        admin_auth_header = request.META.get('HTTP_ADMIN_AUTHORIZATION') or request.META.get('HTTP_AUTHORIZATION')
+        # Skip admin auth for non-admin URLs
+        if not request.path.startswith('/api/admin/'):
+            return self.get_response(request)
         
-        if admin_auth_header and admin_auth_header.startswith('Bearer '):
-            token = admin_auth_header.split(' ')[1]
-            try:
-                payload = jwt.decode(token, settings.SECRET_KEY, algorithms=['HS256'])
-                if payload.get('user_type') == 'admin':
-                    request.is_admin = True
-                    logger.info("Admin authenticated successfully")
-                else:
-                    request.is_admin = False
-                    logger.warning("Token missing admin user_type")
-            except jwt.PyJWTError as e:
-                request.is_admin = False
-                logger.error(f"JWT validation error: {str(e)}")
-        else:
-            request.is_admin = False
-            if '/api/admin/' in request.path and request.method != 'OPTIONS' and request.path != '/api/admin/login/':
-                logger.warning(f"Admin auth failed - missing token for {request.path}")
+        # Skip admin auth for login endpoint
+        if request.path == '/api/admin/login/':
+            return self.get_response(request)
+        
+        # Set default
+        request.is_admin = False
+        
+        # Get admin token from request
+        auth_header = request.headers.get('Authorization', '')
+        if not auth_header.startswith('Bearer '):
+            logger.warning(f"Missing or invalid Authorization header: {auth_header}")
+            return self.get_response(request)
+        
+        token = auth_header.split(' ')[1]
+        
+        # Verify token
+        try:
+            # Decode the JWT token
+            payload = jwt.decode(token, settings.SECRET_KEY, algorithms=['HS256'])
+            is_admin = payload.get('is_admin', False)
+            
+            if is_admin:
+                request.is_admin = True
+                logger.info(f"Admin authenticated successfully: {payload.get('email', 'unknown')}")
+            else:
+                logger.warning(f"Token valid but not admin: {payload}")
+                
+        except jwt.ExpiredSignatureError:
+            logger.warning("Admin token expired")
+        except jwt.InvalidTokenError:
+            logger.warning("Invalid admin token")
+        except Exception as e:
+            logger.error(f"Admin auth error: {str(e)}")
             
         return self.get_response(request)

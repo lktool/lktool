@@ -173,24 +173,27 @@ class UserListView(APIView):
     def get(self, request):
         # Check if user is admin
         if not getattr(request, 'is_admin', False):
+            print("Admin authentication failed for UserListView")
             return Response({"detail": "Admin authentication required"}, status=status.HTTP_401_UNAUTHORIZED)
             
         try:
+            print("Admin authentication successful, fetching users")
             # Get all users and serialize basic info
             users = User.objects.all().order_by('-date_joined')
             
             # For debugging
             print(f"Found {users.count()} users to return")
             
-            # Return basic user info
-            data = [
-                {
+            # Return basic user info as a list of dictionaries
+            data = []
+            for user in users:
+                data.append({
                     "id": user.id, 
-                    "email": user.email,
-                    "username": user.username if hasattr(user, 'username') else None
-                } 
-                for user in users
-            ]
+                    "email": user.email or f"User {user.id}",
+                    "username": user.username if hasattr(user, 'username') else f"User {user.id}"
+                })
+            
+            print(f"Returning {len(data)} users")
             return Response(data)
         except Exception as e:
             print(f"Error in UserListView: {str(e)}")

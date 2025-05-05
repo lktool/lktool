@@ -36,12 +36,17 @@ export const adminService = {
                 { headers: { 'Content-Type': 'application/json' } }
             );
             
+            console.log("Admin login response:", response.data);
+            
             // Store the admin token on successful login - Make sure format is consistent
             if (response.data && response.data.token) {
                 // Store raw token string, not JSON object
                 const token = response.data.token;
                 console.log(`Setting admin token: ${token.substr(0, 10)}...`);
                 localStorage.setItem('adminToken', token);
+                
+                // Store a timestamp to track when the token was created
+                localStorage.setItem('adminTokenTimestamp', Date.now().toString());
                 return true;
             }
             return false;
@@ -133,28 +138,17 @@ export const adminService = {
             
             console.log(`Admin token found (${adminToken.substr(0, 10)}...), requesting users list`);
             
-            // Create new request manually instead of using createAdminClient helper
-            const response = await axios.get(`${BACKEND_URL}/api/admin/users/`, {
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${adminToken}`
-                }
-            });
+            // Use createAdminClient instead of manual axios config
+            const apiClient = createAdminClient();
+            const response = await apiClient.get('/api/admin/users/');
             
-            console.log('Users fetched successfully:', response.data.length);
-            return response.data;
+            console.log('Users fetched successfully:', response.data);
+            return response.data || [];
         } catch (error) {
             console.error('Error fetching users:', error.response?.data || error.message);
             
-            // Special handling for token issues
-            if (error.response?.status === 401) {
-                console.error('Admin token invalid or expired. Please re-login.');
-                // Force logout
-                localStorage.removeItem('adminToken');
-                setTimeout(() => {
-                    window.location.href = '/admin';
-                }, 1000);
-            }
+            // REMOVED: Don't force logout on 401, just return empty users array
+            // This prevents auto-logout when token is temporarily invalid
             
             return [];
         }
