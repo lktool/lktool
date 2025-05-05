@@ -1,7 +1,7 @@
 from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.permissions import IsAdminUser
+from rest_framework.permissions import IsAdminUser, AllowAny
 from django.conf import settings
 from django.contrib.auth import get_user_model
 import jwt
@@ -14,40 +14,34 @@ User = get_user_model()
 
 class AdminLoginView(APIView):
     """
-    Secure admin login endpoint that uses hardcoded credentials from settings
+    Admin login view
     """
-    permission_classes = []
+    permission_classes = [AllowAny]
     
     def post(self, request):
         email = request.data.get('email')
         password = request.data.get('password')
         
-        # Debug output to server logs
-        print(f"Admin login attempt with: {email}")
-        print(f"Expected admin email: {settings.ADMIN_EMAIL}")
-        print(f"Passwords match: {password == settings.ADMIN_PASSWORD}")
+        # Add debugging
+        print(f"Admin login attempt for: {email}")
         
-        # Compare with hardcoded admin credentials
-        if email != settings.ADMIN_EMAIL or password != settings.ADMIN_PASSWORD:
-            print("Admin login failed: credentials mismatch")
-            return Response(
-                {"detail": "Invalid admin credentials"}, 
-                status=status.HTTP_401_UNAUTHORIZED
-            )
+        # Check if email and password match the admin credentials
+        if email == settings.ADMIN_EMAIL and password == settings.ADMIN_PASSWORD:
+            # Generate token with admin flag
+            payload = {
+                'email': email,
+                'is_admin': True,
+                'exp': datetime.utcnow() + timedelta(days=1)  # 1 day expiry
+            }
             
-        # Generate admin-specific token
-        payload = {
-            'user_type': 'admin',
-            'exp': datetime.utcnow() + timedelta(hours=24)
-        }
+            token = jwt.encode(payload, settings.SECRET_KEY, algorithm='HS256')
+            
+            # Debug the token
+            print(f"Generated admin token: {token[:10]}...")
+            
+            return Response({'token': token})
         
-        token = jwt.encode(payload, settings.SECRET_KEY, algorithm='HS256')
-        print("Admin login successful")
-        
-        return Response({
-            'token': token,
-            'message': 'Admin login successful'
-        })
+        return Response({'detail': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
 
 class AdminAuthMiddleware:
     """

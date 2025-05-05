@@ -38,15 +38,24 @@ export const adminService = {
             
             console.log("Admin login response:", response.data);
             
-            // Store the admin token on successful login - Make sure format is consistent
+            // Store the admin token on successful login
             if (response.data && response.data.token) {
-                // Store raw token string, not JSON object
+                // Ensure we store the token as a string, not as an object
                 const token = response.data.token;
-                console.log(`Setting admin token: ${token.substr(0, 10)}...`);
+                
+                // Log token format for debugging (first 10 chars only)
+                const tokenPreview = token.substring(0, 10) + '...';
+                console.log(`Setting admin token (${typeof token}): ${tokenPreview}`);
+                
+                // Store raw token string
                 localStorage.setItem('adminToken', token);
                 
-                // Store a timestamp to track when the token was created
-                localStorage.setItem('adminTokenTimestamp', Date.now().toString());
+                // Also store the admin email for reference
+                localStorage.setItem('adminEmail', email);
+                
+                // Store admin login timestamp
+                localStorage.setItem('adminLoginTime', Date.now());
+                
                 return true;
             }
             return false;
@@ -123,32 +132,47 @@ export const adminService = {
     },
 
     /**
-     * Get list of all users with improved token handling
+     * Get list of all users with improved token handling and debugging
      * @returns {Promise<Array>} Array of users
      */
     async getUsers() {
         try {
             console.log('Fetching users list...');
             
+            // Get the admin token
             const adminToken = localStorage.getItem('adminToken');
             if (!adminToken) {
-                console.error('No admin token found');
+                console.error('No admin token found in localStorage');
                 return [];
             }
             
-            console.log(`Admin token found (${adminToken.substr(0, 10)}...), requesting users list`);
+            // Debug token format
+            console.log(`Admin token type: ${typeof adminToken}, length: ${adminToken.length}`);
+            const tokenPreview = adminToken.substring(0, 10) + '...';
+            console.log(`Using admin token: ${tokenPreview}`);
             
-            // Use createAdminClient instead of manual axios config
-            const apiClient = createAdminClient();
-            const response = await apiClient.get('/api/admin/users/');
+            // Use direct axios request with explicit headers
+            const response = await axios({
+                method: 'get',
+                url: `${BACKEND_URL}/api/admin/users/`,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${adminToken}`
+                }
+            });
             
-            console.log('Users fetched successfully:', response.data);
-            return response.data || [];
+            // Log success
+            console.log(`Users fetched successfully: ${response.data.length} users`);
+            
+            return response.data;
         } catch (error) {
             console.error('Error fetching users:', error.response?.data || error.message);
+            console.error('Full error details:', error);
             
-            // REMOVED: Don't force logout on 401, just return empty users array
-            // This prevents auto-logout when token is temporarily invalid
+            if (error.response?.status === 401) {
+                console.warn('Admin authentication failed - please login again');
+                // Don't auto-logout, just return empty array
+            }
             
             return [];
         }
