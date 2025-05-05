@@ -256,6 +256,21 @@ CORS_ALLOW_HEADERS = [
     'expires',        # Add this header
 ]
 
+# Update CORS allowed headers to ensure admin API works
+CORS_ALLOW_ALL_HEADERS = True  # Temporarily allow all headers for debugging
+CORS_EXPOSE_HEADERS = ['*']    # Expose all headers in response
+
+# Add CORS debugging (temporarily)
+CORS_URLS_REGEX = r'^/api/.*$'
+
+# Log all CORS requests
+def cors_logger(request, response):
+    print(f"CORS request: {request.method} {request.path}")
+    print(f"  Origin: {request.headers.get('Origin')}")
+    print(f"  Authorization header present: {'Authorization' in request.headers}")
+    print(f"  Response status: {response.status_code}")
+    return response
+
 # Important: Keep this setting off in production
 CORS_ALLOW_ALL_ORIGINS = False
 

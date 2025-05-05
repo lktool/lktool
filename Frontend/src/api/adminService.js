@@ -132,48 +132,41 @@ export const adminService = {
     },
 
     /**
-     * Get list of all users with improved token handling and debugging
-     * @returns {Promise<Array>} Array of users
+     * Get list of all users with direct token passing
      */
     async getUsers() {
         try {
             console.log('Fetching users list...');
             
-            // Get the admin token
             const adminToken = localStorage.getItem('adminToken');
             if (!adminToken) {
-                console.error('No admin token found in localStorage');
+                console.error('No admin token found');
                 return [];
             }
             
-            // Debug token format
             console.log(`Admin token type: ${typeof adminToken}, length: ${adminToken.length}`);
-            const tokenPreview = adminToken.substring(0, 10) + '...';
-            console.log(`Using admin token: ${tokenPreview}`);
+            console.log(`Using token: ${adminToken.substring(0, 15)}...`);
             
-            // Use direct axios request with explicit headers
-            const response = await axios({
-                method: 'get',
-                url: `${BACKEND_URL}/api/admin/users/`,
+            // Make a direct fetch with the token to avoid any middleware issues
+            const response = await fetch(`${BACKEND_URL}/api/admin/users/`, {
+                method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${adminToken}`
                 }
             });
             
-            // Log success
-            console.log(`Users fetched successfully: ${response.data.length} users`);
-            
-            return response.data;
-        } catch (error) {
-            console.error('Error fetching users:', error.response?.data || error.message);
-            console.error('Full error details:', error);
-            
-            if (error.response?.status === 401) {
-                console.warn('Admin authentication failed - please login again');
-                // Don't auto-logout, just return empty array
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(`API error: ${response.status} ${JSON.stringify(errorData)}`);
             }
             
+            const data = await response.json();
+            console.log(`Users fetched successfully: ${data.length} users`);
+            return data;
+        } catch (error) {
+            console.error('Error fetching users:', error.message);
+            console.error('Full error details:', error);
             return [];
         }
     },

@@ -1,6 +1,7 @@
 from django.conf import settings
 import jwt
 import logging
+import json
 
 # Set up logger
 logger = logging.getLogger(__name__)
@@ -26,42 +27,49 @@ class AdminAuthMiddleware:
         
         # Get admin token from request
         auth_header = request.headers.get('Authorization', '')
+        print(f"Admin auth header: {auth_header[:20]}...")
+        
         if not auth_header.startswith('Bearer '):
-            logger.warning(f"Missing or invalid Authorization header format: {auth_header}")
+            print("Missing or invalid Authorization header format")
             return self.get_response(request)
         
         token = auth_header.split(' ')[1]
-        
-        # Print token for debugging (first 10 chars)
-        token_preview = token[:10] + '...' if token else 'None'
-        print(f"AdminAuthMiddleware: Received token {token_preview}")
+        print(f"Extracted token (first 15 chars): {token[:15]}...")
         
         # Verify token
         try:
-            # Decode the JWT token without verification first for debugging
-            unverified_payload = jwt.decode(token, options={"verify_signature": False})
-            print(f"Token claims: {unverified_payload}")
+            # Decode without verification first to debug
+            try:
+                header = jwt.get_unverified_header(token)
+                print(f"Token header: {header}")
+            except Exception as e:
+                print(f"Error reading token header: {e}")
+                
+            # Try to decode token
+            payload = jwt.decode(
+                token, 
+                settings.SECRET_KEY, 
+                algorithms=['HS256'],
+                options={"verify_signature": True}
+            )
             
-            # Now do proper verification
-            payload = jwt.decode(token, settings.SECRET_KEY, algorithms=['HS256'])
+            print(f"Token payload: {json.dumps(payload)}")
+            
+            # Check if admin flag is in the payload
             is_admin = payload.get('is_admin', False)
             
             if is_admin:
                 request.is_admin = True
-                logger.info(f"Admin authenticated successfully: {payload.get('email', 'unknown')}")
-                print(f"Admin auth successful for {payload.get('email', 'unknown')}")
+                print(f"Admin authentication successful - email: {payload.get('email')}")
             else:
-                logger.warning(f"Token valid but not admin: {payload}")
-                print(f"Token valid but not admin: {payload}")
-                
+                print("Token valid but not admin token")
         except jwt.ExpiredSignatureError:
-            logger.warning("Admin token expired")
             print("Admin token expired")
+        except jwt.DecodeError as e:
+            print(f"Token decode error: {e}")
         except jwt.InvalidTokenError as e:
-            logger.warning(f"Invalid admin token: {str(e)}")
-            print(f"Invalid admin token: {str(e)}")
+            print(f"Invalid token: {e}")
         except Exception as e:
-            logger.error(f"Admin auth error: {str(e)}")
             print(f"Admin auth error: {str(e)}")
-            
+        
         return self.get_response(request)

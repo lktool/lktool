@@ -22,22 +22,25 @@ class AdminLoginView(APIView):
         email = request.data.get('email')
         password = request.data.get('password')
         
-        # Add debugging
         print(f"Admin login attempt for: {email}")
         
         # Check if email and password match the admin credentials
         if email == settings.ADMIN_EMAIL and password == settings.ADMIN_PASSWORD:
-            # Generate token with admin flag
+            # Generate token with proper structure including admin flag
             payload = {
                 'email': email,
                 'is_admin': True,
                 'exp': datetime.utcnow() + timedelta(days=1)  # 1 day expiry
             }
             
+            # Make sure token uses HS256 algorithm (most widely supported)
             token = jwt.encode(payload, settings.SECRET_KEY, algorithm='HS256')
             
-            # Debug the token
-            print(f"Generated admin token: {token[:10]}...")
+            # Convert to string if bytes (depends on jwt library version)
+            if isinstance(token, bytes):
+                token = token.decode('utf-8')
+                
+            print(f"Admin token generated: {token[:15]}...")
             
             return Response({'token': token})
         
@@ -171,21 +174,19 @@ class UserListView(APIView):
             return Response({"detail": "Admin authentication required"}, status=status.HTTP_401_UNAUTHORIZED)
             
         try:
-            print("Admin authentication successful, fetching users")
+            print("Admin authentication successful for UserListView, fetching users")
             # Get all users and serialize basic info
             users = User.objects.all().order_by('-date_joined')
             
-            # For debugging
-            print(f"Found {users.count()} users to return")
-            
-            # Return basic user info as a list of dictionaries
-            data = []
-            for user in users:
-                data.append({
+            # Return basic user info
+            data = [
+                {
                     "id": user.id, 
-                    "email": user.email or f"User {user.id}",
-                    "username": user.username if hasattr(user, 'username') else f"User {user.id}"
-                })
+                    "email": user.email,
+                    "username": getattr(user, 'username', f"User {user.id}")
+                } 
+                for user in users
+            ]
             
             print(f"Returning {len(data)} users")
             return Response(data)
