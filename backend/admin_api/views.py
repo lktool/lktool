@@ -26,48 +26,29 @@ class AdminLoginView(APIView):
         
         # Check if email and password match the admin credentials
         if email == settings.ADMIN_EMAIL and password == settings.ADMIN_PASSWORD:
-            # Generate token with proper structure including admin flag
+            # Generate token with proper structure
             payload = {
                 'email': email,
                 'is_admin': True,
+                'user_id': 'admin',  # Add required ID field
+                'token_type': 'access',  # Add token type field
+                'jti': datetime.utcnow().timestamp(),  # Add JWT ID
                 'exp': datetime.utcnow() + timedelta(days=1)  # 1 day expiry
             }
             
-            # Make sure token uses HS256 algorithm (most widely supported)
+            # Make sure token uses HS256 algorithm
             token = jwt.encode(payload, settings.SECRET_KEY, algorithm='HS256')
             
-            # Convert to string if bytes (depends on jwt library version)
+            # Convert bytes to string if needed
             if isinstance(token, bytes):
                 token = token.decode('utf-8')
                 
-            print(f"Admin token generated: {token[:15]}...")
+            print(f"Generated admin token with payload: {payload}")
             
             return Response({'token': token})
         
         return Response({'detail': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
 
-class AdminAuthMiddleware:
-    """
-    Custom middleware to verify admin tokens
-    """
-    def __init__(self, get_response):
-        self.get_response = get_response
-        
-    def __call__(self, request):
-        admin_auth_header = request.META.get('HTTP_ADMIN_AUTHORIZATION')
-        if admin_auth_header and admin_auth_header.startswith('Bearer '):
-            token = admin_auth_header.split(' ')[1]
-            try:
-                payload = jwt.decode(token, settings.SECRET_KEY, algorithms=['HS256'])
-                if payload.get('user_type') == 'admin':
-                    request.is_admin = True
-            except jwt.PyJWTError:
-                request.is_admin = False
-        else:
-            request.is_admin = False
-            
-        return self.get_response(request)
-        
 class FormSubmissionListView(APIView):
     """
     View to list all contact form submissions for admin
@@ -174,25 +155,29 @@ class UserListView(APIView):
             return Response({"detail": "Admin authentication required"}, status=status.HTTP_401_UNAUTHORIZED)
             
         try:
-            print("Admin authentication successful for UserListView, fetching users")
-            # Get all users and serialize basic info
+            User = get_user_model()
+            print("Admin authentication successful, fetching users")
+            
+            # Get all users
             users = User.objects.all().order_by('-date_joined')
+            print(f"Found {users.count()} users")
             
-            # Return basic user info
-            data = [
-                {
-                    "id": user.id, 
+            # Return essential user data
+            data = []
+            for user in users:
+                data.append({
+                    "id": user.id,
                     "email": user.email,
-                    "username": getattr(user, 'username', f"User {user.id}")
-                } 
-                for user in users
-            ]
+                    "username": getattr(user, 'username', user.email)
+                })
             
-            print(f"Returning {len(data)} users")
             return Response(data)
         except Exception as e:
-            print(f"Error in UserListView: {str(e)}")
-            return Response({"detail": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            print(f"Error fetching users: {str(e)}")
+            return Response(
+                {"detail": "Error fetching users: " + str(e)}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 class UserSubmissionsView(APIView):
     """View to fetch submissions for a specific user"""

@@ -27,48 +27,33 @@ class AdminAuthMiddleware:
         
         # Get admin token from request
         auth_header = request.headers.get('Authorization', '')
-        print(f"Admin auth header: {auth_header[:20]}...")
-        
         if not auth_header.startswith('Bearer '):
-            print("Missing or invalid Authorization header format")
+            print(f"Missing or invalid Authorization header format: {auth_header[:20]}...")
             return self.get_response(request)
         
         token = auth_header.split(' ')[1]
-        print(f"Extracted token (first 15 chars): {token[:15]}...")
         
         # Verify token
         try:
-            # Decode without verification first to debug
-            try:
-                header = jwt.get_unverified_header(token)
-                print(f"Token header: {header}")
-            except Exception as e:
-                print(f"Error reading token header: {e}")
-                
-            # Try to decode token
+            # Decode properly with more flexible options
             payload = jwt.decode(
                 token, 
                 settings.SECRET_KEY, 
                 algorithms=['HS256'],
-                options={"verify_signature": True}
+                options={
+                    'verify_signature': True,
+                    'require_exp': True, 
+                    'require_iat': False,
+                    'require_nbf': False
+                }
             )
             
-            print(f"Token payload: {json.dumps(payload)}")
-            
-            # Check if admin flag is in the payload
-            is_admin = payload.get('is_admin', False)
-            
-            if is_admin:
+            # Simply look for is_admin flag
+            if payload.get('is_admin') is True:
                 request.is_admin = True
-                print(f"Admin authentication successful - email: {payload.get('email')}")
+                print(f"Admin authentication successful for {payload.get('email', 'unknown')}")
             else:
-                print("Token valid but not admin token")
-        except jwt.ExpiredSignatureError:
-            print("Admin token expired")
-        except jwt.DecodeError as e:
-            print(f"Token decode error: {e}")
-        except jwt.InvalidTokenError as e:
-            print(f"Invalid token: {e}")
+                print(f"Token valid but missing is_admin flag")
         except Exception as e:
             print(f"Admin auth error: {str(e)}")
         

@@ -40,21 +40,16 @@ export const adminService = {
             
             // Store the admin token on successful login
             if (response.data && response.data.token) {
-                // Ensure we store the token as a string, not as an object
+                // Store raw token string as-is, without any wrapping
                 const token = response.data.token;
+                console.log(`Setting admin token: ${token.substring(0, 10)}...`);
                 
-                // Log token format for debugging (first 10 chars only)
-                const tokenPreview = token.substring(0, 10) + '...';
-                console.log(`Setting admin token (${typeof token}): ${tokenPreview}`);
-                
-                // Store raw token string
+                // Store token directly without JSON.stringify
                 localStorage.setItem('adminToken', token);
                 
-                // Also store the admin email for reference
+                // Also store admin email and timestamp
                 localStorage.setItem('adminEmail', email);
-                
-                // Store admin login timestamp
-                localStorage.setItem('adminLoginTime', Date.now());
+                localStorage.setItem('adminLoginTime', Date.now().toString());
                 
                 return true;
             }
@@ -132,7 +127,7 @@ export const adminService = {
     },
 
     /**
-     * Get list of all users with direct token passing
+     * Get list of all users with improved token handling
      */
     async getUsers() {
         try {
@@ -144,29 +139,30 @@ export const adminService = {
                 return [];
             }
             
-            console.log(`Admin token type: ${typeof adminToken}, length: ${adminToken.length}`);
-            console.log(`Using token: ${adminToken.substring(0, 15)}...`);
+            console.log(`Admin token length: ${adminToken.length}`);
             
-            // Make a direct fetch with the token to avoid any middleware issues
+            // Create direct fetch request with proper headers
             const response = await fetch(`${BACKEND_URL}/api/admin/users/`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${adminToken}`
-                }
+                    'Authorization': `Bearer ${adminToken}`,
+                    'Accept': 'application/json'
+                },
+                credentials: 'include'
             });
             
             if (!response.ok) {
-                const errorData = await response.json().catch(() => ({}));
-                throw new Error(`API error: ${response.status} ${JSON.stringify(errorData)}`);
+                const errorText = await response.text();
+                console.error(`API error (${response.status}): ${errorText}`);
+                throw new Error(`API error: ${response.status} ${errorText}`);
             }
             
             const data = await response.json();
-            console.log(`Users fetched successfully: ${data.length} users`);
+            console.log(`Users fetched successfully: ${data.length}`);
             return data;
         } catch (error) {
             console.error('Error fetching users:', error.message);
-            console.error('Full error details:', error);
             return [];
         }
     },
