@@ -131,48 +131,16 @@ export const adminService = {
      */
     async getUsers() {
         try {
-            console.log('Fetching users list...');
-            
-            const adminToken = localStorage.getItem('adminToken');
-            if (!adminToken) {
-                console.error('No admin token found');
-                return [];
-            }
-            
-            console.log(`Admin token length: ${adminToken.length}`);
-            
-            try {
-                // Make request to backend API
-                const response = await axios.get(`${BACKEND_URL}/api/admin/users/`, {
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${adminToken}`
-                    }
-                });
-                
-                if (response.data) {
-                    console.log('Users fetched successfully:', response.data.length);
-                    
-                    // Ensure consistent data format for frontend
-                    const formattedUsers = response.data.map(user => ({
-                        id: user.id,
-                        email: user.email,
-                        // Fallback display name if backend response format changes
-                        displayName: user.username || user.email || `User ${user.id}`
-                    }));
-                    
-                    return formattedUsers;
-                }
-                return [];
-            } catch (error) {
-                // Provide mock data if API fails
-                console.error('Error fetching users:', error.response?.data || error.message);
-                return [
-                    {id: 1, email: "testuser@example.com", displayName: "Test User"}
-                ];
-            }
-        } catch (error) {
-            console.error('Error in getUsers:', error);
+            const token = localStorage.getItem('adminToken');
+            if (!token) return [];
+            const { data } = await axios.get(
+                `${BACKEND_URL}/api/admin/users/`,
+                { headers:{ 'Authorization': `Bearer ${token}` } }
+            );
+            // data is array of {id, email}
+            return data.map(u => ({ id: u.id, email: u.email }));
+        } catch (err) {
+            console.error('Error fetching users:', err);
             return [];
         }
     },

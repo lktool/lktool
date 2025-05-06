@@ -148,25 +148,17 @@ class UserListView(APIView):
     """View to list all registered users for admin dropdown."""
     
     def get(self, request):
-        # auth check
         if not getattr(request, 'is_admin', False):
             return Response({"detail":"Admin authentication required"},
                             status=status.HTTP_401_UNAUTHORIZED)
         try:
-            User = get_user_model()
-            # only id and email fields
-            users = list(User.objects
-                             .filter(is_active=True)
-                             .values('id', 'email')
-                             .order_by('-date_joined'))
-            
+            qs = CustomUser.objects.filter(is_active=True)
+            users = list(qs.values('id', 'email').order_by('-date_joined'))
             return Response(users, status=status.HTTP_200_OK)
-        
         except Exception as e:
-            # log and return error
             print(f"UserListView error: {e}")
             return Response(
-                {"detail": "Error fetching users", "error": str(e)},
+                {"detail":"Error fetching users","error":str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
