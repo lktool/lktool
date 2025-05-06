@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.utils.translation import gettext_lazy as _
+from django.utils.timezone import now
 
 class CustomUserManager(BaseUserManager):
     """
@@ -38,7 +39,7 @@ class CustomUser(AbstractUser):
     
     # Add  field to track email verification
     is_verified = models.BooleanField(default=False)
-    
+    date_joined = models.DateTimeField(default=now)
     # Set email as the USERNAME_FIELD
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
