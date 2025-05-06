@@ -192,7 +192,7 @@ const FormData = () => {
               {users && users.length > 0 ? (
                 users.map(user => (
                   <option key={user.id} value={user.id}>
-                    {user.email || user.username || `User #${user.id}`}
+                    {user.email || user.displayName || `User #${user.id}`}
                   </option>
                 ))
               ) : (

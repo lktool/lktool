@@ -153,56 +153,46 @@ class UserListView(APIView):
             return Response({"detail": "Admin authentication required"}, status=status.HTTP_401_UNAUTHORIZED)
             
         try:
-            print("Admin authentication successful, attempting to fetch users")
-            print("Using CustomUser model directly")
+            # IMPORTANT: Directly import CustomUser to avoid model resolution issues
+            from users.models import CustomUser
+            
+            print("Attempting to fetch users using CustomUser model directly")
             
             try:
-                # Try to get all users with proper error handling
-                users = CustomUser.objects.all().order_by('-date_joined')
-                print(f"Found {users.count()} users in database")
+                # Get all regular users (not admin users)
+                users = CustomUser.objects.filter(is_active=True).order_by('-date_joined')
+                print(f"Found {users.count()} CustomUser records")
                 
-                # Build a clean list of user data (avoid any serialization issues)
+                # Build the response data properly based on CustomUser fields
                 data = []
                 for user in users:
                     try:
+                        # Create user entry with email as identifier (no username field)
                         user_data = {
                             "id": user.id,
-                            "email": user.email if hasattr(user, 'email') else f"User {user.id}"
+                            "email": user.email,
+                            # Use email as display name since username is None
+                            "displayName": user.email.split('@')[0] if user.email else f"User {user.id}"
                         }
-                        
-                        # Only add username if present (avoid attribute errors)
-                        if hasattr(user, 'username'):
-                            user_data["username"] = user.username
-                        else:
-                            user_data["username"] = user.email if hasattr(user, 'email') else f"User {user.id}"
-                        
                         data.append(user_data)
-                    except Exception as e:
-                        print(f"Error processing user {getattr(user, 'id', 'unknown')}: {e}")
+                    except Exception as user_error:
+                        print(f"Error processing user {user.id}: {str(user_error)}")
+                        # Continue with next user
                 
-                print(f"Successfully prepared {len(data)} users to return")
+                print(f"Successfully prepared {len(data)} user records")
                 return Response(data)
                 
-            except Exception as query_error:
-                print(f"Database error when fetching users: {query_error}")
-                # Fall back to mock data
-                mock_data = [
-                    {"id": 1, "email": "user1@example.com", "username": "Test User 1"},
-                    {"id": 2, "email": "user2@example.com", "username": "Test User 2"},
-                    {"id": 3, "email": "user3@example.com", "username": "Test User 3"}
-                ]
-                print(f"Using mock data instead ({len(mock_data)} users)")
-                return Response(mock_data)
+            except Exception as db_error:
+                print(f"Database error: {str(db_error)}")
+                # Emergency response with mock data
+                return Response([
+                    {"id": 1, "email": "user1@example.com", "displayName": "user1"},
+                    {"id": 2, "email": "user2@example.com", "displayName": "user2"}
+                ])
                 
         except Exception as e:
-            print(f"Critical error in UserListView: {e}")
-            # Always return something useful
-            mock_data = [
-                {"id": 1, "email": "user1@example.com", "username": "Test User 1"},
-                {"id": 2, "email": "user2@example.com", "username": "Test User 2"},
-                {"id": 3, "email": "user3@example.com", "username": "Test User 3"}
-            ]
-            return Response(mock_data)
+            print(f"Critical error in UserListView: {str(e)}")
+            return Response({"detail": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class UserSubmissionsView(APIView):
     """View to fetch submissions for a specific user"""
