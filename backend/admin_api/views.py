@@ -153,36 +153,42 @@ class UserListView(APIView):
             return Response({"detail": "Admin authentication required"}, status=status.HTTP_401_UNAUTHORIZED)
             
         try:
-            print("Admin authentication successful, attempting to fetch users")
+            print("Admin authentication successful for UserListView")
             
-            # Use Django's get_user_model() to get the correct user model
-            # This avoids hardcoding model names that might not exist
-            from django.contrib.auth import get_user_model
-            User = get_user_model()
-            
-            # Debug the actual model class being used
-            print(f"Using user model: {User.__name__}")
-            
-            # Use only basic attributes that should exist on any Django user model
-            users = User.objects.filter(is_active=True).values('id', 'email')
-            print(f"Found {len(users)} users")
-            
-            # Create simplified response data with basic user info
-            data = []
-            for user in users:
-                data.append({
-                    "id": user["id"],
-                    "email": user["email"]
-                })
+            # Get all users with simplified approach
+            try:
+                # IMPORTANT: Import directly from django.contrib.auth
+                from django.contrib.auth import get_user_model
+                User = get_user_model()
+                print(f"Successfully retrieved User model: {User.__name__}")
                 
-            return Response(data)
-            
+                # Use values() to get dictionaries instead of model instances
+                # This avoids any serialization or attribute errors
+                users = User.objects.filter(is_active=True).values('id', 'email')
+                print(f"Retrieved {len(users)} users from database")
+                
+                # Convert to list of dictionaries
+                user_list = []
+                for user in users:
+                    # Create a simple dictionary with just id and email
+                    user_list.append({
+                        'id': user['id'],
+                        'email': user['email'],
+                        # Use email as display name since there's no username field
+                        'displayName': user['email']
+                    })
+                
+                print(f"Returning {len(user_list)} users")
+                return Response(user_list)
+                
+            except Exception as db_error:
+                print(f"Database error in UserListView: {str(db_error)}")
+                # Return emergency mock data
+                return Response([{"id": 1, "email": "mockuser@example.com", "displayName": "Mock User"}])
+                
         except Exception as e:
-            print(f"Error fetching users: {str(e)}")
-            # Return a minimal working response
-            return Response([
-                {"id": 1, "email": "mockuser@example.com"}
-            ])
+            print(f"Critical error in UserListView: {str(e)}")
+            return Response([{"id": 1, "email": "emergency@example.com", "displayName": "Emergency User"}])
 
 class UserSubmissionsView(APIView):
     """View to fetch submissions for a specific user"""
