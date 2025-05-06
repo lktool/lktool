@@ -180,26 +180,16 @@ const FormData = () => {
           <div className="classroom-select-container">
             <label htmlFor="user-select">User:</label>
             <select
-              id="user-select"
               value={selectedUser}
               onChange={handleUserChange}
-              disabled={loading || users.length === 0}
-              className="classroom-select"
+              disabled={!users.length}
             >
               <option value="">
-                {users.length === 0 ? 'No users available' : 'Select a user'}
+                {users.length ? "Select a user" : "No users available"}
               </option>
-              {users && users.length > 0 ? (
-                users.map(user => (
-                  <option key={user.id} value={user.id}>
-                    {user.email || user.displayName || `User #${user.id}`}
-                  </option>
-                ))
-              ) : (
-                <option value="" disabled>
-                  {loading ? "Loading users..." : "No users available"}
-                </option>
-              )}
+              {users.map(u => (
+                <option key={u.id} value={u.id}>{u.email}</option>
+              ))}
             </select>
             {users && users.length > 0 && (
               <div className="user-count">{users.length} users found</div>

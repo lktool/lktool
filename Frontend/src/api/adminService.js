@@ -135,12 +135,10 @@ export const adminService = {
             if (!token) return [];
             const { data } = await axios.get(
                 `${BACKEND_URL}/api/admin/users/`,
-                { headers:{ 'Authorization': `Bearer ${token}` } }
+                { headers: { Authorization: `Bearer ${token}` } }
             );
-            // data is array of {id, email}
-            return data.map(u => ({ id: u.id, email: u.email }));
-        } catch (err) {
-            console.error('Error fetching users:', err);
+            return data; // each item is {id, email}
+        } catch {
             return [];
         }
     },

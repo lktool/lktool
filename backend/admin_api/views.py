@@ -145,20 +145,27 @@ class AdminStatsView(APIView):
         })
 
 class UserListView(APIView):
-    """View to list all registered users for admin dropdown."""
+    """List all active users for admin dropdown."""
     
     def get(self, request):
+        # ...existing AdminAuthMiddleware sets request.is_admin...
         if not getattr(request, 'is_admin', False):
-            return Response({"detail":"Admin authentication required"},
-                            status=status.HTTP_401_UNAUTHORIZED)
+            return Response(
+                {"detail": "Admin authentication required"},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+        
         try:
+            # Fetch only id and email—no serialization issues
             qs = CustomUser.objects.filter(is_active=True)
             users = list(qs.values('id', 'email').order_by('-date_joined'))
             return Response(users, status=status.HTTP_200_OK)
+        
         except Exception as e:
+            # Log the exception server‐side for diagnosis
             print(f"UserListView error: {e}")
             return Response(
-                {"detail":"Error fetching users","error":str(e)},
+                {"detail": "Error fetching users", "error": str(e)},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
