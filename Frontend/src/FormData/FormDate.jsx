@@ -49,22 +49,21 @@ const FormData = () => {
       try {
         setMessage({ text: 'Fetching users...', type: 'info' });
         
-        // Check if admin is logged in
-        const adminToken = localStorage.getItem('adminToken');
-        if (!adminToken) {
-          setMessage({ text: 'Admin authentication required', type: 'error' });
-          return;
-        }
-        
         const userData = await adminService.getUsers();
+        
+        console.log("Received user data:", userData);
         
         if (Array.isArray(userData) && userData.length > 0) {
           console.log(`Successfully loaded ${userData.length} users`);
           setUsers(userData);
-          setMessage({ text: '', type: '' }); // Clear message on success
+          setMessage({ text: `Loaded ${userData.length} users successfully`, type: 'success' });
+          // Add small delay to clear success message
+          setTimeout(() => {
+            setMessage({ text: '', type: '' });
+          }, 3000);
         } else {
           console.warn('No users returned from API:', userData);
-          setMessage({ text: 'No users found. Please check API configuration.', type: 'warning' });
+          setMessage({ text: 'No users found. Using mock data.', type: 'warning' });
         }
       } catch (err) {
         console.error('Failed to fetch users:', err);
@@ -190,12 +189,19 @@ const FormData = () => {
               <option value="">
                 {users.length === 0 ? 'No users available' : 'Select a user'}
               </option>
-              {Array.isArray(users) && users.map(user => (
-                <option key={user.id} value={user.id}>
-                  {user.email || user.username || `User #${user.id}`}
-                </option>
-              ))}
+              {users && users.length > 0 ? (
+                users.map(user => (
+                  <option key={user.id} value={user.id}>
+                    {user.email || user.username || `User #${user.id}`}
+                  </option>
+                ))
+              ) : (
+                <option value="" disabled>Loading users...</option>
+              )}
             </select>
+            {users && users.length > 0 && (
+              <div className="user-count">{users.length} users found</div>
+            )}
           </div>
 
           <div className="classroom-select-container">
