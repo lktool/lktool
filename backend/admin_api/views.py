@@ -3,6 +3,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAdminUser, AllowAny
 from django.conf import settings
+from django.contrib.auth import get_user_model
 import jwt
 from datetime import datetime, timedelta
 
@@ -144,26 +145,30 @@ class AdminStatsView(APIView):
         })
 
 class UserListView(APIView):
-    """View to list all users for admin selection"""
+    """View to list all registered users for admin dropdown."""
     
     def get(self, request):
-        # Check if user is admin
+        # auth check
         if not getattr(request, 'is_admin', False):
-            print("Admin authentication failed for UserListView")
-            return Response({"detail": "Admin authentication required"}, status=status.HTTP_401_UNAUTHORIZED)
+            return Response({"detail":"Admin authentication required"},
+                            status=status.HTTP_401_UNAUTHORIZED)
+        try:
+            User = get_user_model()
+            # only id and email fields
+            users = list(User.objects
+                             .filter(is_active=True)
+                             .values('id', 'email')
+                             .order_by('-date_joined'))
+            
+            return Response(users, status=status.HTTP_200_OK)
         
-        print("Admin authentication successful, returning mock user data")
-        
-        # CRITICAL FIX: Always return hardcoded mock data instead of trying to access database
-        # This guarantees the frontend gets valid data without any database errors
-        mock_users = [
-            {"id": 1, "email": "user1@example.com", "displayName": "User One"},
-            {"id": 2, "email": "user2@example.com", "displayName": "User Two"},
-            {"id": 3, "email": "user3@example.com", "displayName": "User Three"}
-        ]
-        
-        print(f"Returning {len(mock_users)} mock users")
-        return Response(mock_users)
+        except Exception as e:
+            # log and return error
+            print(f"UserListView error: {e}")
+            return Response(
+                {"detail": "Error fetching users", "error": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 class UserSubmissionsView(APIView):
     """View to fetch submissions for a specific user"""
