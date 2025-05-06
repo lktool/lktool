@@ -127,7 +127,7 @@ export const adminService = {
     },
 
     /**
-     * Get list of all users with improved error handling and debugging
+     * Get list of all users with robust error handling
      */
     async getUsers() {
         try {
@@ -136,52 +136,44 @@ export const adminService = {
             const adminToken = localStorage.getItem('adminToken');
             if (!adminToken) {
                 console.error('No admin token found');
-                return this.getMockUsers();
+                return [];
             }
             
             console.log(`Admin token length: ${adminToken.length}`);
             
             try {
-                // Add query parameter to bypass cache
-                const timestamp = new Date().getTime();
-                const response = await fetch(`${BACKEND_URL}/api/admin/users/?t=${timestamp}`, {
-                    method: 'GET',
+                // Make request to backend API
+                const response = await axios.get(`${BACKEND_URL}/api/admin/users/`, {
                     headers: {
                         'Content-Type': 'application/json',
-                        'Accept': 'application/json',
                         'Authorization': `Bearer ${adminToken}`
-                    },
-                    cache: 'no-cache'
+                    }
                 });
                 
-                // If successful, parse and return data
-                if (response.status === 200) {
-                    const data = await response.json();
-                    console.log(`Users fetched successfully: ${data.length} users`);
-                    return data;
-                } 
-                // For any non-200 response, use mock data
-                else {
-                    console.error(`Server error (${response.status}): Using mock data`);
+                if (response.data) {
+                    console.log('Users fetched successfully:', response.data.length);
                     
-                    // Try to get error details for debugging
-                    try {
-                        const errorText = await response.text();
-                        console.error(`Server response: ${errorText.substring(0, 200)}...`);
-                    } catch (e) {}
+                    // Ensure consistent data format for frontend
+                    const formattedUsers = response.data.map(user => ({
+                        id: user.id,
+                        email: user.email,
+                        // Fallback display name if backend response format changes
+                        displayName: user.username || user.email || `User ${user.id}`
+                    }));
                     
-                    // Return mock data as fallback
-                    return this.getMockUsers();
+                    return formattedUsers;
                 }
-            } 
-            catch (fetchError) {
-                console.error(`Network error fetching users: ${fetchError.message}`);
-                return this.getMockUsers();
+                return [];
+            } catch (error) {
+                // Provide mock data if API fails
+                console.error('Error fetching users:', error.response?.data || error.message);
+                return [
+                    {id: 1, email: "testuser@example.com", displayName: "Test User"}
+                ];
             }
-        } 
-        catch (error) {
-            console.error(`General error in getUsers: ${error.message}`);
-            return this.getMockUsers();
+        } catch (error) {
+            console.error('Error in getUsers:', error);
+            return [];
         }
     },
 

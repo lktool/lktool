@@ -196,7 +196,9 @@ const FormData = () => {
                   </option>
                 ))
               ) : (
-                <option value="" disabled>Loading users...</option>
+                <option value="" disabled>
+                  {loading ? "Loading users..." : "No users available"}
+                </option>
               )}
             </select>
             {users && users.length > 0 && (
