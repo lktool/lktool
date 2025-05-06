@@ -1,7 +1,7 @@
 from django.conf import settings
 import jwt
 import logging
-import json
+import traceback
 
 # Set up logger
 logger = logging.getLogger(__name__)
@@ -25,7 +25,7 @@ class AdminAuthMiddleware:
         # Set default
         request.is_admin = False
         
-        # Get admin token from request
+        # Get admin token from request (with detailed debug info)
         auth_header = request.headers.get('Authorization', '')
         if not auth_header.startswith('Bearer '):
             print(f"Missing or invalid Authorization header format: {auth_header[:20]}...")
@@ -33,9 +33,19 @@ class AdminAuthMiddleware:
         
         token = auth_header.split(' ')[1]
         
+        # Print partial token for debugging
+        print(f"AdminAuthMiddleware: Processing token {token[:15]}...")
+        
         # Verify token
         try:
-            # Decode properly with more flexible options
+            # Debug decode without verification first
+            try:
+                unverified = jwt.decode(token, options={"verify_signature": False})
+                print(f"Token claims: {unverified}")
+            except Exception as decode_error:
+                print(f"Failed to decode token without verification: {str(decode_error)}")
+            
+            # Now try full verification
             payload = jwt.decode(
                 token, 
                 settings.SECRET_KEY, 
@@ -43,18 +53,21 @@ class AdminAuthMiddleware:
                 options={
                     'verify_signature': True,
                     'require_exp': True, 
-                    'require_iat': False,
-                    'require_nbf': False
+                    'require_iat': False,  # don't require issued at
+                    'require_nbf': False   # don't require not before
                 }
             )
             
-            # Simply look for is_admin flag
+            # Look for admin flag and set it if found
             if payload.get('is_admin') is True:
                 request.is_admin = True
-                print(f"Admin authentication successful for {payload.get('email', 'unknown')}")
+                print(f"Admin token verified for {payload.get('email', 'unknown')}")
             else:
-                print(f"Token valid but missing is_admin flag")
+                print(f"Token valid but missing is_admin flag: {payload}")
+                
         except Exception as e:
-            print(f"Admin auth error: {str(e)}")
+            # Catch and log all exceptions without breaking
+            print(f"Admin token validation error: {str(e)}")
+            print(traceback.format_exc())
         
         return self.get_response(request)

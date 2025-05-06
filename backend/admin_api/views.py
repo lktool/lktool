@@ -155,25 +155,54 @@ class UserListView(APIView):
             return Response({"detail": "Admin authentication required"}, status=status.HTTP_401_UNAUTHORIZED)
             
         try:
-            User = get_user_model()
-            print("Admin authentication successful, fetching users")
+            # Add more detailed debugging
+            print("Admin authentication successful, attempting to fetch users")
             
-            # Get all users
-            users = User.objects.all().order_by('-date_joined')
-            print(f"Found {users.count()} users")
+            # Access the user model safely
+            try:
+                User = get_user_model()
+                print(f"Successfully retrieved User model: {User.__name__}")
+            except Exception as model_error:
+                print(f"Error getting User model: {str(model_error)}")
+                return Response({"detail": "Error accessing user model"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
             
-            # Return essential user data
+            # Try to get all users with error handling
+            try:
+                users = User.objects.all().order_by('-date_joined')
+                print(f"Found {users.count()} users in database")
+            except Exception as query_error:
+                print(f"Database query error: {str(query_error)}")
+                return Response({"detail": "Database error"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            
+            # Return at least an empty list even if no users found
+            if users.count() == 0:
+                print("No users found in database - returning empty list")
+                return Response([])
+            
+            # Return essential user data (catch attribute errors)
             data = []
             for user in users:
-                data.append({
-                    "id": user.id,
-                    "email": user.email,
-                    "username": getattr(user, 'username', user.email)
-                })
+                try:
+                    user_data = {
+                        "id": user.id,
+                        "email": getattr(user, 'email', f"User {user.id}"),
+                    }
+                    
+                    # Safely get username if available
+                    try:
+                        user_data["username"] = getattr(user, 'username', user.email)
+                    except:
+                        user_data["username"] = f"User {user.id}"
+                    
+                    data.append(user_data)
+                except Exception as user_error:
+                    print(f"Error processing user {getattr(user, 'id', 'unknown')}: {str(user_error)}")
+                    # Continue with next user instead of failing entire request
             
+            print(f"Successfully prepared {len(data)} users to return")
             return Response(data)
         except Exception as e:
-            print(f"Error fetching users: {str(e)}")
+            print(f"Unhandled exception in UserListView: {str(e)}")
             return Response(
                 {"detail": "Error fetching users: " + str(e)}, 
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
