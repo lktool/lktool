@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAdminUser, AllowAny
 from django.conf import settings
-from django.contrib.auth import get_user_model
+#from django.contrib.auth import get_user_model
 import jwt
 from datetime import datetime, timedelta
 
@@ -148,21 +148,17 @@ class UserListView(APIView):
     """List all active users for admin dropdown."""
     
     def get(self, request):
-        # ...existing AdminAuthMiddleware sets request.is_admin...
         if not getattr(request, 'is_admin', False):
             return Response(
                 {"detail": "Admin authentication required"},
                 status=status.HTTP_401_UNAUTHORIZED
             )
-        
         try:
-            # Fetch only id and email—no serialization issues
+            # fetch id & email from CustomUser
             qs = CustomUser.objects.filter(is_active=True)
             users = list(qs.values('id', 'email').order_by('-date_joined'))
             return Response(users, status=status.HTTP_200_OK)
-        
         except Exception as e:
-            # Log the exception server‐side for diagnosis
             print(f"UserListView error: {e}")
             return Response(
                 {"detail": "Error fetching users", "error": str(e)},
