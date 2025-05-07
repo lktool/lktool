@@ -11,7 +11,7 @@ function authClient() {
     baseURL: BACKEND_URL,
     headers: { 
       'Content-Type': 'application/json',
-      'Authorization': token ? `Bearer ${token}` : '' 
+      'Admin-Authorization': token ? `Bearer ${token}` : '' 
     }
   });
 }
