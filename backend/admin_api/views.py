@@ -1,56 +1,79 @@
-from rest_framework import generics, status
+from rest_framework import generics, status, permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.permissions import IsAdminUser, AllowAny
+from rest_framework.permissions import IsAdminUser
 from django.conf import settings
+from django.contrib.auth import get_user_model
 import jwt
 from datetime import datetime, timedelta
 
 from contact.models import ContactSubmission
-from contact.serializers import ContactSerializer
-from users.models import CustomUser  # Direct import instead of get_user_model()
+from contact.serializers import ContactSerializer  # Fixed import name
+from .serializers import AdminUserSerializer
+from users.models import CustomUser
 
 class AdminLoginView(APIView):
     """
-    Admin login view
+    Secure admin login endpoint that uses hardcoded credentials from settings
     """
-    permission_classes = [AllowAny]
+    permission_classes = []
     
     def post(self, request):
         email = request.data.get('email')
         password = request.data.get('password')
         
-        print(f"Admin login attempt for: {email}")
+        # Debug output to server logs
+        print(f"Admin login attempt with: {email}")
+        print(f"Expected admin email: {settings.ADMIN_EMAIL}")
+        print(f"Passwords match: {password == settings.ADMIN_PASSWORD}")
         
-        # Check if email and password match the admin credentials
-        if email == settings.ADMIN_EMAIL and password == settings.ADMIN_PASSWORD:
-            # Generate token with proper structure
-            payload = {
-                'email': email,
-                'is_admin': True,
-                'user_id': 'admin',  # Add required ID field
-                'token_type': 'access',  # Add token type field
-                'jti': datetime.utcnow().timestamp(),  # Add JWT ID
-                'exp': datetime.utcnow() + timedelta(days=1)  # 1 day expiry
-            }
+        # Compare with hardcoded admin credentials
+        if email != settings.ADMIN_EMAIL or password != settings.ADMIN_PASSWORD:
+            print("Admin login failed: credentials mismatch")
+            return Response(
+                {"detail": "Invalid admin credentials"}, 
+                status=status.HTTP_401_UNAUTHORIZED
+            )
             
-            # Make sure token uses HS256 algorithm
-            token = jwt.encode(payload, settings.SECRET_KEY, algorithm='HS256')
-            
-            # Convert bytes to string if needed
-            if isinstance(token, bytes):
-                token = token.decode('utf-8')
-                
-            print(f"Generated admin token with payload: {payload}")
-            
-            return Response({'token': token})
+        # Generate admin-specific token
+        payload = {
+            'user_type': 'admin',
+            'exp': datetime.utcnow() + timedelta(hours=24)
+        }
         
-        return Response({'detail': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
+        token = jwt.encode(payload, settings.SECRET_KEY, algorithm='HS256')
+        print("Admin login successful")
+        
+        return Response({
+            'token': token,
+            'message': 'Admin login successful'
+        })
 
+class AdminAuthMiddleware:
+    """
+    Custom middleware to verify admin tokens
+    """
+    def __init__(self, get_response):
+        self.get_response = get_response
+        
+    def __call__(self, request):
+        admin_auth_header = request.META.get('HTTP_ADMIN_AUTHORIZATION')
+        if admin_auth_header and admin_auth_header.startswith('Bearer '):
+            token = admin_auth_header.split(' ')[1]
+            try:
+                payload = jwt.decode(token, settings.SECRET_KEY, algorithms=['HS256'])
+                if payload.get('user_type') == 'admin':
+                    request.is_admin = True
+            except jwt.PyJWTError:
+                request.is_admin = False
+        else:
+            request.is_admin = False
+            
+        return self.get_response(request)
+        
 class FormSubmissionListView(APIView):
     """
     View to list all contact form submissions for admin
-    Also handles LinkedIn analysis submission
     """
     def get(self, request):
         # Check if user is admin
@@ -66,41 +89,9 @@ class FormSubmissionListView(APIView):
         elif status_filter == 'pending':
             submissions = submissions.filter(is_processed=False)
         
-        serializer = ContactSerializer(submissions, many=True)
+        serializer = ContactSerializer(submissions, many=True)  # Fixed serializer name
         return Response(serializer.data)
-
-    def post(self, request):
-        """Handle LinkedIn profile analysis submission"""
-        # Check if user is admin
-        if not getattr(request, 'is_admin', False):
-            return Response({"detail": "Admin authentication required"}, status=status.HTTP_401_UNAUTHORIZED)
         
-        try:
-            # Get required data
-            user_id = request.data.get('user')
-            submission_id = request.data.get('submission')
-            analysis_data = request.data.get('data')
-            
-            # Validate data
-            if not user_id or not submission_id or not analysis_data:
-                return Response({"detail": "Missing required fields"}, status=status.HTTP_400_BAD_REQUEST)
-                
-            # Get the submission
-            try:
-                submission = ContactSubmission.objects.get(id=submission_id)
-            except ContactSubmission.DoesNotExist:
-                return Response({"detail": "Submission not found"}, status=status.HTTP_404_NOT_FOUND)
-            
-            # Store analysis as JSON field
-            submission.analysis = analysis_data
-            # Mark as processed
-            submission.is_processed = True
-            submission.save()
-            
-            return Response({"message": "Analysis saved successfully"}, status=status.HTTP_200_OK)
-        except Exception as e:
-            return Response({"detail": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
 class UpdateSubmissionStatusView(APIView):
     """
     View to update a submission's processed status
@@ -121,7 +112,7 @@ class UpdateSubmissionStatusView(APIView):
             submission.is_processed = bool(is_processed)
             submission.save(update_fields=['is_processed'])
             
-        serializer = ContactSerializer(submission)
+        serializer = ContactSerializer(submission)  # Fixed serializer name
         return Response(serializer.data)
 
 class AdminStatsView(APIView):
@@ -143,55 +134,18 @@ class AdminStatsView(APIView):
             'pending': pending_count
         })
 
-class UserListView(APIView):
-    """List all registered users for admin dropdown."""
-    
-    def get(self, request):
-        # auth check
-        if not getattr(request, 'is_admin', False):
-            return Response(
-                {"detail": "Admin authentication required"},
-                status=status.HTTP_401_UNAUTHORIZED
-            )
-        try:
-            # fetch only id and email directly from CustomUser
-            qs = CustomUser.objects.filter(is_active=True)
-            users = list(qs.values('id', 'email').order_by('-date_joined'))
-            return Response(users, status=status.HTTP_200_OK)
-        
-        except Exception as e:
-            print(f"UserListView error: {e}")
-            return Response(
-                {"detail": "Error fetching users", "error": str(e)},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+class AdminUserListView(generics.ListAPIView):
+    """
+    Only admin users can GET a list of all CustomUser records.
+    """
+    queryset = CustomUser.objects.filter(is_active=True).order_by('-date_joined')
+    serializer_class = AdminUserSerializer
+    permission_classes = [permissions.IsAdminUser]
 
-class UserSubmissionsView(APIView):
-    """View to fetch submissions for a specific user"""
-    def get(self, request, user_id):
-        # Check if user is admin
-        if not getattr(request, 'is_admin', False):
-            return Response({"detail": "Admin authentication required"}, status=status.HTTP_401_UNAUTHORIZED)
-            
-        try:
-            user = CustomUser.objects.get(id=user_id)
-            # First try to get submissions by user FK relation
-            submissions = ContactSubmission.objects.filter(user=user).order_by('-created_at')
-            
-            # If that doesn't work, try by email
-            if submissions.count() == 0:
-                submissions = ContactSubmission.objects.filter(email=user.email).order_by('-created_at')
-                
-            data = []
-            for sub in submissions:
-                data.append({
-                    "id": sub.id,
-                    "email": sub.email,
-                    "linkedin_url": sub.linkedin_url,
-                    "created_at": sub.created_at,
-                    "is_processed": sub.is_processed,
-                    "has_analysis": sub.analysis is not None
-                })
-            return Response(data)
-        except CustomUser.DoesNotExist:
-            return Response({"detail": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+class UserListView(generics.ListAPIView):
+    """
+    Only admin users can GET a list of all users (id, email, first_name, last_name).
+    """
+    queryset = get_user_model().objects.filter(is_active=True).order_by('-date_joined')
+    serializer_class = AdminUserSerializer
+    permission_classes = [permissions.IsAdminUser]

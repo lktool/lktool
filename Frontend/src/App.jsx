@@ -14,7 +14,6 @@ import FormData from "./FormData/FormDate";
 import AdminRoute from "./components/AdminRoute";
 import NavBar from "./NavBar/NavBar"; // Import NavBar component
 import UserSubmissions from "./UserSubmissions/UserSubmissions"; // Import UserSubmissions component
-import UserAnalyses from "./UserAnalyses/UserAnalyses"; // Import UserAnalyses component
 
 function App() {
   return (
@@ -53,16 +52,6 @@ function App() {
             element={
               <ProtectedRoute>
                 <UserSubmissions />
-              </ProtectedRoute>
-            } 
-          />
-          
-          {/* User Analyses Route */}
-          <Route 
-            path="/my-analyses" 
-            element={
-              <ProtectedRoute>
-                <UserAnalyses />
               </ProtectedRoute>
             } 
           />

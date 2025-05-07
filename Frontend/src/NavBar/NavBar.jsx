@@ -34,25 +34,12 @@ function NavBar() {
         
     }, [location.pathname]);
 
-    // Add check for token changes with user-specific events
+    // Add check for token changes
     useEffect(() => {
         const checkAuthStatus = () => {
             // Check user login status
-            const token = localStorage.getItem('token');
-            let userEmail = null;
-            
-            if (token) {
-                try {
-                    // Try to parse the token to get user info
-                    const tokenData = JSON.parse(token);
-                    userEmail = tokenData.email;
-                } catch (e) {
-                    // Fallback if token isn't in JSON format
-                    userEmail = localStorage.getItem('user_email');
-                }
-            }
-            
-            setIsUserLoggedIn(!!token);
+            const userToken = localStorage.getItem('token');
+            setIsUserLoggedIn(!!userToken);
             
             // Check admin login status
             const adminToken = localStorage.getItem('adminToken');
@@ -62,34 +49,15 @@ function NavBar() {
         // Initial check
         checkAuthStatus();
         
-        // Custom event handler for auth changes
-        const handleAuthChange = (event) => {
-            // Get the current user email from local storage
-            let currentUserEmail = null;
-            const token = localStorage.getItem('token');
-            
-            if (token) {
-                try {
-                    const tokenData = JSON.parse(token);
-                    currentUserEmail = tokenData.email;
-                } catch (e) {
-                    currentUserEmail = localStorage.getItem('user_email');
-                }
-            }
-            
-            // Only update state if this event is for the current user
-            if (event.detail && event.detail.email === currentUserEmail) {
-                checkAuthStatus();
-            }
-        };
-        
-        // Set up event listeners
+        // Set up event listener for storage changes (login/logout in other tabs)
         window.addEventListener('storage', checkAuthStatus);
-        window.addEventListener('authChange', handleAuthChange);
+        
+        // Custom event for auth changes within the same tab
+        window.addEventListener('authChange', checkAuthStatus);
         
         return () => {
             window.removeEventListener('storage', checkAuthStatus);
-            window.removeEventListener('authChange', handleAuthChange);
+            window.removeEventListener('authChange', checkAuthStatus);
         };
     }, []);
 
@@ -119,21 +87,13 @@ function NavBar() {
     }
     
     function handleUserLogout() {
-        // Get current user email before logout
-        const userEmail = localStorage.getItem('user_email');
-        
-        // Clear user authentication data
+        // Clear user authentication data only
         localStorage.removeItem('token');
         setIsUserLoggedIn(false);
         navigate('/login');
         
-        // Dispatch custom event with user specificity
-        window.dispatchEvent(new CustomEvent('authChange', {
-            detail: { 
-                email: userEmail,
-                action: 'logout'
-            }
-        }));
+        // Dispatch custom event to notify other components
+        window.dispatchEvent(new Event('authChange'));
     }
     
     function handleAdminLogout() {
@@ -152,10 +112,6 @@ function NavBar() {
 
     function handleInputMain() {
         navigate('/inputMain');
-    }
-
-    function handleMyAnalyses() {
-        navigate('/my-analyses');
     }
     
     // Hide navbar on specific pages where it's not needed
@@ -253,15 +209,6 @@ function NavBar() {
                         <div className="navbar-account">
                             <a href="#" onClick={(e) => {e.preventDefault(); handleMySubmissions();}}>
                                 My Submissions
-                            </a>
-                        </div>
-                    )}
-
-                    {/* Add My Analyses link for users with processed submissions */}
-                    {isUserLoggedIn && !isAdminPage && (
-                        <div className="navbar-account">
-                            <a href="#" onClick={(e) => {e.preventDefault(); handleMyAnalyses();}}>
-                                My Analyses
                             </a>
                         </div>
                     )}
