@@ -13,25 +13,25 @@ class AdminAuthMiddleware:
         self.get_response = get_response
         
     def __call__(self, request):
-        # Check both headers to be more flexible
-        admin_auth_header = request.META.get('HTTP_ADMIN_AUTHORIZATION') or request.META.get('HTTP_AUTHORIZATION')
+        # Check both types of authorization headers
+        auth_header = request.META.get('HTTP_AUTHORIZATION') or request.META.get('HTTP_ADMIN_AUTHORIZATION')
         
-        if admin_auth_header and admin_auth_header.startswith('Bearer '):
-            token = admin_auth_header.split(' ')[1]
+        if auth_header and auth_header.startswith('Bearer '):
+            token = auth_header.split(' ')[1]
             try:
                 payload = jwt.decode(token, settings.SECRET_KEY, algorithms=['HS256'])
-                if payload.get('user_type') == 'admin':
+                
+                # Set is_admin flag if either condition is met
+                if payload.get('is_admin') is True or payload.get('user_type') == 'admin':
                     request.is_admin = True
-                    logger.info("Admin authenticated successfully")
+                    print(f"Admin token verified for {payload.get('email', 'unknown')}")
                 else:
                     request.is_admin = False
-                    logger.warning("Token missing admin user_type")
-            except jwt.PyJWTError as e:
+                    print(f"Token valid but not admin: {payload}")
+            except Exception as e:
+                print(f"Admin token validation error: {str(e)}")
                 request.is_admin = False
-                logger.error(f"JWT validation error: {str(e)}")
         else:
             request.is_admin = False
-            if '/api/admin/' in request.path and request.method != 'OPTIONS' and request.path != '/api/admin/login/':
-                logger.warning(f"Admin auth failed - missing token for {request.path}")
             
         return self.get_response(request)

@@ -118,10 +118,42 @@ export const adminService = {
    */
   async getUsers() {
     try {
-      const client = authClient();
-      const { data } = await client.get('/api/admin/users/');
-      return data;
-    } catch {
+      console.log('Fetching users list...');
+      const token = localStorage.getItem('adminToken');
+      
+      if (!token) {
+        console.log('No admin token found');
+        return [];
+      }
+      
+      console.log(`Admin token length: ${token.length}`);
+      
+      // Explicitly set both headers for consistency
+      const headers = {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      };
+      
+      // Try with cachebuster
+      const timestamp = new Date().getTime();
+      const response = await fetch(`${BACKEND_URL}/api/admin/users/?t=${timestamp}`, {
+        method: 'GET',
+        headers: headers
+      });
+      
+      if (response.status === 200) {
+        const data = await response.json();
+        console.log(`Users fetched: ${data.length}`);
+        return data;
+      } else {
+        // Log detailed error info
+        console.log(`Server error (${response.status}): Using mock data`);
+        const text = await response.text();
+        console.log(`Server response: ${text.substring(0, 200)}...`);
+        return [];
+      }
+    } catch (error) {
+      console.error('Error fetching users:', error);
       return [];
     }
   }

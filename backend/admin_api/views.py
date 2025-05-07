@@ -134,18 +134,67 @@ class AdminStatsView(APIView):
             'pending': pending_count
         })
 
-class AdminUserListView(generics.ListAPIView):
-    """
-    Only admin users can GET a list of all CustomUser records.
-    """
-    queryset = CustomUser.objects.filter(is_active=True).order_by('-date_joined')
-    serializer_class = AdminUserSerializer
-    permission_classes = [permissions.IsAdminUser]
+class UserListView(APIView):
+    """View to list all users for admin selection"""
+    
+    def get(self, request):
+        # Check if user is admin
+        if not getattr(request, 'is_admin', False):
+            print("Admin authentication failed for UserListView")
+            return Response({"detail": "Admin authentication required"}, status=status.HTTP_401_UNAUTHORIZED)
+            
+        try:
+            # Use a simple dict-based approach to avoid serialization issues
+            data = []
+            for user in CustomUser.objects.filter(is_active=True):
+                data.append({
+                    "id": user.id,
+                    "email": user.email
+                })
+            
+            return Response(data)
+            
+        except Exception as e:
+            # Log error and return JSON error response
+            print(f"Error in UserListView: {str(e)}")
+            return Response(
+                {"error": "Failed to fetch users", "detail": str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
-class UserListView(generics.ListAPIView):
-    """
-    Only admin users can GET a list of all users (id, email, first_name, last_name).
-    """
-    queryset = get_user_model().objects.filter(is_active=True).order_by('-date_joined')
-    serializer_class = AdminUserSerializer
-    permission_classes = [permissions.IsAdminUser]
+class UserSubmissionsView(APIView):
+    """View to fetch submissions for a specific user"""
+    def get(self, request, user_id):
+        # Check if user is admin
+        if not getattr(request, 'is_admin', False):
+            return Response({"detail": "Admin authentication required"}, status=status.HTTP_401_UNAUTHORIZED)
+            
+        try:
+            # Get the user with proper error handling
+            try:
+                user = CustomUser.objects.get(id=user_id)
+            except CustomUser.DoesNotExist:
+                return Response({"detail": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+                
+            # Get submissions for this user
+            submissions = ContactSubmission.objects.filter(email=user.email).order_by('-created_at')
+            
+            # Prepare response data
+            data = []
+            for sub in submissions:
+                data.append({
+                    "id": sub.id,
+                    "email": sub.email,
+                    "linkedin_url": sub.linkedin_url,
+                    "created_at": sub.created_at,
+                    "is_processed": sub.is_processed,
+                    "has_analysis": sub.analysis is not None
+                })
+            return Response(data)
+            
+        except Exception as e:
+            print(f"Error in UserSubmissionsView: {e}")
+            return Response(
+                {"detail": f"Error fetching submissions: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
