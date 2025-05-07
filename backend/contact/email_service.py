@@ -3,10 +3,27 @@ Email service for contact form submissions.
 """
 import logging
 import traceback
-from django.core.mail import EmailMessage
+from django.core.mail import EmailMessage, send_mail
 from django.conf import settings
+import threading
 
 logger = logging.getLogger(__name__)
+
+def send_email_async(subject, message, recipient_list, html_message=None):
+    """Send email asynchronously using threading"""
+    def _send_email_task():
+        send_mail(
+            subject=subject,
+            message=message,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=recipient_list,
+            html_message=html_message,
+            fail_silently=False,
+        )
+    
+    email_thread = threading.Thread(target=_send_email_task)
+    email_thread.daemon = True
+    email_thread.start()
 
 def send_notification_email(user_email, url, message, recipient_email=None, subject="New Message from Website User"):
     """
@@ -97,4 +114,52 @@ def send_notification_email(user_email, url, message, recipient_email=None, subj
         print(f"{str(e)}")
         print("--------------------------------\n")
         
+        return False
+
+def send_reply_notification(submission):
+    """Send notification when admin replies to a submission"""
+    subject = "Response to your LinkedIn Profile Submission"
+    
+    message = f"""
+    Hello,
+    
+    We've reviewed your LinkedIn profile submission and provided feedback.
+    
+    Admin Reply: {submission.admin_reply}
+    
+    Original Message: {submission.message}
+    LinkedIn URL: {submission.linkedin_url}
+    
+    Thank you for using our service.
+    """
+    
+    html_message = f"""
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <h2 style="color: #328E6E;">Your LinkedIn Profile Review</h2>
+        <p>Hello,</p>
+        <p>We've reviewed your LinkedIn profile submission and provided feedback:</p>
+        
+        <div style="background-color: #f5f5f5; padding: 15px; border-left: 4px solid #67AE6E; margin: 20px 0;">
+            <p style="font-weight: bold;">Admin Reply:</p>
+            <p>{submission.admin_reply}</p>
+        </div>
+        
+        <p><strong>Original Submission:</strong></p>
+        <p>LinkedIn URL: <a href="{submission.linkedin_url}">{submission.linkedin_url}</a></p>
+        <p>Message: {submission.message}</p>
+        
+        <p>Thank you for using our service.</p>
+    </div>
+    """
+    
+    try:
+        send_email_async(
+            subject=subject,
+            message=message,
+            recipient_list=[submission.email],
+            html_message=html_message
+        )
+        return True
+    except Exception as e:
+        print(f"Failed to send reply notification: {e}")
         return False

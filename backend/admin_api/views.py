@@ -5,9 +5,11 @@ from rest_framework.permissions import IsAdminUser
 from django.conf import settings
 import jwt
 from datetime import datetime, timedelta
+from django.utils import timezone
 
 from contact.models import ContactSubmission
 from contact.serializers import ContactSerializer  # Fixed import name
+from contact.email_service import send_reply_notification
 
 class AdminLoginView(APIView):
     """
@@ -129,4 +131,41 @@ class AdminStatsView(APIView):
             'total': total_count,
             'processed': processed_count,
             'pending': pending_count
+        })
+
+class SubmissionReplyView(APIView):
+    """
+    View to add admin reply to a submission
+    """
+    def post(self, request, pk):
+        # Check if user is admin
+        if not getattr(request, 'is_admin', False):
+            return Response({"detail": "Admin authentication required"}, status=status.HTTP_401_UNAUTHORIZED)
+            
+        try:
+            submission = ContactSubmission.objects.get(pk=pk)
+        except ContactSubmission.DoesNotExist:
+            return Response({"detail": "Submission not found"}, status=status.HTTP_404_NOT_FOUND)
+            
+        # Get the reply text from request data
+        reply_text = request.data.get('reply')
+        if not reply_text:
+            return Response({"detail": "Reply text is required"}, status=status.HTTP_400_BAD_REQUEST)
+            
+        # Update submission with admin reply
+        submission.admin_reply = reply_text
+        submission.admin_reply_date = timezone.now()
+        submission.is_processed = True
+        submission.save()
+        
+        # Send email notification to user
+        try:
+            send_reply_notification(submission)
+        except Exception as e:
+            # Log error but don't fail the request
+            print(f"Failed to send reply notification: {e}")
+        
+        return Response({
+            "message": "Reply sent successfully",
+            "submission": ContactSerializer(submission).data
         })

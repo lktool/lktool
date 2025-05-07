@@ -15,7 +15,8 @@ class ContactSubmission(models.Model):
     email = models.EmailField()
     created_at = models.DateTimeField(auto_now_add=True)
     is_processed = models.BooleanField(default=False)
-    # Removing analysis field
+    admin_reply = models.TextField(blank=True, null=True)
+    admin_reply_date = models.DateTimeField(blank=True, null=True)
 
     def __str__(self):
         return f"Contact from {self.email} on {self.created_at.strftime('%Y-%m-%d %H:%M')}"

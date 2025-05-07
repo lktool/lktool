@@ -79,6 +79,23 @@ export const adminService = {
     }
   },
 
-
+  /**
+   * Submit admin reply to a user submission
+   * @param {number} submissionId - Submission ID
+   * @param {string} replyText - Admin's reply text
+   * @returns {Promise<Object>} Response data
+   */
+  async submitReply(submissionId, replyText) {
+    try {
+      const client = authClient();
+      const response = await client.post(`/api/admin/submissions/${submissionId}/reply/`, {
+        reply: replyText
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error submitting reply:', error);
+      throw error;
+    }
+  },
 
 };
