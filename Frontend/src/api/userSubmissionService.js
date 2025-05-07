@@ -1,7 +1,8 @@
 import axios from 'axios';
+import { API_CONFIG } from './apiConfig';
 
-// Backend URL for API calls
-const BACKEND_URL = 'https://lktool.onrender.com';
+// Backend URL from centralized config
+const BACKEND_URL = API_CONFIG.API_URL;
 
 /**
  * Service for handling user submission data

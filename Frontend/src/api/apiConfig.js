@@ -1,9 +1,9 @@
-// Base API URL - update to absolute URL to avoid issues with BrowserRouter
-const API_BASE_URL = 'https://lktool.onrender.com';
+// Base API URL from environment variable
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://lktool.onrender.com';
 
 // API endpoint configuration
 export const API_CONFIG = {
-  API_URL: import.meta.env.VITE_API_BASE_URL || 'https://lktool.onrender.com',
+  API_URL: API_BASE_URL,
   AUTH: {
     SIGNUP: '/api/auth/signup/',
     LOGIN: '/api/auth/login/',

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import "./FormData.css";
 import NavBar from '../NavBar/NavBar';
 
@@ -36,31 +36,6 @@ const FormData = () => {
     noEngagementOnPosts: false,
   });
 
-  const [users, setUsers] = useState([]);
-  const [selectedUser, setSelectedUser] = useState('');
-  const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    const fetchUsers = async () => {
-      setLoading(true);
-      try {
-        const response = await fetch('/api/users');
-        const data = await response.json();
-        setUsers(data);
-      } catch (error) {
-        console.error('Error fetching users:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchUsers();
-  }, []);
-
-  const handleUserChange = (e) => {
-    setSelectedUser(e.target.value);
-  };
-
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setForm({ ...form, [name]: type === 'checkbox' ? checked : value });
@@ -75,25 +50,6 @@ const FormData = () => {
     <>
     <form onSubmit={handleSubmit} className="classroom-form-data">
       <h2 className="classroom-heading">LinkedIn Profile Analyzer</h2>
-
-      {/* User Selection */}
-      <fieldset className="classroom-fieldset">
-        <legend className="classroom-legend">Select User</legend>
-        <select
-          value={selectedUser}
-          onChange={handleUserChange}
-          disabled={loading || !users.length}
-        >
-          <option value="">
-            {users.length ? 'Select a user' : 'No users available'}
-          </option>
-          {users.map(u => (
-            <option key={u.id} value={u.id}>
-              {u.email}
-            </option>
-          ))}
-        </select>
-      </fieldset>
 
       {/* Profile Basics */}
       <fieldset className="classroom-fieldset">

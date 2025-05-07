@@ -18,11 +18,10 @@ function getCsrfToken() {
 
 // Create an axios instance with base configuration
 const axiosInstance = axios.create({
-  baseURL: API_CONFIG?.API_URL || 'https://lktool.onrender.com',  // No /api prefix here
+  baseURL: API_CONFIG.API_URL,
   headers: {
     'Content-Type': 'application/json',
   },
-  /* timeout: 15000, */ // 15 second timeout
   withCredentials: true, // Important for CORS with credentials
 });
 

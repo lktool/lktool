@@ -1,7 +1,8 @@
 import axios from 'axios';
+import { API_CONFIG } from './apiConfig';
 
-// Backend URL
-const BACKEND_URL = 'https://lktool.onrender.com';
+// Backend URL from centralized config
+const BACKEND_URL = API_CONFIG.API_URL;
 
 // Create an API client with admin authorization header
 function authClient() {

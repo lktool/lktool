@@ -1,16 +1,13 @@
-from rest_framework import generics, status, permissions
+from rest_framework import generics, status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAdminUser
 from django.conf import settings
-from django.contrib.auth import get_user_model
 import jwt
 from datetime import datetime, timedelta
 
 from contact.models import ContactSubmission
 from contact.serializers import ContactSerializer  # Fixed import name
-from .serializers import AdminUserSerializer
-from users.models import CustomUser
 
 class AdminLoginView(APIView):
     """
@@ -133,79 +130,3 @@ class AdminStatsView(APIView):
             'processed': processed_count,
             'pending': pending_count
         })
-
-class UserListView(APIView):
-    """View to list all users for admin selection"""
-    
-    def get(self, request):
-        # Debug authentication state
-        print(f"Admin auth check: is_admin={getattr(request, 'is_admin', False)}")
-        print(f"Auth header: {request.headers.get('Authorization')}")
-        
-        # Always return JSON, never HTML
-        try:
-            # Check if admin
-            if not getattr(request, 'is_admin', False):
-                return Response({"detail": "Admin authentication required"}, status=status.HTTP_401_UNAUTHORIZED)
-            
-            # Create minimal user data that always works
-            data = []
-            try:
-                users = CustomUser.objects.filter(is_active=True)
-                for user in users:
-                    data.append({"id": user.id, "email": user.email})
-            except Exception as e:
-                print(f"Database error: {e}")
-                # Return empty array but with 200 status
-                
-            # Return JSON data with explicit content type
-            return Response(
-                data, 
-                status=status.HTTP_200_OK,
-                content_type="application/json"
-            )
-        except Exception as e:
-            print(f"Critical error in UserListView: {e}")
-            # Return a proper JSON response even for critical errors
-            return Response(
-                {"error": str(e)}, 
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                content_type="application/json"
-            )
-
-class UserSubmissionsView(APIView):
-    """View to fetch submissions for a specific user"""
-    def get(self, request, user_id):
-        # Check if user is admin
-        if not getattr(request, 'is_admin', False):
-            return Response({"detail": "Admin authentication required"}, status=status.HTTP_401_UNAUTHORIZED)
-            
-        try:
-            # Get the user with proper error handling
-            try:
-                user = CustomUser.objects.get(id=user_id)
-            except CustomUser.DoesNotExist:
-                return Response({"detail": "User not found"}, status=status.HTTP_404_NOT_FOUND)
-                
-            # Get submissions for this user
-            submissions = ContactSubmission.objects.filter(email=user.email).order_by('-created_at')
-            
-            # Prepare response data
-            data = []
-            for sub in submissions:
-                data.append({
-                    "id": sub.id,
-                    "email": sub.email,
-                    "linkedin_url": sub.linkedin_url,
-                    "created_at": sub.created_at,
-                    "is_processed": sub.is_processed,
-                    "has_analysis": sub.analysis is not None
-                })
-            return Response(data)
-            
-        except Exception as e:
-            print(f"Error in UserSubmissionsView: {e}")
-            return Response(
-                {"detail": f"Error fetching submissions: {str(e)}"},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
