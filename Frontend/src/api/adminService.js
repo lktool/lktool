@@ -7,14 +7,20 @@ const BACKEND_URL = API_CONFIG.API_URL;
 // Create an API client with admin authorization header
 function authClient() {
   const token = localStorage.getItem('adminToken');
-  return axios.create({
+  const client = axios.create({
     baseURL: BACKEND_URL,
-    headers: { 
+    headers: {
       'Content-Type': 'application/json',
-      'Authorization': token ? `Bearer ${token}` : '' 
-    }
+      ...(token && { 'Authorization': `Bearer ${token}` }),
+    },
   });
+
+  // Log headers for debugging
+  console.log('Auth headers:', client.defaults.headers);
+
+  return client;
 }
+
 
 export const adminService = {
   /**
