@@ -119,45 +119,35 @@ export const adminService = {
    */
   async getUsers() {
     try {
-        console.log('Fetching users list...');
-        const token = localStorage.getItem('adminToken');
-        
-        if (!token) {
-            console.log('No admin token found');
-            return this.getMockUsers();
-        }
-        
-        console.log(`Admin token length: ${token.length}`);
-        
-        // CRITICAL FIX: Use axios instead of fetch for consistent handling
-        try {
-            const response = await axios.get(
-                `${BACKEND_URL}/api/admin/users/?t=${Date.now()}`, 
-                {
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}` 
-                    },
-                    validateStatus: function (status) {
-                        return status < 500; // Only throw for 500 errors
-                    }
-                }
-            );
-            
-            if (response.status === 200 && Array.isArray(response.data)) {
-                console.log(`Users fetched: ${response.data.length}`);
-                return response.data;
-            } else {
-                console.error(`Invalid response: ${response.status}`, response.data);
-                return this.getMockUsers();
-            }
-        } catch (error) {
-            console.error('API error:', error);
-            return this.getMockUsers();
-        }
-    } catch (error) {
-        console.error('Critical error:', error);
+      console.log('Fetching users list...');
+      const token = localStorage.getItem('adminToken');
+      
+      if (!token) {
+        console.log('No admin token found');
         return this.getMockUsers();
+      }
+      
+      console.log(`Admin token length: ${token.length}`);
+      
+      // Use the authClient helper that correctly sets Admin-Authorization header
+      try {
+        const client = authClient();
+        const response = await client.get(`/api/admin/users/?t=${Date.now()}`);
+        
+        if (response.status === 200 && Array.isArray(response.data)) {
+          console.log(`Users fetched: ${response.data.length}`);
+          return response.data;
+        } else {
+          console.error(`Invalid response: ${response.status}`, response.data);
+          return this.getMockUsers();
+        }
+      } catch (error) {
+        console.error('API error:', error);
+        return this.getMockUsers();
+      }
+    } catch (error) {
+      console.error('Critical error:', error);
+      return this.getMockUsers();
     }
   },
 
