@@ -3,11 +3,11 @@ from contact.models import ContactSubmission
 
 class AdminContactSerializer(serializers.ModelSerializer):
     """
-    Extended serializer for admin use with writable analysis field
+    Serializer for admin use with basic fields
     """
     class Meta:
         model = ContactSubmission
         fields = ['id', 'user', 'email', 'linkedin_url', 'message', 
-                 'created_at', 'is_processed', 'analysis']
+                 'created_at', 'is_processed']
         read_only_fields = ['id', 'user', 'email', 'linkedin_url', 
                           'message', 'created_at']

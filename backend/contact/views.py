@@ -173,29 +173,3 @@ class UserSubmissionsView(APIView):
         response["Expires"] = "0"
         
         return response
-
-class UserAnalysesView(APIView):
-    """API endpoint for users to view analyses of their submissions"""
-    permission_classes = [IsAuthenticated]
-    
-    def get(self, request):
-        # Get current user's email
-        user_email = request.user.email
-        
-        # Fetch submissions with analyses
-        submissions = ContactSubmission.objects.filter(
-            email__iexact=user_email, 
-            is_processed=True,
-            analysis__isnull=False
-        ).order_by('-created_at')
-        
-        data = []
-        for submission in submissions:
-            data.append({
-                'id': submission.id,
-                'linkedin_url': submission.linkedin_url,
-                'created_at': submission.created_at,
-                'analysis': submission.analysis
-            })
-        
-        return Response(data)

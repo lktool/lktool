@@ -170,22 +170,6 @@ export const adminService = {
   },
 
   /**
-   * Submit LinkedIn profile analysis
-   * @param {Object} analysisData - Contains submission ID and analysis form data
-   * @returns {Promise<Object>} Response data
-   */
-  async submitAnalysis(analysisData) {
-    try {
-      const client = authClient();
-      const response = await client.post('/api/admin/submissions/', analysisData);
-      return response.data;
-    } catch (error) {
-      console.error('Error submitting analysis:', error);
-      throw error;
-    }
-  },
-
-  /**
    * Get submissions for a specific user
    * @param {number} userId - User ID
    * @returns {Promise<Array>} List of user submissions
