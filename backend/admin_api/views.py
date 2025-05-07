@@ -9,6 +9,8 @@ from datetime import datetime, timedelta
 from contact.models import ContactSubmission
 from contact.serializers import ContactSerializer  # Fixed import name
 from .serializers import AdminContactSerializer
+from users.models import CustomUser
+from users.serializers import UserSerializer
 
 class AdminLoginView(APIView):
     """
@@ -189,3 +191,26 @@ class UserSubmissionsView(APIView):
             return Response({"detail": "User not found"}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             return Response({"detail": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+class UserListView(APIView):
+    """
+    View to list all users for the admin dashboard
+    """
+    def get(self, request):
+        # Check if user is admin
+        if not getattr(request, 'is_admin', False):
+            return Response({"detail": "Admin authentication required"}, status=status.HTTP_401_UNAUTHORIZED)
+            
+        users = CustomUser.objects.all().order_by('-date_joined')
+        
+        # Create a simplified serializer response for better performance
+        user_data = []
+        for user in users:
+            user_data.append({
+                'id': user.id,
+                'email': user.email,
+                'is_verified': user.is_verified,
+                'date_joined': user.date_joined
+            })
+            
+        return Response(user_data)

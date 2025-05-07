@@ -1,5 +1,5 @@
 // Base API URL from environment variable
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://lktool.onrender.com';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 // API endpoint configuration
 export const API_CONFIG = {

@@ -53,7 +53,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-95udpxakz7tgh4@clqs(jqq=coel+k(ik@@2%4gg@g=00)96on"
+SECRET_KEY = config("SECRET_KEY", default="unsafe-secret-for-dev")
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False  # Turn off debug in production
@@ -355,6 +355,7 @@ SECURE_CONTENT_TYPE_NOSNIFF = True
 CSRF_TRUSTED_ORIGINS = [
     'https://projectsection-ten.vercel.app',
     'https://lktools.onrender.com',
+    'http://localhost:5173',
 ]
 
 # Set X-Frame-Options to deny by default
