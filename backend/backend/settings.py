@@ -251,9 +251,10 @@ CORS_ALLOW_HEADERS = [
     'user-agent',
     'x-csrftoken',
     'x-requested-with',
-    'cache-control',  # Add this header
-    'pragma',         # Add this header
-    'expires',        # Add this header
+    'cache-control',
+    'pragma',
+    'expires',
+    'admin-authorization',  # Add this header
 ]
 
 # Update CORS allowed headers to ensure admin API works

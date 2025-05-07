@@ -11,7 +11,7 @@ function authClient() {
     baseURL: BACKEND_URL,
     headers: { 
       'Content-Type': 'application/json',
-      'Admin-Authorization': token ? `Bearer ${token}` : '' 
+      'Authorization': token ? `Bearer ${token}` : '' 
     }
   });
 }
@@ -129,7 +129,7 @@ export const adminService = {
       
       console.log(`Admin token length: ${token.length}`);
       
-      // Use the authClient helper that correctly sets Admin-Authorization header
+      // Use the authClient helper that correctly sets Authorization header
       try {
         const client = authClient();
         const response = await client.get(`/api/admin/users/?t=${Date.now()}`);

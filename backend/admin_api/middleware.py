@@ -13,7 +13,7 @@ class AdminAuthMiddleware:
         self.get_response = get_response
         
     def __call__(self, request):
-        # Check both headers to be more flexible
+        # Check both standard Authorization and Admin-Authorization headers
         admin_auth_header = request.META.get('HTTP_ADMIN_AUTHORIZATION') or request.META.get('HTTP_AUTHORIZATION')
         
         if admin_auth_header and admin_auth_header.startswith('Bearer '):
