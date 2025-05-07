@@ -35,13 +35,27 @@ class AdminLoginView(APIView):
                 status=status.HTTP_401_UNAUTHORIZED
             )
             
-        # Generate admin-specific token
+        # Generate admin-specific token with explicit algorithm
         payload = {
             'user_type': 'admin',
-            'exp': datetime.utcnow() + timedelta(hours=24)
+            'exp': datetime.utcnow() + timedelta(hours=24),
+            'iat': datetime.utcnow(),
+            'admin_email': email  # Add email to payload for identification
         }
         
+        # Explicitly encode token with algorithm specification
         token = jwt.encode(payload, settings.SECRET_KEY, algorithm='HS256')
+        
+        # Check encoded token format
+        print(f"Generated admin token: {token[:20]}...")
+        
+        # Verify token can be decoded immediately (sanity check)
+        try:
+            decoded = jwt.decode(token, settings.SECRET_KEY, algorithms=['HS256'])
+            print(f"Token verified, payload: {decoded}")
+        except Exception as e:
+            print(f"Error verifying token: {e}")
+        
         print("Admin login successful")
         
         return Response({

@@ -128,11 +128,26 @@ export const adminService = {
       }
       
       console.log(`Admin token length: ${token.length}`);
+      console.log(`Admin token first 20 chars: ${token.substring(0, 20)}...`);
       
       try {
-        // Use the authClient helper for consistent headers
+        // Log the auth client headers
         const client = authClient();
-        const response = await client.get(`/api/admin/users/?t=${Date.now()}`);
+        console.log('Auth headers:', client.defaults.headers);
+        
+        const url = `${BACKEND_URL}/api/admin/users/?t=${Date.now()}`;
+        console.log(`Making request to URL: ${url}`);
+        
+        // Make the request with explicit token header for debugging
+        const response = await axios.get(
+          url,
+          {
+            headers: { 
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            }
+          }
+        );
         
         if (response.status === 200 && Array.isArray(response.data)) {
           console.log(`Users fetched: ${response.data.length}`);
@@ -142,7 +157,10 @@ export const adminService = {
           return this.getMockUsers();
         }
       } catch (error) {
-        console.error('API error:', error);
+        console.error('API error details:', error.response?.data || 'No response data');
+        console.error('API error status:', error.response?.status || 'No status');
+        
+        // Fall back to mock users
         return this.getMockUsers();
       }
     } catch (error) {
