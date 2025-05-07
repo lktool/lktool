@@ -8,6 +8,7 @@ from datetime import datetime, timedelta
 
 from contact.models import ContactSubmission
 from contact.serializers import ContactSerializer  # Fixed import name
+from .serializers import AdminContactSerializer
 
 class AdminLoginView(APIView):
     """
@@ -88,10 +89,45 @@ class FormSubmissionListView(APIView):
         
         serializer = ContactSerializer(submissions, many=True)  # Fixed serializer name
         return Response(serializer.data)
+    
+    def post(self, request):
+        """Handle LinkedIn profile analysis submission"""
+        # Check if user is admin
+        if not getattr(request, 'is_admin', False):
+            return Response({"detail": "Admin authentication required"}, status=status.HTTP_401_UNAUTHORIZED)
+        
+        try:
+            # Get required data
+            submission_id = request.data.get('submission')
+            analysis_data = request.data.get('data')
+            
+            # Validate data
+            if not submission_id or not analysis_data:
+                return Response({"detail": "Missing required fields"}, status=status.HTTP_400_BAD_REQUEST)
+                
+            # Get the submission
+            submission = ContactSubmission.objects.get(id=submission_id)
+            
+            # Use admin serializer to update analysis
+            serializer = AdminContactSerializer(
+                submission, 
+                data={'analysis': analysis_data, 'is_processed': True},
+                partial=True
+            )
+            
+            if serializer.is_valid():
+                serializer.save()
+                return Response({"message": "Analysis saved successfully"}, status=status.HTTP_200_OK)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            
+        except ContactSubmission.DoesNotExist:
+            return Response({"detail": "Submission not found"}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({"detail": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
 class UpdateSubmissionStatusView(APIView):
     """
-    View to update a submission's processed status
+    View to update a submission's processed status and analysis
     """
     def patch(self, request, pk):
         # Check if user is admin
@@ -103,14 +139,13 @@ class UpdateSubmissionStatusView(APIView):
         except ContactSubmission.DoesNotExist:
             return Response({"detail": "Submission not found"}, status=status.HTTP_404_NOT_FOUND)
             
-        # Update is_processed status
-        is_processed = request.data.get('is_processed')
-        if is_processed is not None:
-            submission.is_processed = bool(is_processed)
-            submission.save(update_fields=['is_processed'])
-            
-        serializer = ContactSerializer(submission)  # Fixed serializer name
-        return Response(serializer.data)
+        # Use admin serializer that allows updating analysis field
+        serializer = AdminContactSerializer(submission, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class AdminStatsView(APIView):
     """
@@ -130,3 +165,27 @@ class AdminStatsView(APIView):
             'processed': processed_count,
             'pending': pending_count
         })
+
+class UserSubmissionsView(APIView):
+    """
+    View to fetch submissions for a specific user (Admin only)
+    """
+    def get(self, request, user_id):
+        # Check if user is admin
+        if not getattr(request, 'is_admin', False):
+            return Response({"detail": "Admin authentication required"}, status=status.HTTP_401_UNAUTHORIZED)
+            
+        from users.models import CustomUser
+        try:
+            # First check if user exists
+            user = CustomUser.objects.get(id=user_id)
+            
+            # Get submissions for this user's email
+            submissions = ContactSubmission.objects.filter(email=user.email).order_by('-created_at')
+            serializer = ContactSerializer(submissions, many=True)
+            
+            return Response(serializer.data)
+        except CustomUser.DoesNotExist:
+            return Response({"detail": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({"detail": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

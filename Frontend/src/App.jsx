@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { useEffect } from "react";
 import Landing from "./Landing/Landing";
 import Admin from "./Admin/Admin";
 import Login from './Login/Login';
@@ -16,6 +17,10 @@ import NavBar from "./NavBar/NavBar"; // Import NavBar component
 import UserSubmissions from "./UserSubmissions/UserSubmissions"; // Import UserSubmissions component
 
 function App() {
+  useEffect(() => {
+    document.title = "LinkedIn Profile Analysis Tool";
+  }, []);
+
   return (
     <>
       <Router>

@@ -4,7 +4,9 @@ from .models import ContactSubmission
 class ContactSerializer(serializers.ModelSerializer):
     class Meta:
         model = ContactSubmission
-        fields = ['id', 'linkedin_url', 'message', 'email', 'is_processed', 'created_at']
+        fields = ['id', 'user', 'email', 'linkedin_url', 'message', 
+                 'created_at', 'is_processed', 'analysis']
+        read_only_fields = ['id', 'user', 'is_processed', 'created_at', 'analysis']
         
     def validate_linkedin_url(self, value):
         if not value:
