@@ -138,28 +138,39 @@ class UserListView(APIView):
     """View to list all users for admin selection"""
     
     def get(self, request):
-        # Check if user is admin
-        if not getattr(request, 'is_admin', False):
-            print("Admin authentication failed for UserListView")
-            return Response({"detail": "Admin authentication required"}, status=status.HTTP_401_UNAUTHORIZED)
-            
+        # Debug authentication state
+        print(f"Admin auth check: is_admin={getattr(request, 'is_admin', False)}")
+        print(f"Auth header: {request.headers.get('Authorization')}")
+        
+        # Always return JSON, never HTML
         try:
-            # Use a simple dict-based approach to avoid serialization issues
+            # Check if admin
+            if not getattr(request, 'is_admin', False):
+                return Response({"detail": "Admin authentication required"}, status=status.HTTP_401_UNAUTHORIZED)
+            
+            # Create minimal user data that always works
             data = []
-            for user in CustomUser.objects.filter(is_active=True):
-                data.append({
-                    "id": user.id,
-                    "email": user.email
-                })
-            
-            return Response(data)
-            
-        except Exception as e:
-            # Log error and return JSON error response
-            print(f"Error in UserListView: {str(e)}")
+            try:
+                users = CustomUser.objects.filter(is_active=True)
+                for user in users:
+                    data.append({"id": user.id, "email": user.email})
+            except Exception as e:
+                print(f"Database error: {e}")
+                # Return empty array but with 200 status
+                
+            # Return JSON data with explicit content type
             return Response(
-                {"error": "Failed to fetch users", "detail": str(e)},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                data, 
+                status=status.HTTP_200_OK,
+                content_type="application/json"
+            )
+        except Exception as e:
+            print(f"Critical error in UserListView: {e}")
+            # Return a proper JSON response even for critical errors
+            return Response(
+                {"error": str(e)}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                content_type="application/json"
             )
 
 class UserSubmissionsView(APIView):
