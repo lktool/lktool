@@ -65,40 +65,6 @@ export const adminService = {
   },
   
   /**
-   * Get form submissions with optional filtering
-   * @param {string} filter - Filter submissions (processed, pending, all)
-   * @returns {Promise<Array>} List of submissions
-   */
-  async getSubmissions(filter = '') {
-    try {
-      const client = authClient();
-      const queryParam = filter && filter !== 'all' ? `?status=${filter}` : '';
-      const response = await client.get(`/api/admin/submissions/${queryParam}`);
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching submissions:', error);
-      return [];
-    }
-  },
-  
-  /**
-   * Update submission status
-   * @param {number} id - Submission ID
-   * @param {boolean} isProcessed - Processed flag
-   * @returns {Promise<Object>} Updated submission
-   */
-  async updateSubmissionStatus(id, isProcessed) {
-    try {
-      const client = authClient();
-      const response = await client.patch(`/api/admin/submissions/${id}/`, { is_processed: isProcessed });
-      return response.data;
-    } catch (error) {
-      console.error('Error updating submission:', error);
-      throw error;
-    }
-  },
-  
-  /**
    * Get dashboard statistics
    * @returns {Promise<Object>} Dashboard statistics
    */
@@ -113,84 +79,6 @@ export const adminService = {
     }
   },
 
-  /**
-   * Get list of users
-   * @returns {Promise<Array>} List of users
-   */
-  async getUsers() {
-    try {
-      console.log('Fetching users list...');
-      const token = localStorage.getItem('adminToken');
-      
-      if (!token) {
-        console.log('No admin token found');
-        return this.getMockUsers();
-      }
-      
-      console.log(`Admin token length: ${token.length}`);
-      console.log(`Admin token first 20 chars: ${token.substring(0, 20)}...`);
-      
-      try {
-        // Log the auth client headers
-        const client = authClient();
-        console.log('Auth headers:', client.defaults.headers);
-        
-        const url = `${BACKEND_URL}/api/admin/users/?t=${Date.now()}`;
-        console.log(`Making request to URL: ${url}`);
-        
-        // Make the request with explicit token header for debugging
-        const response = await axios.get(
-          url,
-          {
-            headers: { 
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`
-            }
-          }
-        );
-        
-        if (response.status === 200 && Array.isArray(response.data)) {
-          console.log(`Users fetched: ${response.data.length}`);
-          return response.data;
-        } else {
-          console.error(`Invalid response: ${response.status}`, response.data);
-          return this.getMockUsers();
-        }
-      } catch (error) {
-        console.error('API error details:', error.response?.data || 'No response data');
-        console.error('API error status:', error.response?.status || 'No status');
-        
-        // Fall back to mock users
-        return this.getMockUsers();
-      }
-    } catch (error) {
-      console.error('Critical error:', error);
-      return this.getMockUsers();
-    }
-  },
 
-  /**
-   * Get submissions for a specific user
-   * @param {number} userId - User ID
-   * @returns {Promise<Array>} List of user submissions
-   */
-  async getUserSubmissions(userId) {
-    try {
-      const client = authClient();
-      const response = await client.get(`/api/admin/users/${userId}/submissions/`);
-      return response.data;
-    } catch (error) {
-      console.error(`Error fetching submissions for user ${userId}:`, error);
-      return [];
-    }
-  },
 
-  getMockUsers() {
-    console.log("Returning mock users data for testing");
-    return [
-        { id: 1, email: "user1@example.com" },
-        { id: 2, email: "user2@example.com" },
-        { id: 3, email: "user3@example.com" }
-    ];
-  }
 };

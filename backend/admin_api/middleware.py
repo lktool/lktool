@@ -13,30 +13,25 @@ class AdminAuthMiddleware:
         self.get_response = get_response
         
     def __call__(self, request):
-        # Focus on Authorization header (standard practice)
-        auth_header = request.META.get('HTTP_AUTHORIZATION')
+        # Check both headers to be more flexible
+        admin_auth_header = request.META.get('HTTP_ADMIN_AUTHORIZATION') or request.META.get('HTTP_AUTHORIZATION')
         
-        if auth_header and auth_header.startswith('Bearer '):
-            token = auth_header.split(' ')[1]
+        if admin_auth_header and admin_auth_header.startswith('Bearer '):
+            token = admin_auth_header.split(' ')[1]
             try:
-                # Add debug logging to see the token and decode process
-                print(f"Admin Auth: Processing token: {token[:10]}...")
-                
                 payload = jwt.decode(token, settings.SECRET_KEY, algorithms=['HS256'])
-                print(f"Admin Auth: Token payload: {payload}")
-                
                 if payload.get('user_type') == 'admin':
                     request.is_admin = True
-                    print("Admin Auth: Successfully verified admin token!")
+                    logger.info("Admin authenticated successfully")
                 else:
                     request.is_admin = False
-                    print(f"Admin Auth: Token missing admin user_type, payload: {payload}")
+                    logger.warning("Token missing admin user_type")
             except jwt.PyJWTError as e:
                 request.is_admin = False
-                print(f"Admin Auth: JWT validation error: {str(e)}")
+                logger.error(f"JWT validation error: {str(e)}")
         else:
             request.is_admin = False
             if '/api/admin/' in request.path and request.method != 'OPTIONS' and request.path != '/api/admin/login/':
-                print(f"Admin Auth: No auth header found for path: {request.path}")
+                logger.warning(f"Admin auth failed - missing token for {request.path}")
             
         return self.get_response(request)

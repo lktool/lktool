@@ -8,9 +8,6 @@ from datetime import datetime, timedelta
 
 from contact.models import ContactSubmission
 from contact.serializers import ContactSerializer  # Fixed import name
-from .serializers import AdminContactSerializer
-from users.models import CustomUser
-from users.serializers import UserSerializer
 
 class AdminLoginView(APIView):
     """
@@ -35,27 +32,13 @@ class AdminLoginView(APIView):
                 status=status.HTTP_401_UNAUTHORIZED
             )
             
-        # Generate admin-specific token with explicit algorithm
+        # Generate admin-specific token
         payload = {
             'user_type': 'admin',
-            'exp': datetime.utcnow() + timedelta(hours=24),
-            'iat': datetime.utcnow(),
-            'admin_email': email  # Add email to payload for identification
+            'exp': datetime.utcnow() + timedelta(hours=24)
         }
         
-        # Explicitly encode token with algorithm specification
         token = jwt.encode(payload, settings.SECRET_KEY, algorithm='HS256')
-        
-        # Check encoded token format
-        print(f"Generated admin token: {token[:20]}...")
-        
-        # Verify token can be decoded immediately (sanity check)
-        try:
-            decoded = jwt.decode(token, settings.SECRET_KEY, algorithms=['HS256'])
-            print(f"Token verified, payload: {decoded}")
-        except Exception as e:
-            print(f"Error verifying token: {e}")
-        
         print("Admin login successful")
         
         return Response({
@@ -103,9 +86,9 @@ class FormSubmissionListView(APIView):
         elif status_filter == 'pending':
             submissions = submissions.filter(is_processed=False)
         
-        serializer = ContactSerializer(submissions, many=True)
+        serializer = ContactSerializer(submissions, many=True)  # Fixed serializer name
         return Response(serializer.data)
-
+        
 class UpdateSubmissionStatusView(APIView):
     """
     View to update a submission's processed status
@@ -120,13 +103,14 @@ class UpdateSubmissionStatusView(APIView):
         except ContactSubmission.DoesNotExist:
             return Response({"detail": "Submission not found"}, status=status.HTTP_404_NOT_FOUND)
             
-        # Use admin serializer for updating status only
-        serializer = AdminContactSerializer(submission, data=request.data, partial=True)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        # Update is_processed status
+        is_processed = request.data.get('is_processed')
+        if is_processed is not None:
+            submission.is_processed = bool(is_processed)
+            submission.save(update_fields=['is_processed'])
+            
+        serializer = ContactSerializer(submission)  # Fixed serializer name
+        return Response(serializer.data)
 
 class AdminStatsView(APIView):
     """
@@ -146,50 +130,3 @@ class AdminStatsView(APIView):
             'processed': processed_count,
             'pending': pending_count
         })
-
-class UserSubmissionsView(APIView):
-    """
-    View to fetch submissions for a specific user (Admin only)
-    """
-    def get(self, request, user_id):
-        # Check if user is admin
-        if not getattr(request, 'is_admin', False):
-            return Response({"detail": "Admin authentication required"}, status=status.HTTP_401_UNAUTHORIZED)
-            
-        from users.models import CustomUser
-        try:
-            # First check if user exists
-            user = CustomUser.objects.get(id=user_id)
-            
-            # Get submissions for this user's email
-            submissions = ContactSubmission.objects.filter(email=user.email).order_by('-created_at')
-            serializer = ContactSerializer(submissions, many=True)
-            
-            return Response(serializer.data)
-        except CustomUser.DoesNotExist:
-            return Response({"detail": "User not found"}, status=status.HTTP_404_NOT_FOUND)
-        except Exception as e:
-            return Response({"detail": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-class UserListView(APIView):
-    """
-    View to list all users for the admin dashboard
-    """
-    def get(self, request):
-        # Check if user is admin
-        if not getattr(request, 'is_admin', False):
-            return Response({"detail": "Admin authentication required"}, status=status.HTTP_401_UNAUTHORIZED)
-            
-        users = CustomUser.objects.all().order_by('-date_joined')
-        
-        # Create a simplified serializer response for better performance
-        user_data = []
-        for user in users:
-            user_data.append({
-                'id': user.id,
-                'email': user.email,
-                'is_verified': user.is_verified,
-                'date_joined': user.date_joined
-            })
-            
-        return Response(user_data)

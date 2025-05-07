@@ -238,23 +238,38 @@ CORS_ALLOWED_ORIGINS = [
 CORS_ALLOW_CREDENTIALS = True
 
 # Enable preflight caching to reduce OPTIONS requests
-CORS_PREFLIGHT_MAX_AGE = 86400  # 24 hours in seconds
+CORS_PREFLIGHT_MAX_AGE = 86400  # 24 hours in seconds - dramatically reduces preflight requests
 
-# Define allowed headers explicitly
+# Add allowed headers to fix CORS issue
 CORS_ALLOW_HEADERS = [
     'accept',
     'accept-encoding',
-    'authorization',  # Standard header - ensure it's included
+    'authorization',
     'content-type',
     'dnt',
     'origin',
     'user-agent',
     'x-csrftoken',
     'x-requested-with',
-    'cache-control',
-    'pragma',
-    'expires',
+    'cache-control',  # Add this header
+    'pragma',         # Add this header
+    'expires',        # Add this header
 ]
+
+# Update CORS allowed headers to ensure admin API works
+CORS_ALLOW_ALL_HEADERS = True  # Temporarily allow all headers for debugging
+CORS_EXPOSE_HEADERS = ['*']    # Expose all headers in response
+
+# Add CORS debugging (temporarily)
+CORS_URLS_REGEX = r'^/api/.*$'
+
+# Log all CORS requests
+def cors_logger(request, response):
+    print(f"CORS request: {request.method} {request.path}")
+    print(f"  Origin: {request.headers.get('Origin')}")
+    print(f"  Authorization header present: {'Authorization' in request.headers}")
+    print(f"  Response status: {response.status_code}")
+    return response
 
 # Important: Keep this setting off in production
 CORS_ALLOW_ALL_ORIGINS = False
