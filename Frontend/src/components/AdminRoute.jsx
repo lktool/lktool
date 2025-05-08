@@ -1,26 +1,42 @@
 import { Navigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import LoadingSpinner from './LoadingSpinner';
+import jwt_decode from 'jwt-decode';  // You may need to install this package
 
 function AdminRoute({ children }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [checkCompleted, setCheckCompleted] = useState(false);
 
   useEffect(() => {
-    // Check if admin is authenticated
+    // Check if admin token exists and has admin role
     const checkAdminAuth = () => {
-      // IMPORTANT: Get the admin token (not regular user token!)
       const adminToken = localStorage.getItem('adminToken');
-      console.log("AdminRoute: Checking admin authentication with token:", adminToken ? "exists" : "missing");
-      setIsAuthenticated(!!adminToken);
+      
+      if (!adminToken) {
+        setIsAuthenticated(false);
+        setIsLoading(false);
+        return;
+      }
+      
+      try {
+        // Decode the token to check for admin role
+        const decoded = jwt_decode(adminToken);
+        
+        // Check if the token has admin role or user_type
+        const isAdmin = (decoded.role === 'admin') || (decoded.user_type === 'admin');
+        
+        setIsAuthenticated(isAdmin);
+      } catch (error) {
+        console.error('Admin token validation error:', error);
+        setIsAuthenticated(false);
+      }
+      
       setIsLoading(false);
-      setCheckCompleted(true);
     };
     
     checkAdminAuth();
     
-    // Add listener to detect token changes
+    // Listen for token changes
     const handleStorageChange = (e) => {
       if (e.key === 'adminToken') {
         checkAdminAuth();
@@ -31,7 +47,6 @@ function AdminRoute({ children }) {
     return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
-  // Don't redirect until we've completed the check
   if (isLoading) {
     return (
       <div className="admin-loading-container">
@@ -40,13 +55,12 @@ function AdminRoute({ children }) {
     );
   }
 
-  // Only redirect if we've completed the check and user isn't authenticated
-  if (checkCompleted && !isAuthenticated) {
-    console.log("AdminRoute: Not authenticated, redirecting to admin login");
+  // Redirect to admin login if not authenticated
+  if (!isAuthenticated) {
     return <Navigate to="/admin" replace />;
   }
 
-  // If authenticated, render the protected content
+  // If authenticated as admin, render the protected content
   return children;
 }
 

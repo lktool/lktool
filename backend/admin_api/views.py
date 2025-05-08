@@ -34,13 +34,16 @@ class AdminLoginView(APIView):
                 status=status.HTTP_401_UNAUTHORIZED
             )
             
-        # Generate admin-specific token
-        payload = {
+        # UPDATED: Use standard JWT token format but with admin role
+        # Create a token with admin role 
+        token_payload = {
             'user_type': 'admin',
+            'role': 'admin',
+            'email': email,
             'exp': datetime.utcnow() + timedelta(hours=24)
         }
         
-        token = jwt.encode(payload, settings.SECRET_KEY, algorithm='HS256')
+        token = jwt.encode(token_payload, settings.SECRET_KEY, algorithm='HS256')
         print("Admin login successful")
         
         return Response({

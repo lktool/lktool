@@ -4,15 +4,14 @@ import { API_CONFIG } from './apiConfig';
 // Backend URL from centralized config
 const BACKEND_URL = API_CONFIG.API_URL;
 
-// Create an axios instance with admin authorization header
+// Create an axios instance with standard Authorization header
 function authClient() {
   const token = localStorage.getItem('adminToken');
   return axios.create({
     baseURL: BACKEND_URL,
     headers: { 
       'Content-Type': 'application/json',
-      // FIX: Use Admin-Authorization header specifically for admin routes
-      'Admin-Authorization': token ? `Bearer ${token}` : '' 
+      'Authorization': token ? `Bearer ${token}` : '' 
     }
   });
 }

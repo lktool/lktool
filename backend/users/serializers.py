@@ -11,6 +11,15 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         token = super().get_token(user)
         # Add custom claims
         token['email'] = user.email
+        
+        # Add role claim - used to identify admin vs regular users
+        token['role'] = 'user'  # Default role is user
+        
+        # Check if this matches admin credentials from settings
+        from django.conf import settings
+        if user.email == settings.ADMIN_EMAIL:
+            token['role'] = 'admin'
+            
         return token
     
     def validate(self, attrs):
