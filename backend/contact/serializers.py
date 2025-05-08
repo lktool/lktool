@@ -2,8 +2,8 @@ from rest_framework import serializers
 from .models import ContactSubmission
 
 class ContactSerializer(serializers.ModelSerializer):
-    # Add safe access to analysis field with a default
-    analysis = serializers.JSONField(required=False, allow_null=True)
+    # Make analysis field optional and safe
+    analysis = serializers.JSONField(required=False, allow_null=True, read_only=True)
     
     class Meta:
         model = ContactSubmission
@@ -22,7 +22,7 @@ class ContactSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Email address is required.")
         # Normalize email to lowercase for consistency
         return value.lower()
-
+        
     def to_representation(self, instance):
         # Add error handling when getting analysis data
         representation = super().to_representation(instance)

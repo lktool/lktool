@@ -152,18 +152,14 @@ class UserSubmissionsView(APIView):
         # Debug the user email and query
         print(f"Fetching submissions for authenticated user: {user_email}")
         
-        # FIXED: Add try-except block to handle any database or serialization errors
         try:
             # Use case-insensitive email comparison and exact match with no caching
             submissions = ContactSubmission.objects.filter(email__iexact=user_email).order_by('-created_at')
             
-            # Force a database refresh to get latest data
-            submissions = submissions.select_related().all()
-            
             # Debug the query results
             print(f"Found {submissions.count()} submissions for {user_email}")
             
-            # Make sure serializer includes necessary fields
+            # Make sure serializer includes necessary fields but handle missing fields safely
             serializer = ContactSerializer(submissions, many=True)
             
             # Add cache control header to prevent browser caching

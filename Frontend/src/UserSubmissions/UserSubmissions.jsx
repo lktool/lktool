@@ -9,54 +9,54 @@ function UserSubmissions() {
   const [error, setError] = useState(null);
   const [lastRefresh, setLastRefresh] = useState(new Date());
 
-  useEffect(() => {
-    async function fetchSubmissions() {
-      try {
-        setLoading(true);
-        
-        // Get authentication token
-        const token = localStorage.getItem('token');
-        if (!token) {
-          throw new Error('No authentication token found');
-        }
-        
-        // Parse token if it's stored as JSON
-        let authToken = token;
-        try {
-          const parsedToken = JSON.parse(token);
-          if (parsedToken && parsedToken.value) {
-            authToken = parsedToken.value;
-          }
-        } catch (e) {
-          // Token is a plain string, which is fine
-        }
-        
-        // Fetch user's submissions WITHOUT cache control headers
-        const response = await axios.get(
-          'https://lktool.onrender.com/api/contact/user-submissions/', 
-          {
-            headers: {
-              'Authorization': `Bearer ${authToken}`,
-              'Content-Type': 'application/json'
-              // Remove cache-control headers
-            }
-          }
-        );
-        
-        setSubmissions(response.data);
-        setError(null);
-      } catch (err) {
-        console.error('Error fetching user submissions:', err);
-        setError('Failed to load your submissions. Please try again later.');
-      } finally {
-        setLoading(false);
+  const fetchSubmissions = async () => {
+    try {
+      setLoading(true);
+      setLastRefresh(new Date());
+      
+      // Get authentication token
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No authentication token found');
       }
+      
+      // Parse token if it's stored as JSON
+      let authToken = token;
+      try {
+        const parsedToken = JSON.parse(token);
+        if (parsedToken && parsedToken.value) {
+          authToken = parsedToken.value;
+        }
+      } catch (e) {
+        // Token is a plain string, which is fine
+      }
+      
+      // Fetch user's submissions WITH error handling
+      const response = await axios.get(
+        'https://lktool.onrender.com/api/contact/user-submissions/', 
+        {
+          headers: {
+            'Authorization': `Bearer ${authToken}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+      
+      setSubmissions(response.data);
+      setError(null);
+    } catch (err) {
+      console.error('Error fetching user submissions:', err);
+      setError('Failed to load your submissions. Please try again later.');
+    } finally {
+      setLoading(false);
     }
-    
+  };
+
+  useEffect(() => {
     fetchSubmissions();
   }, []);
 
-  // Add a refresh button
+  // Add a refresh button handler
   const handleRefresh = () => {
     fetchSubmissions();
   };
@@ -129,6 +129,21 @@ function UserSubmissions() {
                     <div className="submission-field">
                       <label>Message:</label>
                       <p className="submission-message">{submission.message}</p>
+                    </div>
+                  )}
+                  
+                  {/* Add admin reply section */}
+                  {submission.admin_reply && (
+                    <div className="submission-field admin-reply">
+                      <label>Admin Response:</label>
+                      <div className="admin-reply-content">
+                        <p>{submission.admin_reply}</p>
+                        {submission.admin_reply_date && (
+                          <div className="admin-reply-date">
+                            Response date: {new Date(submission.admin_reply_date).toLocaleDateString()}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   )}
                 </div>

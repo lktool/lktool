@@ -65,33 +65,33 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1rem;
+  margin-bottom: 15px;
 }
 
 .refresh-button {
   background-color: #67AE6E;
   color: white;
   border: none;
-  border-radius: 6px;
   padding: 8px 16px;
+  border-radius: 4px;
   cursor: pointer;
-  font-weight: 500;
-  transition: background-color 0.2s;
+  font-size: 0.9rem;
+  transition: background-color 0.3s;
 }
 
 .refresh-button:hover {
-  background-color: #5a9c61;
+  background-color: #328E6E;
 }
 
 .refresh-button:disabled {
-  background-color: #ccc;
+  background-color: #cccccc;
   cursor: not-allowed;
 }
 
 .last-refresh {
+  font-size: 0.8rem;
   color: #666;
-  font-size: 0.85rem;
-  margin-bottom: 1rem;
+  margin-bottom: 20px;
   text-align: right;
 }
 
@@ -163,4 +163,35 @@
   border-radius: 8px;
   margin-bottom: 1.5rem;
   text-align: center;
+}
+
+/* Admin reply styling */
+.admin-reply {
+  margin-top: 15px;
+  border-top: 1px dashed #ccc;
+  padding-top: 15px;
+}
+
+.admin-reply label {
+  color: #328E6E;
+  font-weight: 600;
+}
+
+.admin-reply-content {
+  background-color: #f9f9f9;
+  padding: 12px 15px;
+  border-radius: 6px;
+  border-left: 4px solid #67AE6E;
+  margin-top: 8px;
+}
+
+.admin-reply-content p {
+  margin-bottom: 8px;
+}
+
+.admin-reply-date {
+  font-size: 0.8rem;
+  color: #666;
+  text-align: right;
+  font-style: italic;
 }

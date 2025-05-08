@@ -117,6 +117,34 @@ def send_notification_email(user_email, url, message, recipient_email=None, subj
         
         return False
 
+def send_notification_email(submission):
+    """Send notification when a new submission is received"""
+    subject = f"New LinkedIn Profile Submission: {submission.email}"
+    message = f"""
+    A new LinkedIn profile has been submitted:
+    
+    Email: {submission.email}
+    LinkedIn URL: {submission.linkedin_url}
+    
+    Message:
+    {submission.message}
+    
+    You can review this submission in the admin dashboard.
+    """
+    
+    try:
+        send_mail(
+            subject=subject,
+            message=message,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[settings.ADMIN_EMAIL],
+            fail_silently=False,
+        )
+        return True
+    except Exception as e:
+        print(f"Failed to send notification email: {e}")
+        return False
+
 def send_reply_notification(submission):
     """Send notification when admin replies to a submission"""
     subject = "Response to your LinkedIn Profile Submission"
