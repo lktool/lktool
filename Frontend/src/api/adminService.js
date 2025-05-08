@@ -80,10 +80,44 @@ export const adminService = {
   },
 
   /**
-   * Submit admin reply to a user submission
-   * @param {number} submissionId - Submission ID
+   * Submit admin reply to a user submissionering
+   * @param {number} submissionId - Submission ID(processed, pending, all)
    * @param {string} replyText - Admin's reply text
    * @returns {Promise<Object>} Response data
+   */nc getSubmissions(filter = '') {
+  async submitReply(submissionId, replyText) {
+    try {st client = authClient();
+      const client = authClient(); filter !== 'all' ? `?status=${filter}` : '';
+      const response = await client.post(`/api/admin/submissions/${submissionId}/reply/`, {
+        reply: replyTextta;
+      });ch (error) {
+      return response.data;fetching submissions:', error);
+    } catch (error) {
+      console.error('Error submitting reply:', error);
+      throw error;
+    }
+  },*
+   * Submit admin reply to a user submission
+  /** * @param {number} submissionId - Submission ID
+   * Update submission status   * @param {string} replyText - Admin's reply text
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+};  },    }      throw error;      console.error('Error updating submission:', error);    } catch (error) {      return response.data;      const response = await client.patch(`/api/admin/submissions/${id}/`, { is_processed: isProcessed });      const client = authClient();    try {  async updateSubmissionStatus(id, isProcessed) {   */   * @returns {Promise<Object>} Updated submission   * @param {boolean} isProcessed - Processed flag   * @param {number} id - Submission ID   * @returns {Promise<Object>} Response data
    */
   async submitReply(submissionId, replyText) {
     try {

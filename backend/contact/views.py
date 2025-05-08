@@ -153,17 +153,39 @@ class UserSubmissionsView(APIView):
         print(f"Fetching submissions for authenticated user: {user_email}")
         
         try:
-            # Use case-insensitive email comparison and exact match with no caching
+            # Use case-insensitive email comparison
             submissions = ContactSubmission.objects.filter(email__iexact=user_email).order_by('-created_at')
             
             # Debug the query results
             print(f"Found {submissions.count()} submissions for {user_email}")
             
-            # Make sure serializer includes necessary fields but handle missing fields safely
-            serializer = ContactSerializer(submissions, many=True)
+            # Extract only necessary fields to avoid serialization issues
+            serialized_data = []
+            for submission in submissions:
+                try:
+                    submission_data = {
+                        'id': submission.id,
+                        'linkedin_url': submission.linkedin_url,
+                        'message': submission.message,
+                        'email': submission.email,
+                        'is_processed': submission.is_processed,
+                        'created_at': submission.created_at,
+                    }
+                    
+                    # Only include these fields if they exist and are not None
+                    if hasattr(submission, 'admin_reply') and submission.admin_reply is not None:
+                        submission_data['admin_reply'] = submission.admin_reply
+                    
+                    if hasattr(submission, 'admin_reply_date') and submission.admin_reply_date is not None:
+                        submission_data['admin_reply_date'] = submission.admin_reply_date
+                    
+                    serialized_data.append(submission_data)
+                except Exception as field_error:
+                    # Log error but continue processing other submissions
+                    print(f"Error serializing submission {submission.id}: {str(field_error)}")
             
             # Add cache control header to prevent browser caching
-            response = Response(serializer.data)
+            response = Response(serialized_data)
             response["Cache-Control"] = "no-cache, no-store, must-revalidate"
             response["Pragma"] = "no-cache"
             response["Expires"] = "0"
@@ -171,7 +193,10 @@ class UserSubmissionsView(APIView):
             return response
             
         except Exception as e:
+            # Log the full error with traceback for debugging
+            import traceback
             print(f"Error in UserSubmissionsView: {str(e)}")
+            print(traceback.format_exc())
             return Response(
                 {"error": "An error occurred while fetching your submissions"},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
