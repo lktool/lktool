@@ -153,11 +153,10 @@ class UserSubmissionsView(APIView):
         print(f"Fetching submissions for authenticated user: {user_email}")
         
         try:
-            # Only select specific fields that are guaranteed to exist
-            # Explicitly exclude the 'analysis' field which is causing the error
+            # Use defer() to explicitly tell Django NOT to query the problematic field
             submissions = ContactSubmission.objects.filter(
                 email__iexact=user_email
-            ).order_by('-created_at')
+            ).defer('analysis').order_by('-created_at')
             
             # Build simple dictionaries with only required fields
             submissions_list = []

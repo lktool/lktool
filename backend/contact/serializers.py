@@ -2,14 +2,11 @@ from rest_framework import serializers
 from .models import ContactSubmission
 
 class ContactSerializer(serializers.ModelSerializer):
-    # Make analysis field optional and safe, and exclude it from database reads
-    analysis = serializers.JSONField(required=False, allow_null=True, read_only=True)
-    
     class Meta:
         model = ContactSubmission
-        # Exclude analysis from default fields to avoid database queries
-        fields = ['id', 'linkedin_url', 'message', 'email', 'is_processed', 
-                 'created_at', 'admin_reply', 'admin_reply_date']
+        # Explicitly list all fields except 'analysis' to avoid ORM errors
+        fields = ['id', 'linkedin_url', 'message', 'email', 
+                 'is_processed', 'created_at', 'admin_reply', 'admin_reply_date']
         
     def validate_linkedin_url(self, value):
         if not value:
