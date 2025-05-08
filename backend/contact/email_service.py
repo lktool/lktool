@@ -6,6 +6,7 @@ import traceback
 from django.core.mail import EmailMessage, send_mail
 from django.conf import settings
 import threading
+from users.utils import send_email_async
 
 logger = logging.getLogger(__name__)
 

@@ -15,6 +15,7 @@ class ContactSubmission(models.Model):
     email = models.EmailField()
     created_at = models.DateTimeField(auto_now_add=True)
     is_processed = models.BooleanField(default=False)
+    analysis = models.JSONField(blank=True, null=True)  # Keep this field to match migrations
     admin_reply = models.TextField(blank=True, null=True)
     admin_reply_date = models.DateTimeField(blank=True, null=True)
 
