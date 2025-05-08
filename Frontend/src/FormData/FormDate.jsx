@@ -51,8 +51,17 @@ const FormData = () => {
     const fetchSubmissions = async () => {
       setLoading(true);
       try {
+        // Ensure admin token is available
+        const adminToken = localStorage.getItem('adminToken');
+        if (!adminToken) {
+          console.error("No admin token found");
+          return;
+        }
+        
+        console.log("Fetching submissions with admin token");
         // Fetch all pending submissions for review
         const data = await adminService.getSubmissions('pending');
+        console.log("Submissions fetched:", data.length);
         setSubmissions(data);
       } catch (error) {
         console.error('Error fetching submissions:', error);
@@ -61,7 +70,10 @@ const FormData = () => {
       }
     };
     
-    fetchSubmissions();
+    // Only fetch if admin is logged in
+    if (adminService.isAuthenticated()) {
+      fetchSubmissions();
+    }
   }, []);
 
   const handleChange = (e) => {

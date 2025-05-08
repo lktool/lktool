@@ -4,14 +4,15 @@ import { API_CONFIG } from './apiConfig';
 // Backend URL from centralized config
 const BACKEND_URL = API_CONFIG.API_URL;
 
-// Create an API client with admin authorization header
+// Create an axios instance with admin authorization header
 function authClient() {
   const token = localStorage.getItem('adminToken');
   return axios.create({
     baseURL: BACKEND_URL,
     headers: { 
       'Content-Type': 'application/json',
-      'Authorization': token ? `Bearer ${token}` : '' 
+      // FIX: Use Admin-Authorization header specifically for admin routes
+      'Admin-Authorization': token ? `Bearer ${token}` : '' 
     }
   });
 }
@@ -38,6 +39,8 @@ export const adminService = {
       // Store the admin token on successful login
       if (response.data && response.data.token) {
         localStorage.setItem('adminToken', response.data.token);
+        // IMPORTANT: Add a small delay to ensure token is stored before next request
+        await new Promise(resolve => setTimeout(resolve, 100));
         return true;
       }
       return false;
@@ -87,11 +90,19 @@ export const adminService = {
   async getSubmissions(filter = '') {
     try {
       const client = authClient();
+      
+      // Debug the token being sent
+      const token = localStorage.getItem('adminToken');
+      console.log(`Fetching submissions with admin token: ${token ? 'Present' : 'Missing'}`);
+      
       const queryParam = filter && filter !== 'all' ? `?status=${filter}` : '';
       const response = await client.get(`/api/admin/submissions/${queryParam}`);
       return response.data;
     } catch (error) {
       console.error('Error fetching submissions:', error);
+      if (error.response && error.response.status === 401) {
+        console.error('Admin authentication failed. Token may be invalid.');
+      }
       return [];
     }
   },

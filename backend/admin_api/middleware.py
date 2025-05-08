@@ -16,6 +16,12 @@ class AdminAuthMiddleware:
         # Check both headers to be more flexible
         admin_auth_header = request.META.get('HTTP_ADMIN_AUTHORIZATION') or request.META.get('HTTP_AUTHORIZATION')
         
+        # Debug the headers for admin routes
+        if '/api/admin/' in request.path and request.method != 'OPTIONS':
+            logger.info(f"Admin request to {request.path}")
+            logger.info(f"Admin-Authorization header: {request.META.get('HTTP_ADMIN_AUTHORIZATION', 'None')}")
+            logger.info(f"Authorization header: {request.META.get('HTTP_AUTHORIZATION', 'None')}")
+        
         if admin_auth_header and admin_auth_header.startswith('Bearer '):
             token = admin_auth_header.split(' ')[1]
             try:
