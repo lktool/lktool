@@ -1,23 +1,27 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AdminLogin from './AdminLogin';
-import { adminService } from '../api/adminService'; // Import dedicated service
+import { unifiedAuthService } from '../api/unifiedAuthService';
 import LoadingSpinner from '../components/LoadingSpinner';
 import './Admin.css';
 
 function Admin() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
   
   // Check authentication status when component mounts
   useEffect(() => {
     const checkAuth = () => {
-      const isAdmin = adminService.isAuthenticated();
-      setIsAuthenticated(isAdmin);
+      const token = localStorage.getItem('token');
+      const userRole = localStorage.getItem('userRole');
       
-      // If already authenticated, redirect to admin dashboard
-      if (isAdmin) {
+      setIsAuthenticated(!!token);
+      setIsAdmin(userRole === 'admin');
+      
+      // If already authenticated as admin, redirect to dashboard
+      if (token && userRole === 'admin') {
         navigate('/admin/dashboard');
       }
       
@@ -28,9 +32,16 @@ function Admin() {
   }, [navigate]);
   
   // Handle successful login
-  const handleLoginSuccess = () => {
-    setIsAuthenticated(true);
-    navigate('/admin/dashboard');
+  const handleLoginSuccess = (response) => {
+    if (response.isAdmin) {
+      setIsAuthenticated(true);
+      setIsAdmin(true);
+      navigate('/admin/dashboard');
+    } else {
+      setIsAuthenticated(true);
+      setIsAdmin(false);
+      // Show an error that the user is not an admin
+    }
   };
   
   if (isLoading) {
@@ -41,8 +52,8 @@ function Admin() {
     );
   }
   
-  // If not authenticated, show login form
-  if (!isAuthenticated) {
+  // If not authenticated or not admin, show login form
+  if (!isAuthenticated || !isAdmin) {
     return <AdminLogin onLoginSuccess={handleLoginSuccess} />;
   }
   

@@ -1,32 +1,30 @@
 import "./NavBar.css";
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
+import { unifiedAuthService } from '../api/unifiedAuthService';
 
 function NavBar() {
     const navigate = useNavigate();
-    const location = useLocation(); // Get current path
+    const location = useLocation();
     const [isUserLoggedIn, setIsUserLoggedIn] = useState(false);
-    const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
+    const [isAdminUser, setIsAdminUser] = useState(false);
     const [isLandingPage, setIsLandingPage] = useState(false);
-    const [isAdminPage, setIsAdminPage] = useState(false);
     const [isInputMain, setIsInputMain] = useState(false);
     const [isLoginPage, setIsLoginPage] = useState(false);
     const [isSignupPage, setIsSignupPage] = useState(false);
     const [isMySubmissionsPage, setIsMySubmissionsPage] = useState(false);
-    
+
     // Check authentication state when component mounts or location changes
     useEffect(() => {
-        // Check user login status
-        const userToken = localStorage.getItem('token');
-        setIsUserLoggedIn(!!userToken);
+        // Check user login status and role using unified auth
+        const token = localStorage.getItem('token');
+        const userRole = localStorage.getItem('userRole');
         
-        // Check admin login status
-        const adminToken = localStorage.getItem('adminToken');
-        setIsAdminLoggedIn(!!adminToken);
+        setIsUserLoggedIn(!!token);
+        setIsAdminUser(userRole === 'admin');
         
         // Check which page we're on
         setIsLandingPage(location.pathname === '/');
-        setIsAdminPage(location.pathname.startsWith('/admin'));
         setIsInputMain(location.pathname === '/inputMain');
         setIsLoginPage(location.pathname === '/login');
         setIsSignupPage(location.pathname === '/signup');
@@ -34,25 +32,21 @@ function NavBar() {
         
     }, [location.pathname]);
 
-    // Add check for token changes
+    // Listen for authentication changes
     useEffect(() => {
         const checkAuthStatus = () => {
-            // Check user login status
-            const userToken = localStorage.getItem('token');
-            setIsUserLoggedIn(!!userToken);
+            const token = localStorage.getItem('token');
+            const userRole = localStorage.getItem('userRole');
             
-            // Check admin login status
-            const adminToken = localStorage.getItem('adminToken');
-            setIsAdminLoggedIn(!!adminToken);
+            setIsUserLoggedIn(!!token);
+            setIsAdminUser(userRole === 'admin');
         };
         
         // Initial check
         checkAuthStatus();
         
-        // Set up event listener for storage changes (login/logout in other tabs)
+        // Set up event listeners
         window.addEventListener('storage', checkAuthStatus);
-        
-        // Custom event for auth changes within the same tab
         window.addEventListener('authChange', checkAuthStatus);
         
         return () => {
@@ -70,8 +64,7 @@ function NavBar() {
     }
     
     function handleFormData() {
-        // Redirect to admin login if not admin
-        if (!isAdminLoggedIn) {
+        if (!isAdminUser) {
             navigate('/admin');
         } else {
             navigate('/admin/dashboard');
@@ -87,20 +80,11 @@ function NavBar() {
     }
     
     function handleUserLogout() {
-        // Clear user authentication data only
-        localStorage.removeItem('token');
+        // Use unified auth service to logout
+        unifiedAuthService.logout();
         setIsUserLoggedIn(false);
+        setIsAdminUser(false);
         navigate('/login');
-        
-        // Dispatch custom event to notify other components
-        window.dispatchEvent(new Event('authChange'));
-    }
-    
-    function handleAdminLogout() {
-        // Clear admin authentication data only
-        localStorage.removeItem('adminToken');
-        setIsAdminLoggedIn(false);
-        navigate('/admin');
         
         // Dispatch custom event to notify other components
         window.dispatchEvent(new Event('authChange'));
@@ -161,7 +145,7 @@ function NavBar() {
                     )}
 
                     {/* Admin Login page - show Login, Signup options too */}
-                    {location.pathname === '/admin' && !isAdminLoggedIn && (
+                    {location.pathname === '/admin' && !isAdminUser && (
                         <>
                             <div className="navbar-account">
                                 <a href="#" onClick={(e) => {e.preventDefault(); handleLogin();}}>Login</a>
@@ -180,8 +164,7 @@ function NavBar() {
                     )}
                     
                     {/* FormData page - show Form Data & Logout */}
-                    {isUserLoggedIn && !isInputMain && !isAdminPage && 
-                     !isLandingPage && !isMySubmissionsPage && (
+                    {isUserLoggedIn && !isInputMain && !isLandingPage && !isMySubmissionsPage && (
                         <>
                             <div className="navbar-account">
                                 <a href="#" onClick={(e) => {e.preventDefault(); handleFormData();}}>Form Data</a>
@@ -205,7 +188,7 @@ function NavBar() {
                     )}
                     
                     {/* Add My Submissions button for authenticated users on appropriate pages */}
-                    {isUserLoggedIn && !isAdminPage && !isLandingPage && !isMySubmissionsPage && (
+                    {isUserLoggedIn && !isLandingPage && !isMySubmissionsPage && (
                         <div className="navbar-account">
                             <a href="#" onClick={(e) => {e.preventDefault(); handleMySubmissions();}}>
                                 My Submissions
@@ -214,7 +197,7 @@ function NavBar() {
                     )}
                     
                     {/* Admin is logged in & on admin page - show Admin Dashboard & Admin Logout */}
-                    {isAdminLoggedIn && isAdminPage && (
+                    {isAdminUser && (
                         <>
                             <div className="navbar-account active">
                                 <a href="#" onClick={(e) => {e.preventDefault(); navigate('/admin/dashboard');}}>
@@ -222,7 +205,7 @@ function NavBar() {
                                 </a>
                             </div>
                             <div className="navbar-Logout">
-                                <a href="#" onClick={(e) => {e.preventDefault(); handleAdminLogout();}}>Admin Logout</a>
+                                <a href="#" onClick={(e) => {e.preventDefault(); handleUserLogout();}}>Admin Logout</a>
                             </div>
                         </>
                     )}

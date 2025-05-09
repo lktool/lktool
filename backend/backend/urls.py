@@ -21,15 +21,21 @@ from django.conf import settings
 from django.conf.urls.static import static
 
 urlpatterns = [
-    path("admin/", admin.site.urls),
+    # Django admin site (renamed to avoid conflict)
+    path("django-admin/", admin.site.urls),
+    
+    # New unified auth API with role-based endpoints
+    path("api/v2/", include('unified_auth_api.urls')),
+    
+    # Existing endpoints for backward compatibility
     path("api/", include('users.urls')),
     path('api/contact/', include('contact.urls')),
-    path('api/admin/', include('admin_api.urls')),  # Add Admin API URLs
-    path('admin/', include('admin_api.urls')),      # Add this for compatibility
+    path('api/admin/', include('admin_api.urls')),
+    path('admin/', include('admin_api.urls')),  # For compatibility
     
-    # Catch‑all: serve React’s index.html for any non-API, non-admin, non‑static, non‑media path
+    # Catch‑all: serve React's index.html
     re_path(
-        r'^(?!admin/|api/|static/|media/).*$',
+        r'^(?!django-admin/|api/|static/|media/).*$',
         TemplateView.as_view(template_name="index.html"),
         name="spa-fallback"
     ),

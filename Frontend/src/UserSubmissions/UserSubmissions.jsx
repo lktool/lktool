@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import LoadingSpinner from '../components/LoadingSpinner';
+import { unifiedAuthService } from '../api/unifiedAuthService';
 import './UserSubmissions.css';
 
 function UserSubmissions() {
@@ -14,35 +14,10 @@ function UserSubmissions() {
       setLoading(true);
       setLastRefresh(new Date());
       
-      // Get authentication token
-      const token = localStorage.getItem('token');
-      if (!token) {
-        throw new Error('No authentication token found');
-      }
+      // Use the unified auth service to fetch user submissions
+      const data = await unifiedAuthService.getMySubmissions();
       
-      // Parse token if it's stored as JSON
-      let authToken = token;
-      try {
-        const parsedToken = JSON.parse(token);
-        if (parsedToken && parsedToken.value) {
-          authToken = parsedToken.value;
-        }
-      } catch (e) {
-        // Token is a plain string, which is fine
-      }
-      
-      // Fetch user's submissions WITH error handling
-      const response = await axios.get(
-        'https://lktool.onrender.com/api/contact/user-submissions/', 
-        {
-          headers: {
-            'Authorization': `Bearer ${authToken}`,
-            'Content-Type': 'application/json'
-          }
-        }
-      );
-      
-      setSubmissions(response.data);
+      setSubmissions(data);
       setError(null);
     } catch (err) {
       console.error('Error fetching user submissions:', err);

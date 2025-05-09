@@ -5,7 +5,7 @@ import React from "react";
 import { validateEmail } from "../Utils/validate";
 import { Link, useNavigate } from "react-router-dom";
 import GoogleLoginButton from "../components/GoogleLoginButton";
-import { authService } from '../api/authService';
+import { unifiedAuthService } from '../api/unifiedAuthService'; // Use unified auth service
 
 function Signup() {
   const [email, setEmail] = useState("");
@@ -97,8 +97,8 @@ function Signup() {
     // Debounce signup attempts
     signupAttemptRef.current = setTimeout(async () => {
       try {
-        // Pass confirmPassword as third parameter with timeout handling
-        await authService.register(email, password, confirmPassword);
+        // Use unifiedAuthService instead of authService
+        await unifiedAuthService.register(email, password, confirmPassword);
         setSuccess(true); // Show verification needed message
       } catch (err) {
         console.error("Registration error:", err);
@@ -140,7 +140,7 @@ function Signup() {
           <div className="verification-actions">
             <button 
               onClick={() => {
-                authService.resendVerification(email);
+                unifiedAuthService.resendVerification(email); // Use unified auth service
                 alert('Verification email resent!');
               }}
               className="resend-btn"

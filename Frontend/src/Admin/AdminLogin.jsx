@@ -1,13 +1,13 @@
-import { useState } from 'react';
-import { adminService } from '../api/adminService'; // Import our dedicated admin service
+import React, { useState } from 'react';
+import { unifiedAuthService } from '../api/unifiedAuthService';
 import './AdminLogin.css';
 
 function AdminLogin({ onLoginSuccess }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
-
+  const [isLoading, setIsLoading] = useState(false);
+  
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -16,71 +16,68 @@ function AdminLogin({ onLoginSuccess }) {
       return;
     }
     
-    setLoading(true);
+    setIsLoading(true);
     setError('');
     
     try {
-      console.log(`Attempting admin login with email: ${email}`);
-      const success = await adminService.login(email, password);
+      const response = await unifiedAuthService.login(email, password);
       
-      if (success) {
-        console.log('Admin login successful!');
-        onLoginSuccess();
+      if (response.success) {
+        if (response.isAdmin) {
+          onLoginSuccess(response);
+        } else {
+          setError('You do not have admin permissions');
+          unifiedAuthService.logout();
+        }
       } else {
-        setError('Invalid credentials');
+        setError(response.error || 'Invalid credentials');
       }
     } catch (err) {
-      console.error('Admin login error details:', err);
-      
-      if (err.response?.status === 401) {
-        setError('Invalid admin credentials');
-      } else if (err.message && err.message.includes('Network Error')) {
-        setError('Network error. Please check your connection.');
-      } else {
-        setError('Login failed. Please try again.');
-      }
+      console.error('Admin login error:', err);
+      setError('Login failed. Please try again.');
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
-
+  
   return (
     <div className="admin-login-container">
-      <div className="admin-login-card">
-        <h1>Admin Login</h1>
-        <p>Please enter your admin credentials to continue</p>
+      <div className="admin-login-form">
+        <h2>Admin Login</h2>
+        
+        {error && <div className="admin-login-error">{error}</div>}
         
         <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label htmlFor="admin-email">Email</label>
+          <div className="admin-form-group">
+            <label htmlFor="email">Email</label>
             <input
-              id="admin-email"
               type="email"
+              id="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="Admin Email"
+              placeholder="Enter admin email"
+              required
             />
           </div>
           
-          <div className="form-group">
-            <label htmlFor="admin-password">Password</label>
+          <div className="admin-form-group">
+            <label htmlFor="password">Password</label>
             <input
-              id="admin-password"
               type="password"
+              id="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Admin Password"
+              placeholder="Enter admin password"
+              required
             />
           </div>
-          
-          {error && <div className="admin-error">{error}</div>}
           
           <button 
             type="submit" 
-            className="admin-login-btn" 
-            disabled={loading}
+            className="admin-login-button"
+            disabled={isLoading}
           >
-            {loading ? 'Logging in...' : 'Log In'}
+            {isLoading ? 'Logging in...' : 'Login'}
           </button>
         </form>
       </div>

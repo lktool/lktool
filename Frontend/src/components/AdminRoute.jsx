@@ -1,50 +1,41 @@
 import { Navigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import LoadingSpinner from './LoadingSpinner';
-import jwt_decode from 'jwt-decode';  // You may need to install this package
+import { unifiedAuthService } from '../api/unifiedAuthService';
 
 function AdminRoute({ children }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check if admin token exists and has admin role
     const checkAdminAuth = () => {
-      const adminToken = localStorage.getItem('adminToken');
+      const token = localStorage.getItem('token');
+      const userRole = localStorage.getItem('userRole');
       
-      if (!adminToken) {
+      if (!token) {
         setIsAuthenticated(false);
+        setIsAdmin(false);
         setIsLoading(false);
         return;
       }
       
-      try {
-        // Decode the token to check for admin role
-        const decoded = jwt_decode(adminToken);
-        
-        // Check if the token has admin role or user_type
-        const isAdmin = (decoded.role === 'admin') || (decoded.user_type === 'admin');
-        
-        setIsAuthenticated(isAdmin);
-      } catch (error) {
-        console.error('Admin token validation error:', error);
-        setIsAuthenticated(false);
-      }
-      
+      // Check if token exists and role is admin
+      setIsAuthenticated(!!token);
+      setIsAdmin(userRole === 'admin');
       setIsLoading(false);
     };
     
     checkAdminAuth();
     
-    // Listen for token changes
-    const handleStorageChange = (e) => {
-      if (e.key === 'adminToken') {
-        checkAdminAuth();
-      }
-    };
+    // Listen for authentication changes
+    window.addEventListener('authChange', checkAdminAuth);
+    window.addEventListener('storage', checkAdminAuth);
     
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
+    return () => {
+      window.removeEventListener('authChange', checkAdminAuth);
+      window.removeEventListener('storage', checkAdminAuth);
+    };
   }, []);
 
   if (isLoading) {
@@ -55,8 +46,8 @@ function AdminRoute({ children }) {
     );
   }
 
-  // Redirect to admin login if not authenticated
-  if (!isAuthenticated) {
+  // Redirect to admin login if not authenticated or not admin
+  if (!isAuthenticated || !isAdmin) {
     return <Navigate to="/admin" replace />;
   }
 

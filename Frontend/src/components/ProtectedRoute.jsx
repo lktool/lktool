@@ -1,6 +1,8 @@
 import { Navigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { authService } from '../api/authService';
+import { unifiedAuthService } from '../api/unifiedAuthService';
+import LoadingSpinner from './LoadingSpinner';
+import './ProtectedRoute.css';
 
 function ProtectedRoute({ children, allowedRoles = [] }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -10,29 +12,23 @@ function ProtectedRoute({ children, allowedRoles = [] }) {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        // CRITICAL FIX: Force server validation of token instead of just checking local storage
+        // Get token and role from localStorage
         const token = localStorage.getItem('token');
+        const role = localStorage.getItem('userRole');
+        
         if (!token) {
           setIsAuthenticated(false);
           setIsLoading(false);
           return;
         }
         
-        // Make an actual API call to verify the token with the server
-        const response = await authService.getCurrentUser();
-        if (response && response.data) {
-          setIsAuthenticated(true);
-          setUserRole(response.data.role);
-        } else {
-          // If no data returned, token might be invalid
-          setIsAuthenticated(false);
-          authService.logout(); // Clear any invalid tokens
-        }
+        // If we have both token and role, we're authenticated
+        setIsAuthenticated(true);
+        setUserRole(role);
       } catch (error) {
         console.error('Authentication verification failed:', error);
-        // Any error means the token is invalid or expired
         setIsAuthenticated(false);
-        authService.logout(); // Clear invalid tokens
+        unifiedAuthService.logout();
       } finally {
         setIsLoading(false);
       }
@@ -44,8 +40,7 @@ function ProtectedRoute({ children, allowedRoles = [] }) {
   if (isLoading) {
     return (
       <div className="loading-container">
-        <div className="loading-spinner"></div>
-        <p>Verifying authentication...</p>
+        <LoadingSpinner size="large" text="Verifying authentication..." />
       </div>
     );
   }
