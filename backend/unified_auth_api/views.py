@@ -1,25 +1,43 @@
-from rest_framework import viewsets, permissions, status
+from django.contrib.auth import get_user_model
+from rest_framework import viewsets, permissions, status, generics
 from rest_framework.response import Response
-from rest_framework.decorators import action
-from django.utils import timezone
+from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework_simplejwt.views import TokenObtainPairView
-from contact.models import ContactSubmission
+from rest_framework.views import APIView
+from google.oauth2 import id_token
+from google.auth.transport import requests as google_requests
+import os
+from django.utils import timezone
 from django.conf import settings
 from django.core.mail import send_mail
 from django.db.models import Q
 
+User = get_user_model()
+
 from .models import SubmissionAnalysis
 from .serializers import (
-    CustomTokenObtainPairSerializer, UserSerializer, SubmissionSerializer, 
-    UserSubmissionDetailSerializer, AdminSubmissionSerializer, AnalysisSerializer
+    CustomTokenObtainPairSerializer, UserSerializer, SubmissionSerializer,
+    UserSubmissionDetailSerializer, AdminSubmissionSerializer, AnalysisSerializer,
+    RegisterSerializer
 )
 from .permissions import IsOwnerOrAdmin, IsAdminUser
-
-User = get_user_model()
 
 class CustomTokenObtainPairView(TokenObtainPairView):
     """Custom token view with user role information"""
     serializer_class = CustomTokenObtainPairSerializer
+
+class RegisterUserView(generics.CreateAPIView):
+    """Register a new user"""
+    permission_classes = [permissions.AllowAny]
+    serializer_class = RegisterSerializer
+
+class UserProfileView(generics.RetrieveUpdateAPIView):
+    """View or update user profile"""
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = UserSerializer
+    
+    def get_object(self):
+        return self.request.user
 
 class UserSubmissionViewSet(viewsets.ModelViewSet):
     """ViewSet for user's submissions"""
@@ -139,3 +157,98 @@ class AnalysisViewSet(viewsets.ModelViewSet):
     
     def get_queryset(self):
         return SubmissionAnalysis.objects.all().order_by('-analyzed_at')
+
+class GoogleAuthView(APIView):
+    """
+    Handle Google authentication with their OAuth2 tokens
+    """
+    permission_classes = [permissions.AllowAny]
+    
+    def post(self, request):
+        credential = request.data.get('credential')
+        action = request.data.get('action', 'login')  # 'login' or 'signup'
+        
+        if not credential:
+            return Response(
+                {"error": "Google credential is required"}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        try:
+            # Verify the Google ID token
+            client_id = os.environ.get('GOOGLE_CLIENT_ID', 
+                '865917249576-o12qfisk9hpp4b10vjvdj2d1kqhunva9.apps.googleusercontent.com')
+            
+            id_info = id_token.verify_oauth2_token(
+                credential, google_requests.Request(), client_id
+            )
+            
+            # Get email from verified token
+            email = id_info.get('email')
+            if not email:
+                return Response(
+                    {"error": "Email not found in Google token"}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Check if user exists
+            try:
+                user = User.objects.get(email=email)
+                
+                # If action is signup but user exists
+                if action == 'signup':
+                    return Response(
+                        {"error": "Account already exists", "needs_login": True}, 
+                        status=status.HTTP_409_CONFLICT
+                    )
+                
+            except User.DoesNotExist:
+                # If action is login but user doesn't exist
+                if action == 'login':
+                    return Response(
+                        {"error": "Account not found", "needs_signup": True}, 
+                        status=status.HTTP_404_NOT_FOUND
+                    )
+                
+                # Create new user for signup action
+                user = User.objects.create_user(
+                    email=email,
+                    username=email,  # Use email as username
+                    is_verified=True,  # Google-verified email
+                    password=None  # No password for social login
+                )
+                
+                # Set some default fields from Google data
+                if 'given_name' in id_info:
+                    user.first_name = id_info['given_name']
+                if 'family_name' in id_info:
+                    user.last_name = id_info['family_name']
+                
+                user.save()
+            
+            # Generate JWT token
+            from rest_framework_simplejwt.tokens import RefreshToken
+            refresh = RefreshToken.for_user(user)
+            
+            # Add custom claims
+            refresh['email'] = user.email
+            
+            # Check admin status
+            is_admin = user.is_staff or user.email == getattr(settings, 'ADMIN_EMAIL', None)
+            refresh['role'] = 'admin' if is_admin else 'user'
+            
+            return Response({
+                'access': str(refresh.access_token),
+                'refresh': str(refresh),
+                'email': user.email,
+                'role': 'admin' if is_admin else 'user',
+                'is_staff': is_admin,
+                'user_id': user.id,
+                'is_new_user': action == 'signup'
+            })
+            
+        except Exception as e:
+            return Response(
+                {"error": str(e)}, 
+                status=status.HTTP_401_UNAUTHORIZED
+            )

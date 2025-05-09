@@ -82,16 +82,19 @@ const GoogleLoginButton = ({ onSuccess, actionType = 'login' }) => {
       
       // Add DEBUG logging
       console.log("Verifying Google token with backend");
-      console.log("API URL:", getApiUrl(API_CONFIG.AUTH.GOOGLE_AUTH));
       
-      const response = await fetch(getApiUrl(API_CONFIG.AUTH.GOOGLE_AUTH), {
+      // Use the new unified auth endpoint for Google auth
+      const googleAuthEndpoint = '/api/v2/auth/google/'; 
+      console.log("API URL:", getApiUrl(googleAuthEndpoint));
+      
+      const response = await fetch(getApiUrl(googleAuthEndpoint), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           credential: token,
           action: action
         }),
-        credentials: 'include' // Important for CORS with credentials
+        credentials: 'include'
       });
       
       const data = await response.json();
@@ -112,11 +115,21 @@ const GoogleLoginButton = ({ onSuccess, actionType = 'login' }) => {
         throw new Error(data.error || `Failed to authenticate (${response.status})`);
       }
       
-      if (data.token) {
-        // Store the token
-        localStorage.setItem('token', data.token);
-        if (data.refresh_token) {
-          localStorage.setItem('refreshToken', data.refresh_token);
+      // Store the token in the unified location
+      if (data.access) {
+        // Store the token in the standard location
+        localStorage.setItem('token', data.access);
+        if (data.refresh) {
+          localStorage.setItem('refreshToken', data.refresh);
+        }
+        
+        // Store user role information
+        if (data.role) {
+          localStorage.setItem('userRole', data.role);
+        }
+        
+        if (data.email) {
+          localStorage.setItem('userEmail', data.email);
         }
         
         // Call the onSuccess callback

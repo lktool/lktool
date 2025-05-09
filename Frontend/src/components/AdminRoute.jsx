@@ -4,37 +4,32 @@ import LoadingSpinner from './LoadingSpinner';
 import { unifiedAuthService } from '../api/unifiedAuthService';
 
 function AdminRoute({ children }) {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const checkAdminAuth = () => {
-      const token = localStorage.getItem('token');
-      const userRole = localStorage.getItem('userRole');
+      // Use the unified auth service to directly check admin status
+      const authenticated = unifiedAuthService.isAuthenticated();
+      const adminRole = unifiedAuthService.isAdmin();
       
-      if (!token) {
-        setIsAuthenticated(false);
-        setIsAdmin(false);
-        setIsLoading(false);
-        return;
-      }
-      
-      // Check if token exists and role is admin
-      setIsAuthenticated(!!token);
-      setIsAdmin(userRole === 'admin');
+      setIsAdmin(authenticated && adminRole);
       setIsLoading(false);
     };
     
     checkAdminAuth();
     
-    // Listen for authentication changes
-    window.addEventListener('authChange', checkAdminAuth);
-    window.addEventListener('storage', checkAdminAuth);
+    // Listen for auth changes
+    const handleAuthChange = () => {
+      checkAdminAuth();
+    };
+    
+    window.addEventListener('authChange', handleAuthChange);
+    window.addEventListener('storage', handleAuthChange);
     
     return () => {
-      window.removeEventListener('authChange', checkAdminAuth);
-      window.removeEventListener('storage', checkAdminAuth);
+      window.removeEventListener('authChange', handleAuthChange);
+      window.removeEventListener('storage', handleAuthChange);
     };
   }, []);
 
@@ -46,8 +41,8 @@ function AdminRoute({ children }) {
     );
   }
 
-  // Redirect to admin login if not authenticated or not admin
-  if (!isAuthenticated || !isAdmin) {
+  // Redirect to admin login if not authenticated as admin
+  if (!isAdmin) {
     return <Navigate to="/admin" replace />;
   }
 

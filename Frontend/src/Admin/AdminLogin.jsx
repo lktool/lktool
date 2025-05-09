@@ -20,13 +20,16 @@ function AdminLogin({ onLoginSuccess }) {
     setError('');
     
     try {
+      // Use unified auth service - same endpoint for both user and admin
+      console.log('Attempting admin login with email:', email);
       const response = await unifiedAuthService.login(email, password);
       
       if (response.success) {
         if (response.isAdmin) {
+          console.log('Admin login successful!');
           onLoginSuccess(response);
         } else {
-          setError('You do not have admin permissions');
+          setError('You do not have admin privileges');
           unifiedAuthService.logout();
         }
       } else {

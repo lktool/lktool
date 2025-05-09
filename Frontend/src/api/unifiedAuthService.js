@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { API_CONFIG } from './apiConfig';
+import { API_ENDPOINTS } from './apiEndpoints';
 
 // API base URL
 const API_BASE = `${API_CONFIG.API_URL}/api/v2`;
@@ -20,7 +21,7 @@ export const unifiedAuthService = {
   // Authentication methods
   async login(email, password) {
     try {
-      const response = await axios.post(`${API_BASE}/auth/login/`, {
+      const response = await axios.post(`${API_BASE}${API_ENDPOINTS.AUTH.LOGIN}`, {
         email,
         password
       });
@@ -63,7 +64,7 @@ export const unifiedAuthService = {
    */
   async register(email, password, confirmPassword) {
     try {
-      const response = await axios.post(`${API_BASE}/auth/register/`, {
+      const response = await axios.post(`${API_BASE}${API_ENDPOINTS.AUTH.REGISTER}`, {
         email,
         password,
         password2: confirmPassword
@@ -71,23 +72,6 @@ export const unifiedAuthService = {
       return response.data;
     } catch (error) {
       console.error('Registration error:', error);
-      throw error;
-    }
-  },
-  
-  /**
-   * Resend verification email
-   * @param {string} email - User email
-   * @returns {Promise<Object>} Response data
-   */
-  async resendVerification(email) {
-    try {
-      const response = await axios.post(`${API_BASE}/auth/resend-verification/`, {
-        email
-      });
-      return response.data;
-    } catch (error) {
-      console.error('Error resending verification:', error);
       throw error;
     }
   },
@@ -103,7 +87,7 @@ export const unifiedAuthService = {
         return false;
       }
       
-      const response = await axios.post(`${API_BASE}/auth/refresh/`, {
+      const response = await axios.post(`${API_BASE}${API_ENDPOINTS.AUTH.REFRESH}`, {
         refresh: refreshToken
       });
       
@@ -119,76 +103,18 @@ export const unifiedAuthService = {
     }
   },
   
-  // User submissions
-  async getMySubmissions() {
+  /**
+   * Get user profile info
+   * @returns {Promise<Object>} User profile data
+   */
+  async getUserProfile() {
     try {
       const client = authClient();
-      const response = await client.get('/submissions/');
+      const response = await client.get(API_ENDPOINTS.AUTH.PROFILE);
       return response.data;
     } catch (error) {
-      console.error('Error fetching submissions:', error);
-      return [];
-    }
-  },
-  
-  async submitProfile(data) {
-    try {
-      const client = authClient();
-      const response = await client.post('/submissions/', data);
-      return {
-        success: true,
-        data: response.data
-      };
-    } catch (error) {
-      console.error('Error submitting profile:', error);
-      return {
-        success: false,
-        error: error.response?.data || 'Submission failed'
-      };
-    }
-  },
-  
-  // Admin methods
-  async getAdminSubmissions(filter = '') {
-    try {
-      const client = authClient();
-      const queryParams = filter ? `?status=${filter}` : '';
-      const response = await client.get(`/admin/submissions/${queryParams}`);
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching admin submissions:', error);
-      return [];
-    }
-  },
-  
-  async submitAdminReply(submissionId, replyText) {
-    try {
-      const client = authClient();
-      const response = await client.patch(`/admin/submissions/${submissionId}/`, {
-        admin_reply: replyText,
-        is_processed: true
-      });
-      return {
-        success: true,
-        data: response.data
-      };
-    } catch (error) {
-      console.error('Error submitting admin reply:', error);
-      return {
-        success: false,
-        error: error.response?.data || 'Reply failed'
-      };
-    }
-  },
-  
-  async getAdminStats() {
-    try {
-      const client = authClient();
-      const response = await client.get('/admin/submissions/stats/');
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching admin stats:', error);
-      return { total: 0, processed: 0, pending: 0 };
+      console.error('Error fetching profile:', error);
+      throw error;
     }
   },
   

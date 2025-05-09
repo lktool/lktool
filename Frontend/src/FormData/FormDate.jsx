@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import "./FormData.css";
-import { adminService } from '../api/adminService';
+import { adminSubmissionService } from '../api/adminSubmissionService';
 import LoadingSpinner from '../components/LoadingSpinner';
 
 const FormData = () => {
@@ -51,16 +51,9 @@ const FormData = () => {
     const fetchSubmissions = async () => {
       setLoading(true);
       try {
-        // Ensure admin token is available
-        const adminToken = localStorage.getItem('adminToken');
-        if (!adminToken) {
-          console.error("No admin token found");
-          return;
-        }
-        
         console.log("Fetching submissions with admin token");
-        // Fetch all pending submissions for review
-        const data = await adminService.getSubmissions('pending');
+        // Use adminSubmissionService instead of direct API calls
+        const data = await adminSubmissionService.getSubmissions('pending');
         console.log("Submissions fetched:", data.length);
         setSubmissions(data);
       } catch (error) {
@@ -70,10 +63,7 @@ const FormData = () => {
       }
     };
     
-    // Only fetch if admin is logged in
-    if (adminService.isAuthenticated()) {
-      fetchSubmissions();
-    }
+    fetchSubmissions();
   }, []);
 
   const handleChange = (e) => {
@@ -105,16 +95,22 @@ const FormData = () => {
     setReplyStatus('');
 
     try {
-      await adminService.submitReply(selectedSubmission.id, replyText);
-      setReplyStatus('Reply sent successfully');
+      // Use adminSubmissionService for reply submission
+      const result = await adminSubmissionService.submitReply(selectedSubmission.id, replyText);
       
-      // Update local submission data
-      const updatedSubmissions = submissions.map(sub => 
-        sub.id === selectedSubmission.id 
-          ? {...sub, admin_reply: replyText, is_processed: true} 
-          : sub
-      );
-      setSubmissions(updatedSubmissions);
+      if (result.success) {
+        setReplyStatus('Reply sent successfully');
+        
+        // Update local submission data
+        const updatedSubmissions = submissions.map(sub => 
+          sub.id === selectedSubmission.id 
+            ? {...sub, admin_reply: replyText, is_processed: true} 
+            : sub
+        );
+        setSubmissions(updatedSubmissions);
+      } else {
+        setReplyStatus(result.error || 'Failed to send reply');
+      }
     } catch (error) {
       console.error('Error sending reply:', error);
       setReplyStatus('Failed to send reply');
@@ -125,7 +121,7 @@ const FormData = () => {
 
   const handleMarkProcessed = async (id, isProcessed) => {
     try {
-      await adminService.updateSubmissionStatus(id, isProcessed);
+      await adminSubmissionService.updateSubmissionStatus(id, isProcessed);
       // Update the local submissions list
       setSubmissions(submissions.map(sub => 
         sub.id === id 

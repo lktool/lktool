@@ -1,5 +1,8 @@
 from rest_framework import permissions
 from django.conf import settings
+from django.contrib.auth import get_user_model  # Add this import
+
+User = get_user_model()  # If needed
 
 class IsOwnerOrAdmin(permissions.BasePermission):
     """

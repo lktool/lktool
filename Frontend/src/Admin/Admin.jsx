@@ -6,23 +6,22 @@ import LoadingSpinner from '../components/LoadingSpinner';
 import './Admin.css';
 
 function Admin() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
   
   // Check authentication status when component mounts
   useEffect(() => {
     const checkAuth = () => {
-      const token = localStorage.getItem('token');
-      const userRole = localStorage.getItem('userRole');
+      // Use the unified auth service to check if user is authenticated AND is admin
+      const isAuthenticated = unifiedAuthService.isAuthenticated();
+      const isAdmin = unifiedAuthService.isAdmin();
       
-      setIsAuthenticated(!!token);
-      setIsAdmin(userRole === 'admin');
-      
-      // If already authenticated as admin, redirect to dashboard
-      if (token && userRole === 'admin') {
+      if (isAuthenticated && isAdmin) {
+        // Already authenticated as admin, redirect to dashboard
         navigate('/admin/dashboard');
+      } else if (isAuthenticated && !isAdmin) {
+        // User is logged in but not an admin
+        navigate('/');
       }
       
       setIsLoading(false);
@@ -34,13 +33,12 @@ function Admin() {
   // Handle successful login
   const handleLoginSuccess = (response) => {
     if (response.isAdmin) {
-      setIsAuthenticated(true);
-      setIsAdmin(true);
       navigate('/admin/dashboard');
     } else {
-      setIsAuthenticated(true);
-      setIsAdmin(false);
-      // Show an error that the user is not an admin
+      // Show error - not admin privileges
+      alert('Your account does not have admin privileges');
+      unifiedAuthService.logout();
+      navigate('/login');
     }
   };
   
@@ -52,17 +50,8 @@ function Admin() {
     );
   }
   
-  // If not authenticated or not admin, show login form
-  if (!isAuthenticated || !isAdmin) {
-    return <AdminLogin onLoginSuccess={handleLoginSuccess} />;
-  }
-  
-  // This should not be shown since we redirect after login
-  return (
-    <div className="admin-container">
-      <LoadingSpinner size="large" text="Redirecting to dashboard..." />
-    </div>
-  );
+  // Show the admin login form
+  return <AdminLogin onLoginSuccess={handleLoginSuccess} />;
 }
 
 export default Admin;

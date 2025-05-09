@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { API_CONFIG } from './apiConfig';
+import { API_ENDPOINTS } from './apiEndpoints';
 
 // Backend URL from centralized config
 const BACKEND_URL = API_CONFIG.API_URL;
@@ -14,7 +15,7 @@ export const userSubmissionService = {
    */
   async getUserSubmissions() {
     try {
-      // Get the authentication token
+      // Get the authentication token - use centralized token storage
       const token = localStorage.getItem('token');
       
       // Check for token before making request
@@ -23,25 +24,13 @@ export const userSubmissionService = {
         return [];
       }
       
-      // Handle JWT token format - some tokens are stored as JSON objects
-      let authToken = token;
-      try {
-        // Check if token is stored as JSON
-        const parsedToken = JSON.parse(token);
-        if (parsedToken && parsedToken.value) {
-          authToken = parsedToken.value;
-        }
-      } catch (e) {
-        // Token is a plain string, which is fine
-      }
-      
       // Make authenticated request to get user submissions
       const response = await axios.get(
-        `${BACKEND_URL}/api/contact/user-submissions/`,
+        `${BACKEND_URL}${API_ENDPOINTS.SUBMISSIONS.USER_LIST}`,
         {
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${authToken}`
+            'Authorization': `Bearer ${token}`
           }
         }
       );
@@ -49,8 +38,47 @@ export const userSubmissionService = {
       return response.data;
     } catch (error) {
       console.error('Error fetching user submissions:', error);
-      // Return empty array instead of throwing to avoid crashing the component
       return [];
+    }
+  },
+  
+  /**
+   * Submit a LinkedIn profile for analysis
+   * @param {Object} data - Submission data with LinkedIn URL and message
+   * @returns {Promise<Object>} Result with success flag and data or error
+   */
+  async submitLinkedInProfile(data) {
+    try {
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+        return { 
+          success: false, 
+          error: 'Authentication required' 
+        };
+      }
+      
+      const response = await axios.post(
+        `${BACKEND_URL}${API_ENDPOINTS.SUBMISSIONS.SUBMIT}`, 
+        data,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+      
+      return {
+        success: true,
+        data: response.data
+      };
+    } catch (error) {
+      console.error('Error submitting LinkedIn profile:', error);
+      return {
+        success: false,
+        error: error.response?.data || 'Submission failed'
+      };
     }
   }
 };
