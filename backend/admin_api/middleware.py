@@ -24,10 +24,14 @@ class AdminAuthMiddleware:
         if auth_header and auth_header.startswith('Bearer '):
             token = auth_header.split(' ')[1]
             try:
+                # Add debug output for token validation
+                logger.info(f"Attempting to decode token: {token[:20]}...")
                 payload = jwt.decode(token, settings.SECRET_KEY, algorithms=['HS256'])
+                logger.info(f"Token decoded successfully. Payload keys: {payload.keys()}")
                 
                 # Check for admin role - either via role claim or user_type
                 is_admin = (payload.get('role') == 'admin') or (payload.get('user_type') == 'admin')
+                logger.info(f"Role check: role={payload.get('role')}, user_type={payload.get('user_type')}, is_admin={is_admin}")
                 
                 if is_admin:
                     request.is_admin = True
@@ -35,12 +39,21 @@ class AdminAuthMiddleware:
                 else:
                     request.is_admin = False
                     logger.warning("Token does not have admin role")
-            except jwt.PyJWTError as e:
+            except jwt.ExpiredSignatureError:
+                request.is_admin = False
+                logger.error("JWT token has expired")
+            except jwt.InvalidTokenError:
+                request.is_admin = False
+                logger.error("Invalid JWT token")
+            except Exception as e:
                 request.is_admin = False
                 logger.error(f"JWT validation error: {str(e)}")
         else:
             request.is_admin = False
             if '/api/admin/' in request.path and request.method != 'OPTIONS' and request.path != '/api/admin/login/':
                 logger.warning(f"Admin auth failed - missing token for {request.path}")
+            
+        # IMPORTANT: Set this attribute explicitly 
+        request.admin_checked = True
             
         return self.get_response(request)
