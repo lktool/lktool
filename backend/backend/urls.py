@@ -25,6 +25,7 @@ urlpatterns = [
     path("api/", include('users.urls')),
     path('api/contact/', include('contact.urls')),
     path('api/admin/', include('admin_api.urls')),  # Add Admin API URLs
+    path('admin/', include('admin_api.urls')),      # Add this for compatibility
     
     # Catch‑all: serve React’s index.html for any non-API, non-admin, non‑static, non‑media path
     re_path(

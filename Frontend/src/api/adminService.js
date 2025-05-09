@@ -94,13 +94,25 @@ export const adminService = {
       const token = localStorage.getItem('adminToken');
       console.log(`Fetching submissions with admin token: ${token ? 'Present' : 'Missing'}`);
       
+      // Ensure consistent URL path by always including the /api prefix
       const queryParam = filter && filter !== 'all' ? `?status=${filter}` : '';
       const response = await client.get(`/api/admin/submissions/${queryParam}`);
+      console.log("Submissions response:", response);
       return response.data;
     } catch (error) {
       console.error('Error fetching submissions:', error);
       if (error.response && error.response.status === 401) {
         console.error('Admin authentication failed. Token may be invalid.');
+        // Add token details for debugging
+        const token = localStorage.getItem('adminToken');
+        if (token) {
+          try {
+            // Print partial token for debugging
+            console.log("Token starts with:", token.substring(0, 15) + "...");
+          } catch (e) {
+            console.error("Error parsing token:", e);
+          }
+        }
       }
       return [];
     }
