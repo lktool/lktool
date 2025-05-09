@@ -1,5 +1,6 @@
 from django.db import models
 from django.conf import settings
+from contact.models import ContactSubmission
 
 class ContactSubmission(models.Model):
     """

@@ -1,17 +1,17 @@
-from rest_framework import viewsets, permissions, status, generics
+from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response
 from rest_framework.decorators import action
-from django.contrib.auth import get_user_model
 from django.utils import timezone
 from rest_framework_simplejwt.views import TokenObtainPairView
+from contact.models import ContactSubmission
 from django.conf import settings
 from django.core.mail import send_mail
 from django.db.models import Q
 
-from .models import ContactSubmission, SubmissionAnalysis
+from .models import SubmissionAnalysis
 from .serializers import (
-    UserSerializer, CustomTokenObtainPairSerializer, 
-    SubmissionSerializer, UserSubmissionDetailSerializer, AdminSubmissionSerializer, AnalysisSerializer
+    CustomTokenObtainPairSerializer, UserSerializer, SubmissionSerializer, 
+    UserSubmissionDetailSerializer, AdminSubmissionSerializer, AnalysisSerializer
 )
 from .permissions import IsOwnerOrAdmin, IsAdminUser
 

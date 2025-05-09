@@ -55,6 +55,31 @@ class SubmissionSerializer(serializers.ModelSerializer):
             validated_data['email'] = request.user.email
         return super().create(validated_data)
 
+class UserSubmissionDetailSerializer(serializers.ModelSerializer):
+    """Serializer for user's individual submission details"""
+    user_email = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = ContactSubmission
+        fields = ('id', 'linkedin_url', 'message', 'email', 'is_processed', 
+                 'created_at', 'user_email', 'admin_reply', 'admin_reply_date')
+        read_only_fields = ('is_processed', 'admin_reply', 'admin_reply_date')
+    
+    def get_user_email(self, obj):
+        if obj.user:
+            return obj.user.email
+        return obj.email
+        
+    def to_representation(self, instance):
+        """Only include admin_reply if submission is processed"""
+        representation = super().to_representation(instance)
+        
+        # If not processed, don't include admin reply
+        if not instance.is_processed:
+            representation.pop('admin_reply', None)
+            
+        return representation
+
 class AdminSubmissionSerializer(serializers.ModelSerializer):
     """Admin serializer with full access"""
     user_email = serializers.SerializerMethodField()
