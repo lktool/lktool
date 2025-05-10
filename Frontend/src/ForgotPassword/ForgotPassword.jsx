@@ -1,7 +1,6 @@
-import { useState } from 'react';
-import { validateEmail } from '../Utils/validate';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { authService } from '../api/authService';
+import { unifiedAuthService } from '../api/unifiedAuthService'; // Changed from authService
 import './ForgotPassword.css';
 
 function ForgotPassword() {
@@ -10,11 +9,11 @@ function ForgotPassword() {
     const [success, setSuccess] = useState(false);
     const [loading, setLoading] = useState(false);
 
-    async function handleSubmit(event) {
-        event.preventDefault();
+    const handleSubmit = async (e) => {
+        e.preventDefault();
         
-        if (!validateEmail(email)) {
-            setError('Please provide a valid email address');
+        if (!email) {
+            setError('Please enter your email address');
             return;
         }
         
@@ -22,26 +21,16 @@ function ForgotPassword() {
         setLoading(true);
 
         try {
-            // Use the authService instead of direct axios call
-            await authService.requestPasswordReset(email);
-            
-            // If we reach here, the request was successful
+            // Use unified auth service instead
+            await unifiedAuthService.requestPasswordReset(email);
             setSuccess(true);
         } catch (err) {
-            console.error('Password reset request error:', err);
-            
-            // More specific error handling
-            if (err.response?.status === 500) {
-                setError('Server error. Please try again later or contact support.');
-            } else if (err.response?.data?.email) {
-                setError(`Email error: ${err.response.data.email[0]}`);
-            } else {
-                setError('An error occurred. Please try again later.');
-            }
+            console.error('Password reset request failed:', err);
+            setError('Failed to send password reset email. Please try again.');
         } finally {
             setLoading(false);
         }
-    }
+    };
 
     function handleEmailChange(event) {
         setEmail(event.target.value);

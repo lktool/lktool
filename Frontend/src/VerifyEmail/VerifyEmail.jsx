@@ -1,73 +1,52 @@
-import { useEffect, useState } from 'react';
-import { Link, useParams, useNavigate, useLocation } from 'react-router-dom';
-import { authService } from '../api/authService';
+import { useState, useEffect } from 'react';
+import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
+import { unifiedAuthService } from '../api/unifiedAuthService'; // Changed from authService
 import './VerifyEmail.css';
 
 function VerifyEmail() {
     const { token } = useParams();
-    const [status, setStatus] = useState('verifying'); 
+    const [isLoading, setIsLoading] = useState(false);
+    const [isVerified, setIsVerified] = useState(false);
     const [message, setMessage] = useState('');
+    const [error, setError] = useState('');
     const navigate = useNavigate();
     const location = useLocation();
 
     useEffect(() => {
-        const verifyEmail = async () => {
-            // More robust token extraction
-            let verificationToken = token;
-            
-            // If there are issues with HashRouter parameter extraction
-            if (!verificationToken || verificationToken === 'undefined') {
-                // Extract token from the regular URL path
-                const path = window.location.pathname;
-                const match = path.match(/\/verify-email\/(.+)$/);
-                if (match && match[1]) {
-                    verificationToken = match[1];
-                }
-            }
-            
-            
-            if (!verificationToken) {
-                setStatus('error');
-                setMessage('No verification token provided.');
-                return;
-            }
-            
-            console.log("Attempting to verify email with token");
+        const verifyEmailToken = async () => {
+            if (!token) return;
 
+            setIsLoading(true);
+            
             try {
-                const response = await authService.verifyEmail(verificationToken);
-                
-                setStatus('success');
-                setMessage(response.message || 'Email successfully verified. You can now log in.');
-                
-                // Redirect to login after 3 seconds
-                setTimeout(() => {
-                    navigate('/login');
-                }, 3000);
-                
-            } catch (err) {
-                console.error("Verification error:", err);
-                setStatus('error');
-                setMessage(err.response?.data?.error || 'Failed to verify email. The link may be invalid or expired.');
+                // Use unified auth service
+                const response = await unifiedAuthService.verifyEmail(token);
+                setIsVerified(true);
+                setMessage('Your email has been successfully verified! You can now log in.');
+            } catch (error) {
+                console.error('Email verification failed:', error);
+                setError('Email verification failed. The link may have expired or is invalid.');
+            } finally {
+                setIsLoading(false);
             }
         };
-
-        verifyEmail();
-    }, [token, navigate, location]);
+        
+        verifyEmailToken();
+    }, [token]);
 
     return (
         <div className="verify-email-container">
             <div className="verify-email-card">
                 <h1>Email Verification</h1>
                 
-                {status === 'verifying' && (
+                {isLoading && (
                     <div className="verifying">
                         <p>Verifying your email...</p>
                         <div className="loading-spinner"></div>
                     </div>
                 )}
                 
-                {status === 'success' && (
+                {isVerified && (
                     <div className="success-message">
                         <p>{message}</p>
                         <p>Redirecting to login page...</p>
@@ -75,9 +54,9 @@ function VerifyEmail() {
                     </div>
                 )}
                 
-                {status === 'error' && (
+                {error && (
                     <div className="error-message">
-                        <p>{message}</p>
+                        <p>{error}</p>
                         <Link to="/login" className="login-link">Go to Login</Link>
                     </div>
                 )}
