@@ -1,7 +1,7 @@
 import './Login.css';
 import { AiOutlineEye, AiOutlineEyeInvisible } from 'react-icons/ai';
 import { useState, useEffect, useRef } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { validateEmail } from "../Utils/validate";
 import GoogleLoginButton from "../components/GoogleLoginButton";
 import { unifiedAuthService } from '../api/unifiedAuthService';
@@ -17,8 +17,10 @@ function Login() {
     const [corsError, setCorsError] = useState(false);
     const loginAttemptRef = useRef(null);
     const navigate = useNavigate();
+    const location = useLocation();
     
     const [formErrors, setFormErrors] = useState([]);
+    const redirectPath = location.state?.from?.pathname || '/';
 
     useEffect(() => {
         return () => {
@@ -82,12 +84,6 @@ function Login() {
 
     const handleLogin = async (e) => {
         e.preventDefault();
-        
-        if (!email || !password) {
-            setError('Please enter both email and password');
-            return;
-        }
-        
         setLoading(true);
         setError('');
         
@@ -95,7 +91,22 @@ function Login() {
             const response = await unifiedAuthService.login(email, password);
             
             if (response.success) {
-                navigate('/inputMain');
+                // If admin credentials were used on the user login page
+                if (response.isAdmin) {
+                    // Ask if they want to go to admin dashboard or continue as regular user
+                    const goToAdmin = window.confirm(
+                        "You have admin privileges. Would you like to go to the admin dashboard?"
+                    );
+                    
+                    if (goToAdmin) {
+                        navigate('/admin/dashboard');
+                    } else {
+                        navigate(redirectPath || '/');
+                    }
+                } else {
+                    // Regular user flow - unchanged
+                    navigate(redirectPath || '/');
+                }
             } else {
                 setError(response.error || 'Login failed');
             }

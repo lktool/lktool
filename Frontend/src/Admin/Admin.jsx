@@ -1,57 +1,90 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import AdminLogin from './AdminLogin';
 import { unifiedAuthService } from '../api/unifiedAuthService';
-import LoadingSpinner from '../components/LoadingSpinner';
 import './Admin.css';
 
 function Admin() {
-  const [isLoading, setIsLoading] = useState(true);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  
-  // Check authentication status when component mounts
+
+  // Check if user is already logged in as admin
   useEffect(() => {
-    const checkAuth = () => {
-      // Use the unified auth service to check if user is authenticated AND is admin
-      const isAuthenticated = unifiedAuthService.isAuthenticated();
-      const isAdmin = unifiedAuthService.isAdmin();
-      
-      if (isAuthenticated && isAdmin) {
-        // Already authenticated as admin, redirect to dashboard
-        navigate('/admin/dashboard');
-      } else if (isAuthenticated && !isAdmin) {
-        // User is logged in but not an admin
-        navigate('/');
-      }
-      
-      setIsLoading(false);
-    };
-    
-    checkAuth();
-  }, [navigate]);
-  
-  // Handle successful login
-  const handleLoginSuccess = (response) => {
-    if (response.isAdmin) {
+    if (unifiedAuthService.isAuthenticated() && unifiedAuthService.isAdmin()) {
       navigate('/admin/dashboard');
-    } else {
-      // Show error - not admin privileges
-      alert('Your account does not have admin privileges');
-      unifiedAuthService.logout();
-      navigate('/login');
+    }
+  }, [navigate]);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (!email || !password) {
+      setError('Please enter both email and password');
+      return;
+    }
+    
+    setIsLoading(true);
+    setError('');
+    
+    try {
+      // Use the same unified auth service
+      const response = await unifiedAuthService.login(email, password);
+      
+      if (response.success) {
+        if (response.isAdmin) {
+          // Admin login succeeded
+          navigate('/admin/dashboard');
+        } else {
+          // Regular user tried to log into admin
+          setError('You do not have admin privileges');
+          unifiedAuthService.logout();
+        }
+      } else {
+        setError(response.error || 'Invalid credentials');
+      }
+    } catch (err) {
+      console.error('Admin login error:', err);
+      setError('Login failed. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
   };
-  
+
   if (isLoading) {
     return (
       <div className="admin-container">
-        <LoadingSpinner size="large" text="Loading..." />
+        <p>Loading...</p>
       </div>
     );
   }
-  
-  // Show the admin login form
-  return <AdminLogin onLoginSuccess={handleLoginSuccess} />;
+
+  return (
+    <div className="admin-container">
+      <form onSubmit={handleSubmit}>
+        <h2>Admin Login</h2>
+        {error && <p className="error">{error}</p>}
+        <div>
+          <label>Email:</label>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+        </div>
+        <div>
+          <label>Password:</label>
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+        </div>
+        <button type="submit">Login</button>
+      </form>
+    </div>
+  );
 }
 
 export default Admin;
