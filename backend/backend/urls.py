@@ -25,8 +25,8 @@ urlpatterns = [
     path("django-admin/", admin.site.urls),
     
     # New unified auth API with role-based endpoints
-    path("api/v2/", include('unified_auth_api.urls')),
-    
+
+    path('api/auth/', include('unified_auth_api.urls')),
     # Existing endpoints for backward compatibility
     path("api/", include('users.urls')),
     path('api/contact/', include('contact.urls')),

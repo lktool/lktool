@@ -98,6 +98,7 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     'admin_api.middleware.AdminAuthMiddleware',  # Updated path - moved middleware to its own file
     'django.middleware.cache.FetchFromCacheMiddleware',
+    'unified_auth.middleware.RoleMiddleware',
 ]
 
 ROOT_URLCONF = "backend.urls"
