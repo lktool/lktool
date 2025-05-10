@@ -80,63 +80,32 @@ function Login() {
         setFormErrors([]);
     }
 
-    async function handleSubmit(event) {
-        event.preventDefault();
-
-        if (loginAttemptRef.current) {
-            clearTimeout(loginAttemptRef.current);
-        }
-
-        if (!validateForm()) {
+    const handleLogin = async (e) => {
+        e.preventDefault();
+        
+        if (!email || !password) {
+            setError('Please enter both email and password');
             return;
         }
-
-        setError("");
+        
         setLoading(true);
-        setIsUnverifiedEmail(false); 
-        setCorsError(false);
-
-        loginAttemptRef.current = setTimeout(async () => {
-            try {
-                const response = await unifiedAuthService.login(email, password);
-                
-                if (response.success) {
-                    navigate("/inputMain");
-                } else {
-                    setError(response.error || "Authentication failed");
-                }
+        setError('');
+        
+        try {
+            const response = await unifiedAuthService.login(email, password);
+            
+            if (response.success) {
+                navigate('/inputMain');
+            } else {
+                setError(response.error || 'Login failed');
             }
-            catch (err) {
-                console.error("Login error:", err);
-                if (err.name === 'CanceledError' || err.code === 'ERR_CANCELED' || 
-                    (err.message && err.message.includes('cancel'))) {
-                    setError("Login request was canceled. Please try again.");
-                } else if (err.message && (err.message.includes('CORS') || 
-                                    err.message.includes('Network Error'))) {
-                    setError("Cannot connect to the server. This may be a CORS or network issue.");
-                    setCorsError(true);
-                } else if (err.response?.data?.detail?.includes('not verified') || 
-                         err.response?.data?.detail?.includes('verification') ||
-                         err.message?.includes('not verified')) {
-                    setIsUnverifiedEmail(true);
-                    setError("Your email address has not been verified. Please verify your email or request a new verification link below.");
-                } else if (err.response?.data?.email) {
-                    setError(`Email error: ${err.response.data.email[0]}`);
-                } else if (err.message === 'Request timeout') {
-                    setError("Login request timed out. Please try again.");
-                } else if (err.response?.data?.detail) {
-                    setError(err.response.data.detail);
-                } else if (err.response?.status === 401) {
-                    setError("Invalid email or password");
-                } else {
-                    setError(err.message || "Login failed. Please check your credentials.");
-                }
-            } finally {
-                setLoading(false);
-                loginAttemptRef.current = null;
-            }
-        }, 50);
-    }
+        } catch (err) {
+            console.error('Login error:', err);
+            setError('Login failed. Please try again.');
+        } finally {
+            setLoading(false);
+        }
+    };
 
     async function handleResendVerification() {
         if (!email || !validateEmail(email)) {
@@ -166,7 +135,7 @@ function Login() {
             <div className="inside2">
                 <div className="inside2.1">
                     <h2 className="login">Login</h2>
-                    <form onSubmit={handleSubmit}>
+                    <form onSubmit={handleLogin}>
                         <div className="input-email">
                             <input 
                                 type="email" 

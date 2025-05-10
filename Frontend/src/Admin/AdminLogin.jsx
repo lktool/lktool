@@ -20,8 +20,7 @@ function AdminLogin({ onLoginSuccess }) {
     setError('');
     
     try {
-      // Use unified auth service - same endpoint for both user and admin
-      console.log('Attempting admin login with email:', email);
+      // Use unified auth service for login
       const response = await unifiedAuthService.login(email, password);
       
       if (response.success) {

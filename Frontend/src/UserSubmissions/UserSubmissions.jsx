@@ -9,30 +9,42 @@ function UserSubmissions() {
   const [error, setError] = useState(null);
   const [lastRefresh, setLastRefresh] = useState(new Date());
 
-  const fetchSubmissions = async () => {
-    try {
-      setLoading(true);
-      setLastRefresh(new Date());
-      
-      // Use the unified auth service to fetch user submissions
-      const data = await unifiedAuthService.getMySubmissions();
-      
-      setSubmissions(data);
-      setError(null);
-    } catch (err) {
-      console.error('Error fetching user submissions:', err);
-      setError('Failed to load your submissions. Please try again later.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
+    async function fetchSubmissions() {
+      setLoading(true);
+      try {
+        // Use unified auth service to fetch user submissions
+        const data = await unifiedAuthService.getMySubmissions();
+        setSubmissions(data);
+      } catch (error) {
+        console.error('Error fetching submissions:', error);
+        setError('Failed to load your submissions');
+      } finally {
+        setLoading(false);
+      }
+    }
+    
     fetchSubmissions();
   }, []);
 
   // Add a refresh button handler
   const handleRefresh = () => {
+    async function fetchSubmissions() {
+      setLoading(true);
+      setLastRefresh(new Date());
+      
+      try {
+        const data = await unifiedAuthService.getMySubmissions();
+        setSubmissions(data);
+        setError(null);
+      } catch (err) {
+        console.error('Error fetching user submissions:', err);
+        setError('Failed to load your submissions. Please try again later.');
+      } finally {
+        setLoading(false);
+      }
+    }
+
     fetchSubmissions();
   };
 

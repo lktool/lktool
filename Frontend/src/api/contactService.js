@@ -1,4 +1,6 @@
 import axiosInstance from './axiosConfig';
+import { getContactUrl } from './apiConfig';
+import { API_ENDPOINTS } from './apiEndpoints';
 
 /**
  * Contact form service for handling contact form submissions
@@ -11,9 +13,9 @@ export const contactService = {
     try {
       console.log('Submitting contact form data');
       
-      // Use the configured axios instance which already handles authentication
+      // Use getContactUrl helper to construct URL
       const response = await axiosInstance.post(
-        '/api/contact/submit/', // Fixed: add the missing /api/ prefix
+        getContactUrl(API_ENDPOINTS.CONTACT.SUBMIT),
         {
           linkedin_url: linkedinUrl,
           message,

@@ -1,5 +1,6 @@
 /**
- * API endpoints configuration
+ * API endpoints configuration - using unified auth paths
+ * Organized by feature for clarity
  */
 export const API_ENDPOINTS = {
   AUTH: {
@@ -13,11 +14,14 @@ export const API_ENDPOINTS = {
     PASSWORD_RESET: '/password-reset/',
     PASSWORD_RESET_CONFIRM: '/password-reset/:uid/:token/'
   },
-  SUBMISSIONS: {
-    USER_LIST: '/api/contact/user-submissions/',
-    SUBMIT: '/api/contact/submit/',
-    ADMIN_LIST: '/api/admin/submissions/',
-    ADMIN_REPLY: (id) => `/api/admin/submissions/${id}/reply/`,
-    ADMIN_STATS: '/api/admin/stats/'
+  CONTACT: {
+    USER_SUBMISSIONS: '/user-submissions/',
+    SUBMIT: '/submit/'
+  },
+  ADMIN: {
+    SUBMISSIONS: '/submissions/',
+    SUBMISSION_DETAIL: (id) => `/submissions/${id}/`,
+    REPLY: (id) => `/submissions/${id}/reply/`,
+    STATS: '/stats/'
   }
 };

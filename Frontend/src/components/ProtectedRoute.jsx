@@ -1,27 +1,37 @@
-import { Navigate } from 'react-router-dom';
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
+import { Navigate, useLocation } from 'react-router-dom';
 import { unifiedAuthService } from '../api/unifiedAuthService';
 import LoadingSpinner from './LoadingSpinner';
 
 function ProtectedRoute({ children }) {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(null);
+  const location = useLocation();
 
   useEffect(() => {
-    // Check if user is authenticated
-    const checkAuth = () => {
-      const isAuth = unifiedAuthService.isAuthenticated();
-      setIsAuthenticated(isAuth);
-      setIsLoading(false);
+    const checkAuth = async () => {
+      try {
+        // Check auth status via token in localStorage
+        if (unifiedAuthService.isAuthenticated()) {
+          // Verify the token
+          const isTokenValid = await unifiedAuthService.verifyToken();
+          setIsAuthenticated(isTokenValid);
+          
+          if (!isTokenValid) {
+            unifiedAuthService.logout();
+          }
+        } else {
+          setIsAuthenticated(false);
+        }
+      } catch (error) {
+        console.error('Auth check failed:', error);
+        setIsAuthenticated(false);
+      }
     };
-    
+
     checkAuth();
     
-    // Listen for auth changes
-    const handleAuthChange = () => {
-      checkAuth();
-    };
-    
+    // Add listener for auth changes
+    const handleAuthChange = () => checkAuth();
     window.addEventListener('authChange', handleAuthChange);
     
     return () => {
@@ -29,12 +39,13 @@ function ProtectedRoute({ children }) {
     };
   }, []);
 
-  if (isLoading) {
+  if (isAuthenticated === null) {
     return <LoadingSpinner />;
   }
 
   if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
+    // Redirect to login but remember where they were trying to go
+    return <Navigate to="/login" state={{ from: location.pathname }} replace />;
   }
 
   return children;

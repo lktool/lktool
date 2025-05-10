@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { API_CONFIG, getAuthUrl } from './apiConfig';
+import { API_CONFIG, getAuthUrl, getContactUrl } from './apiConfig';
 import { API_ENDPOINTS } from './apiEndpoints';
 
 // API base URL pointing to unified auth API
@@ -45,7 +45,7 @@ export const unifiedAuthService = {
     try {
       console.log(`Attempting login with email: ${email}`);
       
-      const response = await axios.post(`${API_BASE}${API_ENDPOINTS.AUTH.LOGIN}`, {
+      const response = await axios.post(getAuthUrl(API_ENDPOINTS.AUTH.LOGIN), {
         email,
         password
       });
@@ -126,7 +126,7 @@ export const unifiedAuthService = {
     try {
       console.log(`Attempting registration for email: ${email}`);
       
-      const response = await axios.post(`${API_BASE}${API_ENDPOINTS.AUTH.REGISTER}`, {
+      const response = await axios.post(getAuthUrl(API_ENDPOINTS.AUTH.REGISTER), {
         email,
         password,
         password2: confirmPassword
@@ -181,7 +181,7 @@ export const unifiedAuthService = {
     try {
       console.log(`Processing Google ${action} with credential`);
       
-      const response = await axios.post(`${API_BASE}${API_ENDPOINTS.AUTH.GOOGLE_AUTH}`, {
+      const response = await axios.post(getAuthUrl(API_ENDPOINTS.AUTH.GOOGLE_AUTH), {
         credential,
         action: action
       });
@@ -250,7 +250,7 @@ export const unifiedAuthService = {
    */
   async resendVerification(email) {
     try {
-      const response = await axios.post(`${API_BASE}${API_ENDPOINTS.AUTH.RESEND_VERIFICATION}`, { email });
+      const response = await axios.post(getAuthUrl(API_ENDPOINTS.AUTH.RESEND_VERIFICATION), { email });
       return response.data;
     } catch (error) {
       console.error('Failed to resend verification:', error);
@@ -307,8 +307,11 @@ export const unifiedAuthService = {
    */
   async confirmPasswordReset(uid, token, password, confirmPassword) {
     try {
-      const url = `/password-reset/${uid}/${token}/`;
-      const response = await axios.post(`${API_BASE}${url}`, {
+      const url = API_ENDPOINTS.AUTH.PASSWORD_RESET_CONFIRM
+        .replace(':uid', uid)
+        .replace(':token', token);
+        
+      const response = await axios.post(getAuthUrl(url), {
         password,
         password2: confirmPassword
       });
@@ -326,7 +329,7 @@ export const unifiedAuthService = {
   async verifyToken() {
     try {
       const client = authClient();
-      const response = await client.get(API_ENDPOINTS.AUTH.PROFILE);
+      const response = await client.get(getAuthUrl(API_ENDPOINTS.AUTH.PROFILE));
       return response.status === 200;
     } catch (error) {
       console.error('Token verification failed:', error);
@@ -343,7 +346,7 @@ export const unifiedAuthService = {
   async getMySubmissions() {
     try {
       const client = authClient();
-      const response = await client.get('/api/contact/user-submissions/');
+      const response = await client.get(getContactUrl(API_ENDPOINTS.CONTACT.USER_SUBMISSIONS));
       return response.data;
     } catch (error) {
       console.error('Error fetching user submissions:', error);
@@ -366,7 +369,7 @@ export const unifiedAuthService = {
   async submitLinkedInProfile(data) {
     try {
       const client = authClient();
-      const response = await client.post('/api/contact/submit/', data);
+      const response = await client.post(getContactUrl(API_ENDPOINTS.CONTACT.SUBMIT), data);
       return {
         success: true,
         data: response.data

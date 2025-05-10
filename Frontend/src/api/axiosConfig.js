@@ -45,7 +45,7 @@ axiosInstance.interceptors.request.use(
             // Not JSON, use as is
           }
           
-          // Use ONLY this Authorization header - not HTTP_ADMIN_AUTHORIZATION
+          // Set authorization header
           config.headers['Authorization'] = `Bearer ${tokenValue}`;
         } catch (error) {
           console.error('Error setting auth header:', error);

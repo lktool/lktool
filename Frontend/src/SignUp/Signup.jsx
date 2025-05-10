@@ -18,6 +18,9 @@ function Signup() {
   const [success, setSuccess] = useState(false);
   const signupAttemptRef = useRef(null); // For debouncing signup attempts
   const [formErrors, setFormErrors] = useState([]); // Collect all errors in a single array
+  const [resendLoading, setResendLoading] = useState(false);
+  const [resendSuccess, setResendSuccess] = useState(false);
+  const [resendError, setResendError] = useState(null);
 
   const navigate = useNavigate();
 
@@ -124,6 +127,18 @@ function Signup() {
     }, 100); // Small timeout to prevent multiple submissions
   }
 
+  const handleResendVerification = async () => {
+    try {
+      setResendLoading(true);
+      await unifiedAuthService.resendVerification(email);
+      setResendSuccess(true);
+    } catch (error) {
+      setResendError(error.message);
+    } finally {
+      setResendLoading(false);
+    }
+  };
+
   // Display verification instructions if registration was successful
   if (success) {
     return (
@@ -139,14 +154,14 @@ function Signup() {
           <p>Don't see it? Check your spam folder or request a new link.</p>
           <div className="verification-actions">
             <button 
-              onClick={() => {
-                unifiedAuthService.resendVerification(email); // Use unified auth service
-                alert('Verification email resent!');
-              }}
+              onClick={handleResendVerification}
               className="resend-btn"
+              disabled={resendLoading}
             >
-              Resend Email
+              {resendLoading ? "Resending..." : "Resend Email"}
             </button>
+            {resendSuccess && <p className="success-message">Verification email resent!</p>}
+            {resendError && <p className="error-message">{resendError}</p>}
             <Link to="/login" className="login-link">Go to Login</Link>
           </div>
         </div>
