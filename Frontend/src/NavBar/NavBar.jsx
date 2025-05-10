@@ -16,6 +16,9 @@ function NavBar() {
             setIsAdmin(unifiedAuthService.isAdmin());
         };
 
+        // Check on component mount
+        updateAuthState();
+
         // Add an event listener for auth changes
         window.addEventListener('authChange', updateAuthState);
 
@@ -24,6 +27,12 @@ function NavBar() {
             window.removeEventListener('authChange', updateAuthState);
         };
     }, []);
+
+    const handleLogout = () => {
+        unifiedAuthService.logout();
+        window.dispatchEvent(new Event('authChange'));
+        navigate('/login');
+    };
 
     // Hide navbar on specific pages where it's not needed
     const hideNavbarPaths = ['/forgot-password'];
@@ -61,11 +70,7 @@ function NavBar() {
                             <Link to="/signup">Sign Up</Link>
                         </>
                     ) : (
-                        <button onClick={() => {
-                            unifiedAuthService.logout();
-                            window.dispatchEvent(new Event('authChange'));
-                            navigate('/login');
-                        }}>Logout</button>
+                        <button onClick={handleLogout}>Logout</button>
                     )}
                 </div>
             </div>

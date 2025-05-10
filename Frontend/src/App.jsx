@@ -15,6 +15,7 @@ import FormData from "./FormData/FormDate";
 import AdminRoute from "./components/AdminRoute";
 import NavBar from "./NavBar/NavBar"; 
 import UserSubmissions from "./UserSubmissions/UserSubmissions";
+import PublicOnlyRoute from "./components/PublicOnlyRoute";
 
 function App() {
   useEffect(() => {
@@ -46,10 +47,22 @@ function App() {
         <NavBar />
         
         <Routes>
-          {/* Public Routes */}
-          <Route path="/" element={<Landing />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
+          {/* Public Routes - redirect authenticated users */}
+          <Route path="/" element={
+            <PublicOnlyRoute>
+              <Landing />
+            </PublicOnlyRoute>
+          } />
+          <Route path="/login" element={
+            <PublicOnlyRoute>
+              <Login />
+            </PublicOnlyRoute>
+          } />
+          <Route path="/signup" element={
+            <PublicOnlyRoute>
+              <Signup />
+            </PublicOnlyRoute>
+          } />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           
           {/* Auth callback routes */}
@@ -61,7 +74,11 @@ function App() {
           <Route path="/my-submissions" element={<ProtectedRoute><UserSubmissions /></ProtectedRoute>} />
           
           {/* Admin Routes */}
-          <Route path="/admin" element={<Admin />} />
+          <Route path="/admin" element={
+            <PublicOnlyRoute adminRedirect="/admin/dashboard" userRedirect="/inputMain">
+              <Admin />
+            </PublicOnlyRoute>
+          } />
           <Route path="/admin/dashboard" element={<AdminRoute><FormData /></AdminRoute>} />
           
           {/* Not Found Route */}
