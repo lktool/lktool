@@ -1,16 +1,14 @@
 /**
  * Centralized API endpoint paths
  */
+// Define all API endpoints in one place for consistency
 export const API_ENDPOINTS = {
-  // Auth endpoints
   AUTH: {
     LOGIN: '/auth/login/',
     REGISTER: '/auth/register/',
     REFRESH: '/auth/refresh/',
     PROFILE: '/auth/profile/'
   },
-  
-  // Contact/submission endpoints
   SUBMISSIONS: {
     USER_LIST: '/api/contact/user-submissions/',
     SUBMIT: '/api/contact/submit/',
