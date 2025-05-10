@@ -3,10 +3,15 @@
  */
 export const API_ENDPOINTS = {
   AUTH: {
-    LOGIN: '/auth/login/',
-    REGISTER: '/auth/register/',
-    REFRESH: '/auth/refresh/',
-    PROFILE: '/auth/profile/'
+    LOGIN: '/login/',
+    REGISTER: '/signup/',
+    REFRESH: '/refresh/',
+    PROFILE: '/profile/',
+    GOOGLE_AUTH: '/google/',
+    VERIFY_EMAIL: '/verify-email/',
+    RESEND_VERIFICATION: '/resend-verification/',
+    PASSWORD_RESET: '/password-reset/',
+    PASSWORD_RESET_CONFIRM: '/password-reset/:uid/:token/'
   },
   SUBMISSIONS: {
     USER_LIST: '/api/contact/user-submissions/',

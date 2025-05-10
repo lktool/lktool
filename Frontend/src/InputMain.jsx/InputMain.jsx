@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import axios from 'axios';
+import { unifiedAuthService } from '../api/unifiedAuthService';
 import './InputMain.css'; // Ensure CSS is correctly imported
 import LoadingSpinner from '../components/LoadingSpinner';
 
@@ -39,33 +39,10 @@ function InputMain() {
         setError('');
         
         try {
-            const token = localStorage.getItem('token');
-            let authHeader = {};
-            
-            if (token) {
-                // Parse token if stored as JSON
-                try {
-                    const parsedToken = JSON.parse(token);
-                    if (parsedToken.value) {
-                        authHeader = { 'Authorization': `Bearer ${parsedToken.value}` };
-                    } else {
-                        authHeader = { 'Authorization': `Bearer ${token}` };
-                    }
-                } catch {
-                    authHeader = { 'Authorization': `Bearer ${token}` };
-                }
-            }
-            
-            const response = await axios.post(
-                'https://lktool.onrender.com/api/contact/submit/',
-                formData,
-                {
-                    headers: {
-                        'Content-Type': 'application/json',
-                        ...authHeader
-                    }
-                }
-            );
+            const response = await unifiedAuthService.submitLinkedInProfile({
+                linkedin_url: formData.linkedin_url,
+                message: formData.message,
+            });
             
             console.log('Submission response:', response.data);
             

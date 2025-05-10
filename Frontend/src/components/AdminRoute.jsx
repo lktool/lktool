@@ -1,6 +1,9 @@
 import { Navigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { unifiedAuthService } from '../api/unifiedAuthService';
+import axios from 'axios';
+import { API_CONFIG } from '../api/apiConfig';
+import { API_ENDPOINTS } from '../api/apiEndpoints';
 import LoadingSpinner from './LoadingSpinner';
 
 function AdminRoute({ children }) {
@@ -9,11 +12,24 @@ function AdminRoute({ children }) {
 
   useEffect(() => {
     // Check if user is authenticated AND is admin
-    const checkAdminAuth = () => {
+    const checkAdminAuth = async () => {
       const isAuthenticated = unifiedAuthService.isAuthenticated();
       const hasAdminRole = unifiedAuthService.isAdmin();
       
-      setIsAdmin(isAuthenticated && hasAdminRole);
+      // Verify token with backend if both local checks pass
+      if (isAuthenticated && hasAdminRole) {
+        try {
+          await unifiedAuthService.verifyToken();
+          setIsAdmin(true);
+        } catch (error) {
+          console.error('Admin authentication verification failed:', error);
+          unifiedAuthService.logout();
+          setIsAdmin(false);
+        }
+      } else {
+        setIsAdmin(false);
+      }
+      
       setIsLoading(false);
     };
     
@@ -25,11 +41,9 @@ function AdminRoute({ children }) {
     };
     
     window.addEventListener('authChange', handleAuthChange);
-    window.addEventListener('storage', handleAuthChange);
     
     return () => {
       window.removeEventListener('authChange', handleAuthChange);
-      window.removeEventListener('storage', handleAuthChange);
     };
   }, []);
 
@@ -37,12 +51,10 @@ function AdminRoute({ children }) {
     return <LoadingSpinner />;
   }
 
-  // Redirect to admin login if not authenticated as admin
   if (!isAdmin) {
     return <Navigate to="/admin" replace />;
   }
 
-  // If authenticated as admin, render the protected content
   return children;
 }
 

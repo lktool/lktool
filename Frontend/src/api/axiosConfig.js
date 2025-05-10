@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { API_CONFIG } from './apiConfig';
+import { unifiedAuthService } from './unifiedAuthService';  // Add this import
 
 // Function to get CSRF token from cookies
 function getCsrfToken() {
@@ -28,27 +29,27 @@ const axiosInstance = axios.create({
 // Add request interceptor to include auth token and CSRF token on every request
 axiosInstance.interceptors.request.use(
   (config) => {
-    // Get the token from localStorage
-    const token = localStorage.getItem('token');
-    
-    // If token exists, add it to the headers
-    if (token) {
-      try {
-        // Try to parse the token in case it's stored as a JSON object
-        let tokenValue = token;
+    // Get the token using unified auth service
+    if (unifiedAuthService.isAuthenticated()) {
+      const token = localStorage.getItem('token');
+      if (token) {
         try {
-          const parsedToken = JSON.parse(token);
-          if (parsedToken.value) {
-            tokenValue = parsedToken.value;
+          // Try to parse the token in case it's stored as a JSON object
+          let tokenValue = token;
+          try {
+            const parsedToken = JSON.parse(token);
+            if (parsedToken.value) {
+              tokenValue = parsedToken.value;
+            }
+          } catch (e) {
+            // Not JSON, use as is
           }
-        } catch (e) {
-          // Not JSON, use as is
+          
+          // Use ONLY this Authorization header - not HTTP_ADMIN_AUTHORIZATION
+          config.headers['Authorization'] = `Bearer ${tokenValue}`;
+        } catch (error) {
+          console.error('Error setting auth header:', error);
         }
-        
-        // Add Authorization header with Bearer token
-        config.headers['Authorization'] = `Bearer ${tokenValue}`;
-      } catch (error) {
-        console.error('Error setting auth header:', error);
       }
     }
     
@@ -67,7 +68,7 @@ axiosInstance.interceptors.request.use(
   }
 );
 
-// Response interceptor remains the same
+// Response interceptor with unified auth handling
 axiosInstance.interceptors.response.use(
   (response) => {
     return response;
@@ -75,9 +76,8 @@ axiosInstance.interceptors.response.use(
   async (error) => {
     // Handle 401 Unauthorized errors
     if (error.response && error.response.status === 401) {
-      // Clear invalid tokens
-      localStorage.removeItem('token');
-      localStorage.removeItem('refreshToken');
+      // Use unified auth service for logout
+      unifiedAuthService.logout();
       
       // Add a flag to indicate auth issues
       error.isAuthError = true;

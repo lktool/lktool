@@ -1,6 +1,7 @@
 import axios from 'axios';
-import { API_CONFIG } from './apiConfig';
+import { API_CONFIG, getAdminUrl } from './apiConfig';
 import { API_ENDPOINTS } from './apiEndpoints';
+import { unifiedAuthService } from './unifiedAuthService'; // Add this import
 
 // Backend URL from centralized config
 const BACKEND_URL = API_CONFIG.API_URL;
@@ -16,6 +17,12 @@ export const adminSubmissionService = {
    */
   async getSubmissions(filter = '') {
     try {
+      // Check if user is admin using unified auth service
+      if (!unifiedAuthService.isAuthenticated() || !unifiedAuthService.isAdmin()) {
+        console.error('Not authenticated as admin');
+        return [];
+      }
+      
       const token = localStorage.getItem('token');
       
       if (!token) {

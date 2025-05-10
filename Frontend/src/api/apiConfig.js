@@ -1,35 +1,25 @@
 // Base API URL from environment variable
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://lktool.onrender.com';
 
 // API endpoint configuration
 export const API_CONFIG = {
   API_URL: API_BASE_URL,
-  AUTH: {
-    SIGNUP: '/api/auth/signup/',
-    LOGIN: '/api/auth/login/',
-    REFRESH: '/api/auth/refresh/',
-    PASSWORD_RESET: '/api/auth/password-reset/',
-    PASSWORD_RESET_CONFIRM: '/api/auth/password-reset/:uid/:token/',
-    USER_PROFILE: '/api/auth/user/',
-    GOOGLE_AUTH: '/api/auth/google/',
-    VERIFY_EMAIL: '/api/auth/verify-email/',
-    RESEND_VERIFICATION: '/api/auth/resend-verification/',
-    VERIFY_TOKEN: '/api/auth/verify-token/',  // Add this new endpoint
-  },
-  CONTACT: {
-    SUBMIT: '/api/contact/submit/',
-  }
-};
-
-// For OAuth configs - any redirect URIs specifically
-export const OAUTH_CONFIG = {
-  google: {
-    redirectUri: 'https://projectsection-ten.vercel.app/auth/google/callback', // Fixed the URL format
-  }
+  AUTH_URL: `${API_BASE_URL}/api/auth`,  // Used for auth endpoints
+  CONTACT_URL: `${API_BASE_URL}/api/contact`, // Added for clarity
+  ADMIN_URL: `${API_BASE_URL}/api/admin`  // Added for clarity
 };
 
 // Helper function to get complete API URL
 export const getApiUrl = (endpoint) => `${API_BASE_URL}${endpoint}`;
+
+// Helper function for auth specific endpoints
+export const getAuthUrl = (endpoint) => `${API_CONFIG.AUTH_URL}${endpoint}`;
+
+// Helper function for contact specific endpoints
+export const getContactUrl = (endpoint) => `${API_CONFIG.CONTACT_URL}${endpoint}`;
+
+// Helper function for admin specific endpoints
+export const getAdminUrl = (endpoint) => `${API_CONFIG.ADMIN_URL}${endpoint}`;
 
 // Helper function to build URLs with path parameters
 export const buildApiUrl = (urlTemplate, params) => {
@@ -47,6 +37,6 @@ export const getDomainInfo = () => {
   return {
     currentOrigin: window.location.origin,
     apiBaseUrl: API_BASE_URL,
-    fullApiUrl: getApiUrl('/api/auth/signup/')
+    fullApiUrl: getApiUrl('/api/auth/login/')
   };
 };

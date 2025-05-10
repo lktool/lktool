@@ -10,6 +10,7 @@ from django.utils import timezone
 from contact.models import ContactSubmission
 from contact.serializers import ContactSerializer  # Fixed import name
 from contact.email_service import send_reply_notification
+from unified_auth_api.permissions import IsAdminUserCustom
 
 class AdminLoginView(APIView):
     """
@@ -77,11 +78,9 @@ class FormSubmissionListView(APIView):
     """
     View to list all contact form submissions for admin
     """
+    permission_classes = [IsAdminUserCustom]
+    
     def get(self, request):
-        # Check if user is admin
-        if not getattr(request, 'is_admin', False):
-            return Response({"detail": "Admin authentication required"}, status=status.HTTP_401_UNAUTHORIZED)
-            
         submissions = ContactSubmission.objects.all().order_by('-created_at')
         
         # Filter by status if requested - Apply filter BEFORE serializing
@@ -98,11 +97,9 @@ class UpdateSubmissionStatusView(APIView):
     """
     View to update a submission's processed status
     """
+    permission_classes = [IsAdminUserCustom]
+    
     def patch(self, request, pk):
-        # Check if user is admin
-        if not getattr(request, 'is_admin', False):
-            return Response({"detail": "Admin authentication required"}, status=status.HTTP_401_UNAUTHORIZED)
-            
         try:
             submission = ContactSubmission.objects.get(pk=pk)
         except ContactSubmission.DoesNotExist:
@@ -121,11 +118,9 @@ class AdminStatsView(APIView):
     """
     View to get statistics for the admin dashboard
     """
+    permission_classes = [IsAdminUserCustom]
+    
     def get(self, request):
-        # Check if user is admin
-        if not getattr(request, 'is_admin', False):
-            return Response({"detail": "Admin authentication required"}, status=status.HTTP_401_UNAUTHORIZED)
-        
         total_count = ContactSubmission.objects.count()
         processed_count = ContactSubmission.objects.filter(is_processed=True).count()
         pending_count = total_count - processed_count
@@ -140,11 +135,9 @@ class SubmissionReplyView(APIView):
     """
     View to add admin reply to a submission
     """
+    permission_classes = [IsAdminUserCustom]
+    
     def post(self, request, pk):
-        # Check if user is admin
-        if not getattr(request, 'is_admin', False):
-            return Response({"detail": "Admin authentication required"}, status=status.HTTP_401_UNAUTHORIZED)
-            
         try:
             submission = ContactSubmission.objects.get(pk=pk)
         except ContactSubmission.DoesNotExist:
