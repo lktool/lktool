@@ -1,7 +1,6 @@
 /**
- * Centralized API endpoint paths
+ * API endpoints configuration
  */
-// Define all API endpoints in one place for consistency
 export const API_ENDPOINTS = {
   AUTH: {
     LOGIN: '/auth/login/',

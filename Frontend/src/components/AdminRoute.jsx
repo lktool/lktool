@@ -1,19 +1,19 @@
 import { Navigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import LoadingSpinner from './LoadingSpinner';
 import { unifiedAuthService } from '../api/unifiedAuthService';
+import LoadingSpinner from './LoadingSpinner';
 
 function AdminRoute({ children }) {
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    // Check if user is authenticated AND is admin
     const checkAdminAuth = () => {
-      // Use the unified auth service to directly check admin status
-      const authenticated = unifiedAuthService.isAuthenticated();
-      const adminRole = unifiedAuthService.isAdmin();
+      const isAuthenticated = unifiedAuthService.isAuthenticated();
+      const hasAdminRole = unifiedAuthService.isAdmin();
       
-      setIsAdmin(authenticated && adminRole);
+      setIsAdmin(isAuthenticated && hasAdminRole);
       setIsLoading(false);
     };
     
@@ -34,11 +34,7 @@ function AdminRoute({ children }) {
   }, []);
 
   if (isLoading) {
-    return (
-      <div className="admin-loading-container">
-        <LoadingSpinner size="large" text="Verifying admin credentials..." />
-      </div>
-    );
+    return <LoadingSpinner />;
   }
 
   // Redirect to admin login if not authenticated as admin
