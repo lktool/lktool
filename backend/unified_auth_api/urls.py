@@ -3,12 +3,12 @@ from .views import (
     UnifiedLoginView, 
     UserRegistrationView,
     TokenRefreshView,
-    GoogleAuthView,
     EmailVerificationView,
     ResendVerificationView,
     PasswordResetView,
     PasswordResetConfirmView,
-    UserProfileView
+    UserProfileView,
+    GoogleAuthView  # Import from views.py only
 )
 
 urlpatterns = [

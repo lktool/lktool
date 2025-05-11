@@ -230,7 +230,6 @@ SIMPLE_JWT = {
 
 # Optimize CORS settings for better performance
 CORS_ALLOWED_ORIGINS = [
-    "https://lktool.onrender.com",
     "https://projectsection-ten.vercel.app",
     "http://localhost:5173",
     "http://localhost:3000",
@@ -238,7 +237,10 @@ CORS_ALLOWED_ORIGINS = [
 
 # Add this for persistent connections
 CORS_ALLOW_CREDENTIALS = True
-CORS_ALLOW_ALL_ORIGINS = True  # Debug only! Remove after testing
+
+# For development/debugging, use this setting
+CORS_ALLOW_ALL_ORIGINS = True  # Set to False in production
+
 # Enable preflight caching to reduce OPTIONS requests
 CORS_PREFLIGHT_MAX_AGE = 86400  # 24 hours in seconds - dramatically reduces preflight requests
 
@@ -262,19 +264,8 @@ CORS_ALLOW_HEADERS = [
 CORS_ALLOW_ALL_HEADERS = True  # Temporarily allow all headers for debugging
 CORS_EXPOSE_HEADERS = ['*']    # Expose all headers in response
 
-# Add CORS debugging (temporarily)
-CORS_URLS_REGEX = r'^/api/.*$'
-
-# Log all CORS requests
-def cors_logger(request, response):
-    print(f"CORS request: {request.method} {request.path}")
-    print(f"  Origin: {request.headers.get('Origin')}")
-    print(f"  Authorization header present: {'Authorization' in request.headers}")
-    print(f"  Response status: {response.status_code}")
-    return response
-
-# Important: Keep this setting off in production
-CORS_ALLOW_ALL_ORIGINS = False
+# Fix URL regex to include both /api/ and /auth/ paths
+CORS_URLS_REGEX = r'^/(api|auth)/.*$'  # Match both /api/ and /auth/ paths
 
 # Email Configuration - Properly load from environment
 EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')

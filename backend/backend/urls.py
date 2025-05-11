@@ -19,23 +19,20 @@ from django.urls import path, include, re_path
 from django.views.generic import TemplateView
 from django.conf import settings
 from django.conf.urls.static import static
+from unified_auth_api.views import GoogleAuthView  # Import the view directly
 
 urlpatterns = [
     # Django admin site (renamed to avoid conflict)
     path("django-admin/", admin.site.urls),
-    
-    # New unified auth API with role-based endpoints
-
     path('api/auth/', include('unified_auth_api.urls')),
-    # Existing endpoints for backward compatibility
-    #path("api/", include('users.urls')),
+
     path('api/contact/', include('contact.urls')),
-    #path('api/admin/', include('admin_api.urls')),
-    #path('admin/', include('admin_api.urls')),  # For compatibility
-    
-    # Catch‑all: serve React's index.html
+
+    # Direct access route for Google authentication
+    path('auth/google/', GoogleAuthView.as_view(), name='direct_google_auth'),
+
     re_path(
-        r'^(?!django-admin/|api/|static/|media/).*$',
+        r'^(?!django-admin/|api/|static/|media/|auth/).*$',
         TemplateView.as_view(template_name="index.html"),
         name="spa-fallback"
     ),

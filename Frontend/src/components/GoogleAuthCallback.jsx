@@ -1,45 +1,66 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { unifiedAuthService } from '../api/unifiedAuthService'; // Changed from authService
-import LoadingSpinner from './LoadingSpinner';
+import { useNavigate } from 'react-router-dom';
 
 const GoogleAuthCallback = () => {
   const navigate = useNavigate();
-  const location = useLocation();
   const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-
+  
   useEffect(() => {
-    const handleCallback = async () => {
-      const urlParams = new URLSearchParams(window.location.search);
-      const credential = urlParams.get('credential');
-      const action = urlParams.get('action') || 'login';
+    // Function to extract id token from URL hash
+    const getTokenFromHash = () => {
+      // Remove the pound sign
+      const hash = window.location.hash.substring(1);
       
-      if (!credential) {
-        setError('No credential provided');
-        return;
-      }
+      // Parse the URL parameters
+      const params = new URLSearchParams(hash);
       
-      try {
-        setIsLoading(true);
-        
-        // Use unified auth service
-        const response = await unifiedAuthService.googleAuth(credential, action);
-        
-        if (response.success) {
-          navigate('/inputMain');
-        } else {
-          setError(response.error || 'Authentication failed');
-        }
-      } catch (err) {
-        console.error('Google auth error:', err);
-        setError('Authentication failed');
-      } finally {
-        setIsLoading(false);
-      }
+      // Get the id token (changed from access_token to id_token)
+      return params.get('id_token');
     };
     
-    handleCallback();
+    // Try to get the token
+    const token = getTokenFromHash();
+    console.log("Google Auth Callback - token present:", !!token);
+    
+    if (token) {
+      // Store the token in localStorage so the opener window can access it
+      localStorage.setItem('google_token', token);
+      
+      // Show success message
+      console.log('Successfully authenticated with Google');
+      
+      // Navigate to the main page or close this window
+      // If this window was opened by another window, close it
+      if (window.opener) {
+        // Let the opener know we succeeded
+        try {
+          window.opener.postMessage({ type: 'GOOGLE_AUTH_SUCCESS', token }, '*');
+        } catch (e) {
+          console.error("Error posting message to opener:", e);
+        }
+        window.close();
+      } else {
+        navigate('/inputMain');
+      }
+    } else {
+      // Show error
+      const errorMsg = 'No ID token found in URL. Authentication failed.';
+      console.error(errorMsg);
+      setError(errorMsg);
+      
+      // If opened from another window
+      if (window.opener) {
+        try {
+          window.opener.postMessage({ type: 'GOOGLE_AUTH_ERROR', error: errorMsg }, '*');
+        } catch (e) {
+          console.error("Error posting error to opener:", e);
+        }
+        setTimeout(() => window.close(), 3000); // Close after 3 seconds
+      } else {
+        // If direct navigation, go back to login after delay
+        setTimeout(() => navigate('/login'), 3000);
+      }
+    }
   }, [navigate]);
 
   return (
@@ -52,9 +73,7 @@ const GoogleAuthCallback = () => {
       padding: '20px',
       textAlign: 'center'
     }}>
-      {isLoading ? (
-        <LoadingSpinner />
-      ) : error ? (
+      {error ? (
         <div style={{ color: 'red' }}>
           <h2>Authentication Error</h2>
           <p>{error}</p>

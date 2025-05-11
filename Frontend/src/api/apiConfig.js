@@ -1,5 +1,5 @@
 // Base API URL from environment variable
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://lktool.onrender.com';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 // API endpoint configuration
 export const API_CONFIG = {
@@ -39,4 +39,11 @@ export const getDomainInfo = () => {
     apiBaseUrl: API_BASE_URL,
     fullApiUrl: getApiUrl('/api/auth/login/')
   };
+};
+
+// For OAuth configs - any redirect URIs specifically
+export const OAUTH_CONFIG = {
+  google: {
+    redirectUri: 'https://projectsection-ten.vercel.app/auth/google/callback', // Fixed URL format
+  }
 };

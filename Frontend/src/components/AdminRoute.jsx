@@ -3,7 +3,6 @@ import { useState, useEffect } from 'react';
 import { unifiedAuthService } from '../api/unifiedAuthService';
 import axios from 'axios';
 import { API_CONFIG } from '../api/apiConfig';
-import { API_ENDPOINTS } from '../api/apiEndpoints';
 import LoadingSpinner from './LoadingSpinner';
 
 function AdminRoute({ children }) {

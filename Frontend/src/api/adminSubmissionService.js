@@ -1,123 +1,98 @@
 import axios from 'axios';
-import { API_CONFIG, getAdminUrl } from './apiConfig';
-import { API_ENDPOINTS } from './apiEndpoints';
+import { API_CONFIG, getApiUrl } from './apiConfig';
 import { unifiedAuthService } from './unifiedAuthService'; // Add this import
 
-// Backend URL from centralized config
-const BACKEND_URL = API_CONFIG.API_URL;
+// Create authenticated axios instance
+const authClient = () => {
+  const token = localStorage.getItem('token');
+  
+  return axios.create({
+    baseURL: API_CONFIG.API_URL,
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': token ? `Bearer ${token}` : ''
+    },
+    withCredentials: true
+  });
+};
 
-/**
- * Service for handling admin submission operations
- */
 export const adminSubmissionService = {
   /**
-   * Get submissions with optional filtering
-   * @param {string} filter - Filter submissions (processed, pending, all)
+   * Get all form submissions
+   * @param {string} status - Filter by status (optional)
    * @returns {Promise<Array>} List of submissions
    */
-  async getSubmissions(filter = '') {
+  async getSubmissions(status = null) {
     try {
-      // Check if user is admin using unified auth service
-      if (!unifiedAuthService.isAuthenticated() || !unifiedAuthService.isAdmin()) {
-        console.error('Not authenticated as admin');
-        return [];
+      const client = authClient();
+      let url = '/api/admin/submissions/';
+      
+      if (status) {
+        url += `?status=${status}`;
       }
       
-      const token = localStorage.getItem('token');
-      
-      if (!token) {
-        console.error('No authentication token found');
-        return [];
-      }
-      
-      const queryParam = filter && filter !== 'all' ? `?status=${filter}` : '';
-      const response = await axios.get(
-        `${BACKEND_URL}${API_ENDPOINTS.SUBMISSIONS.ADMIN_LIST}${queryParam}`,
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          }
-        }
-      );
-      
+      const response = await client.get(url);
       return response.data;
     } catch (error) {
-      console.error('Error fetching admin submissions:', error);
-      if (error.response?.status === 401) {
-        console.error('Admin authentication failed. Token may be invalid.');
-      }
+      console.error('Error fetching submissions:', error);
       return [];
     }
   },
   
   /**
-   * Submit admin reply to a user submission
-   * @param {number} submissionId - Submission ID
-   * @param {string} replyText - Admin's reply text
-   * @returns {Promise<Object>} Response data
+   * Update submission status
+   * @param {string} id - Submission ID
+   * @param {boolean} isProcessed - Whether submission is processed
+   * @returns {Promise<Object>} Updated submission
    */
-  async submitReply(submissionId, replyText) {
+  async updateSubmissionStatus(id, isProcessed) {
     try {
-      const token = localStorage.getItem('token');
-      
-      if (!token) {
-        return {
-          success: false,
-          error: 'Authentication required'
-        };
-      }
-      
-      const response = await axios.post(
-        `${BACKEND_URL}${API_ENDPOINTS.SUBMISSIONS.ADMIN_REPLY(submissionId)}`,
-        { reply: replyText },
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          }
-        }
-      );
-      
-      return {
-        success: true,
-        data: response.data
-      };
+      const client = authClient();
+      const response = await client.patch(`/api/admin/submissions/${id}/`, {
+        is_processed: isProcessed
+      });
+      return response.data;
     } catch (error) {
-      console.error('Error submitting admin reply:', error);
-      return {
-        success: false,
-        error: error.response?.data || 'Reply failed'
-      };
+      console.error('Error updating submission:', error);
+      throw error;
     }
   },
   
   /**
    * Get admin dashboard statistics
-   * @returns {Promise<Object>} Dashboard statistics
+   * @returns {Promise<Object>} Dashboard stats
    */
   async getStats() {
     try {
-      const token = localStorage.getItem('token');
-      
-      if (!token) {
-        return { total: 0, processed: 0, pending: 0 };
-      }
-      
-      const response = await axios.get(
-        `${BACKEND_URL}${API_ENDPOINTS.SUBMISSIONS.ADMIN_STATS}`,
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          }
-        }
-      );
-      
+      const client = authClient();
+      const response = await client.get('/api/admin/stats/');
       return response.data;
     } catch (error) {
-      console.error('Error fetching admin stats:', error);
-      return { total: 0, processed: 0, pending: 0 };
+      console.error('Error fetching stats:', error);
+      return {
+        total: 0,
+        processed: 0,
+        pending: 0
+      };
+    }
+  },
+  
+  /**
+   * Send reply to a submission
+   * @param {string} id - Submission ID
+   * @param {string} reply - Reply text
+   * @returns {Promise<Object>} Response data
+   */
+  async sendReply(id, reply) {
+    try {
+      const client = authClient();
+      const response = await client.post(`/api/admin/submissions/${id}/reply/`, {
+        reply
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error sending reply:', error);
+      throw error;
     }
   }
 };
