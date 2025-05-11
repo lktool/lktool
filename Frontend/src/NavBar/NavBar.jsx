@@ -40,15 +40,24 @@ function NavBar() {
         return null;
     }
 
+    // Home link destination based on authentication status and role
+    const getHomeDestination = () => {
+        if (!isAuthenticated) {
+            return '/'; // Public landing page
+        }
+
+        return isAdmin ? '/admin/dashboard' : '/inputMain';
+    };
+
     return (
         <nav className="navbar-container">
             <div className="navbar-content">
-                <div className="navbar-title" onClick={() => navigate('/')}>
+                <div className="navbar-title" onClick={() => navigate(getHomeDestination())}>
                     <h2>LK Tool Box</h2>
                 </div>
                 <div className="navbar-profiles-controls">
-                    {/* Common navigation links */}
-                    <Link to="/">Home</Link>
+                    {/* Dynamic Home Link - Points to role-appropriate destination */}
+                    <Link to={getHomeDestination()}>Home</Link>
 
                     {/* Authenticated user links */}
                     {isAuthenticated && !isAdmin && (
