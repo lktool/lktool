@@ -84,8 +84,26 @@ INSTALLED_APPS = [
     "unified_auth_api",
 ]
 
+# Create a custom middleware to debug CORS requests
+class CorsDebugMiddleware:
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        # Process the request
+        response = self.get_response(request)
+        
+        # Log CORS headers for debugging
+        if 'HTTP_ORIGIN' in request.META:
+            print(f"CORS Debug - Request from: {request.META['HTTP_ORIGIN']}")
+            print(f"CORS Debug - Response status: {response.status_code}")
+            print(f"CORS Debug - CORS headers: {response.has_header('Access-Control-Allow-Origin')}")
+            
+        return response
+
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
+    'backend.settings.CorsDebugMiddleware',   # Add this for debugging
     'django.middleware.cache.UpdateCacheMiddleware',
     "django.middleware.security.SecurityMiddleware",
     'django.middleware.gzip.GZipMiddleware',
@@ -235,16 +253,19 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
 ]
 
-# Add this for persistent connections
+# For development/debugging only - set to False in production
+CORS_ALLOW_ALL_ORIGINS = True
+
+# Allow credentials in requests
 CORS_ALLOW_CREDENTIALS = True
 
-# For development/debugging, use this setting
-CORS_ALLOW_ALL_ORIGINS = True  # Set to False in production
+# Fix URL regex to include both API and auth paths
+CORS_URLS_REGEX = r'^/(api|auth)/.*$'
 
 # Enable preflight caching to reduce OPTIONS requests
-CORS_PREFLIGHT_MAX_AGE = 86400  # 24 hours in seconds - dramatically reduces preflight requests
+CORS_PREFLIGHT_MAX_AGE = 86400  # 24 hours in seconds
 
-# Add allowed headers to fix CORS issue
+# Allow all headers for debugging/development
 CORS_ALLOW_HEADERS = [
     'accept',
     'accept-encoding',
@@ -255,17 +276,10 @@ CORS_ALLOW_HEADERS = [
     'user-agent',
     'x-csrftoken',
     'x-requested-with',
-    'cache-control',  # Add this header
-    'pragma',         # Add this header
-    'expires',        # Add this header
+    'cache-control',
+    'pragma',
+    'expires',
 ]
-
-# Update CORS allowed headers to ensure admin API works
-CORS_ALLOW_ALL_HEADERS = True  # Temporarily allow all headers for debugging
-CORS_EXPOSE_HEADERS = ['*']    # Expose all headers in response
-
-# Fix URL regex to include both /api/ and /auth/ paths
-CORS_URLS_REGEX = r'^/(api|auth)/.*$'  # Match both /api/ and /auth/ paths
 
 # Email Configuration - Properly load from environment
 EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')

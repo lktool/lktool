@@ -125,7 +125,8 @@ export const unifiedAuthService = {
     try {
       console.log(`Attempting registration for email: ${email}`);
       
-      const response = await axios.post(getAuthUrl('/register/'), {
+      // Change '/register/' to '/signup/' to match the backend endpoint
+      const response = await axios.post(getAuthUrl('/signup/'), {
         email,
         password,
         password2: confirmPassword
