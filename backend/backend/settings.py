@@ -85,8 +85,8 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    'django.middleware.cache.UpdateCacheMiddleware',
     "corsheaders.middleware.CorsMiddleware",
+    'django.middleware.cache.UpdateCacheMiddleware',
     "django.middleware.security.SecurityMiddleware",
     'django.middleware.gzip.GZipMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
@@ -230,7 +230,7 @@ SIMPLE_JWT = {
 
 # Optimize CORS settings for better performance
 CORS_ALLOWED_ORIGINS = [
-    "https://lktools.onrender.com",
+    "https://lktool.onrender.com",
     "https://projectsection-ten.vercel.app",
     "http://localhost:5173",
     "http://localhost:3000",
@@ -238,7 +238,7 @@ CORS_ALLOWED_ORIGINS = [
 
 # Add this for persistent connections
 CORS_ALLOW_CREDENTIALS = True
-
+CORS_ALLOW_ALL_ORIGINS = True  # Debug only! Remove after testing
 # Enable preflight caching to reduce OPTIONS requests
 CORS_PREFLIGHT_MAX_AGE = 86400  # 24 hours in seconds - dramatically reduces preflight requests
 
@@ -351,3 +351,6 @@ X_FRAME_OPTIONS = 'DENY'
 # Admin Credentials (loaded from environment variables)
 ADMIN_EMAIL = os.environ.get('ADMIN_EMAIL')
 ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD')
+
+# Add Google OAuth Client ID
+GOOGLE_OAUTH_CLIENT_ID = os.environ.get('GOOGLE_OAUTH_CLIENT_ID', '865917249576-o12qfisk9hpp4b10vjvdj2d1kqhunva9.apps.googleusercontent.com')

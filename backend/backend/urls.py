@@ -28,10 +28,10 @@ urlpatterns = [
 
     path('api/auth/', include('unified_auth_api.urls')),
     # Existing endpoints for backward compatibility
-    path("api/", include('users.urls')),
+    #path("api/", include('users.urls')),
     path('api/contact/', include('contact.urls')),
-    path('api/admin/', include('admin_api.urls')),
-    path('admin/', include('admin_api.urls')),  # For compatibility
+    #path('api/admin/', include('admin_api.urls')),
+    #path('admin/', include('admin_api.urls')),  # For compatibility
     
     # Catch‑all: serve React's index.html
     re_path(
