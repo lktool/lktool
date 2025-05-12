@@ -5,33 +5,51 @@ from rest_framework import status, permissions
 from rest_framework.permissions import IsAdminUser
 from django.shortcuts import get_object_or_404
 from django.db import transaction
+from django.utils import timezone
+from django.db.models import Count, Avg, Q
 
 from .models import ProfileAnalysis
-from .serializers import ProfileAnalysisSerializer
+from .serializers import ProfileAnalysisSerializer, SubmissionWithAnalysisSerializer
 from contact.models import ContactSubmission
 from contact.serializers import ContactSerializer
 
 class ProfileAnalysisCreateView(APIView):
-    """API endpoint for admins to create profile analysis"""
+    """API endpoint for creating a profile analysis"""
     permission_classes = [IsAdminUser]
     
-    @transaction.atomic
     def post(self, request):
-        serializer = ProfileAnalysisSerializer(data=request.data, context={'request': request})
+        # Extract submission ID from request
+        submission_id = request.data.get('submission_id')
+        if not submission_id:
+            return Response({'error': 'Submission ID is required'}, status=status.HTTP_400_BAD_REQUEST)
         
+        # Check if submission exists
+        submission = get_object_or_404(ContactSubmission, id=submission_id)
+        
+        # Check if analysis already exists
+        if hasattr(submission, 'analysis'):
+            return Response({'error': 'Analysis already exists for this submission'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Prepare data for serializer
+        data = request.data.copy()
+        data['submission'] = submission_id
+        data['created_by'] = request.user.id
+        
+        # Create analysis
+        serializer = ProfileAnalysisSerializer(data=data)
         if serializer.is_valid():
             analysis = serializer.save()
             
-            # Return the created analysis
-            return Response(
-                ProfileAnalysisSerializer(analysis).data,
-                status=status.HTTP_201_CREATED
-            )
+            # Mark submission as processed
+            submission.is_processed = True
+            submission.save(update_fields=['is_processed'])
+            
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class ProfileAnalysisDetailView(APIView):
-    """API endpoint for admins to retrieve, update, or delete profile analysis"""
+    """API endpoint for retrieving a profile analysis"""
     permission_classes = [IsAdminUser]
     
     def get(self, request, analysis_id):
@@ -41,68 +59,57 @@ class ProfileAnalysisDetailView(APIView):
     
     def put(self, request, analysis_id):
         analysis = get_object_or_404(ProfileAnalysis, id=analysis_id)
-        serializer = ProfileAnalysisSerializer(
-            analysis, 
-            data=request.data,
-            context={'request': request},
-            partial=True
-        )
-        
+        serializer = ProfileAnalysisSerializer(analysis, data=request.data, partial=True)
         if serializer.is_valid():
-            analysis = serializer.save()
-            return Response(ProfileAnalysisSerializer(analysis).data)
-        
+            serializer.save()
+            return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
-    def delete(self, request, analysis_id):
-        analysis = get_object_or_404(ProfileAnalysis, id=analysis_id)
-        analysis.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
 
 class SubmissionAnalysisStatusView(APIView):
-    """API endpoint for admins to check if a submission has been analyzed"""
+    """API endpoint to check analysis status for a submission"""
     permission_classes = [IsAdminUser]
     
     def get(self, request, submission_id):
         submission = get_object_or_404(ContactSubmission, id=submission_id)
+        has_analysis = hasattr(submission, 'analysis')
         
-        try:
-            analysis = ProfileAnalysis.objects.get(submission=submission)
-            return Response({
-                'has_analysis': True,
-                'analysis_id': analysis.id
-            })
-        except ProfileAnalysis.DoesNotExist:
-            return Response({
-                'has_analysis': False
-            })
+        return Response({
+            'submission_id': submission_id,
+            'has_analysis': has_analysis,
+            'is_processed': submission.is_processed,
+            'analysis_id': submission.analysis.id if has_analysis else None
+        })
 
 class AdminDashboardStatsView(APIView):
-    """API endpoint for admin dashboard statistics"""
+    """API endpoint to get stats for admin dashboard"""
     permission_classes = [IsAdminUser]
     
     def get(self, request):
-        # Count submissions by status
+        # Get overall stats
         total_submissions = ContactSubmission.objects.count()
         processed_submissions = ContactSubmission.objects.filter(is_processed=True).count()
         pending_submissions = total_submissions - processed_submissions
         
-        # Count analyzed submissions
-        analyzed_submissions = ProfileAnalysis.objects.count()
+        # Get recent submissions (last 30 days)
+        thirty_days_ago = timezone.now() - timezone.timedelta(days=30)
+        recent_submissions = ContactSubmission.objects.filter(created_at__gte=thirty_days_ago).count()
         
-        # Calculate risk distribution
-        low_risk = ProfileAnalysis.objects.filter(risk_level='low').count()
-        medium_risk = ProfileAnalysis.objects.filter(risk_level='medium').count()
-        high_risk = ProfileAnalysis.objects.filter(risk_level='high').count()
+        # Get average analysis score
+        analyses = ProfileAnalysis.objects.all()
+        avg_score = analyses.aggregate(Avg('score'))['score__avg'] or 0
+        
+        # Risk level distribution
+        risk_distribution = {
+            'low': ProfileAnalysis.objects.filter(risk_level='low').count(),
+            'medium': ProfileAnalysis.objects.filter(risk_level='medium').count(),
+            'high': ProfileAnalysis.objects.filter(risk_level='high').count(),
+        }
         
         return Response({
             'total_submissions': total_submissions,
             'processed_submissions': processed_submissions,
             'pending_submissions': pending_submissions,
-            'analyzed_submissions': analyzed_submissions,
-            'risk_distribution': {
-                'low': low_risk,
-                'medium': medium_risk,
-                'high': high_risk
-            }
+            'recent_submissions': recent_submissions,
+            'avg_score': round(avg_score, 1),
+            'risk_distribution': risk_distribution
         })

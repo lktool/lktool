@@ -3,17 +3,17 @@
  * Central export point for all API services
  */
 
-// Export configuration
-export * from './config';
-
-// Export interceptors and clients
-export { apiClient, createAuthClient } from './interceptors';
-
-// Export all services
+// Export all API services
 export { authService } from './authService';
 export { submissionService } from './submissionService';
-export { contactService } from './contactService';
 export { adminService } from './adminService';
+
+// Export config and interceptors for direct access if needed
+export * from './config';
+export * from './interceptors';
+
+// Export all services
+export { contactService } from './contactService';
 
 // Re-export as a combined API object
 import { authService } from './authService';

@@ -7,45 +7,19 @@ import { ENDPOINTS } from './config';
 
 export const adminService = {
   /**
-   * Get all submissions for admin dashboard
-   * @param {Object} options - Query options
-   * @param {string} options.status - Filter by status (all, pending, processed)
-   * @param {string} options.search - Search term
-   * @param {string} options.sort - Sort field
-   * @param {number} options.page - Page number
-   * @returns {Promise<Object>} Paginated submissions
+   * Get submissions for admin dashboard
+   * @param {Object} filters - Filter parameters
+   * @returns {Promise<Object>} Submissions data
    */
-  async getSubmissions(options = {}) {
+  async getSubmissions(filters = {}) {
     try {
-      const params = new URLSearchParams();
+      const response = await apiClient.get(ENDPOINTS.ADMIN.SUBMISSIONS, {
+        params: filters
+      });
       
-      if (options.status && options.status !== 'all') {
-        params.append('status', options.status);
-      }
-      
-      if (options.search) {
-        params.append('search', options.search);
-      }
-      
-      if (options.sort) {
-        params.append('sort', options.sort);
-      }
-      
-      if (options.page) {
-        params.append('page', options.page);
-      }
-      
-      const url = `${ENDPOINTS.ADMIN.BASE}${ENDPOINTS.ADMIN.SUBMISSIONS}${params.toString() ? `?${params.toString()}` : ''}`;
-      const response = await apiClient.get(url);
-      
-      return {
+      return { 
         success: true,
-        data: response.data.results || response.data,
-        pagination: {
-          count: response.data.count,
-          next: response.data.next,
-          previous: response.data.previous
-        }
+        data: response.data
       };
     } catch (error) {
       console.error('Error fetching submissions:', error);
@@ -55,45 +29,39 @@ export const adminService = {
       };
     }
   },
-  
+
   /**
-   * Update a submission's status
-   * @param {number} submissionId - ID of the submission
-   * @param {boolean} isProcessed - Whether the submission is processed
-   * @returns {Promise<Object>} Updated submission data
+   * Get detailed information about a specific submission
+   * @param {number} id - Submission ID
+   * @returns {Promise<Object>} Submission details
    */
-  async updateSubmissionStatus(submissionId, isProcessed) {
+  async getSubmissionDetails(id) {
     try {
-      const response = await apiClient.put(
-        `${ENDPOINTS.ADMIN.BASE}${ENDPOINTS.ADMIN.SUBMISSION_DETAIL(submissionId)}`,
-        { is_processed: isProcessed }
-      );
-      
+      const response = await apiClient.get(`${ENDPOINTS.ADMIN.SUBMISSIONS}/${id}/`);
       return {
         success: true,
         data: response.data
       };
     } catch (error) {
-      console.error('Error updating submission status:', error);
+      console.error(`Error fetching submission ${id}:`, error);
       return {
         success: false,
-        error: error.response?.data?.error || 'Failed to update submission'
+        error: error.response?.data?.error || 'Failed to fetch submission details'
       };
     }
   },
-  
+
   /**
-   * Submit an admin reply to a user submission
-   * @param {number} submissionId - ID of the submission
-   * @param {string} reply - Admin's reply text
-   * @returns {Promise<Object>} Result of the reply submission
+   * Submit a reply to a user submission
+   * @param {number} submissionId - Submission ID
+   * @param {string} reply - Admin reply text
+   * @returns {Promise<Object>} Reply result
    */
   async submitReply(submissionId, reply) {
     try {
-      const response = await apiClient.post(
-        `${ENDPOINTS.CONTACT.BASE}${ENDPOINTS.CONTACT.ADMIN_REPLY(submissionId)}`,
-        { reply }
-      );
+      const response = await apiClient.post(`${ENDPOINTS.ADMIN.SUBMIT_REPLY(submissionId)}`, {
+        reply
+      });
       
       return {
         success: true,
@@ -107,21 +75,23 @@ export const adminService = {
       };
     }
   },
-  
+
   /**
    * Submit LinkedIn profile analysis
-   * @param {number} submissionId - ID of the submission to analyze
-   * @param {Object} analysisData - Profile analysis data
+   * @param {number} submissionId - Submission ID
+   * @param {Object} analysisData - Analysis data
    * @returns {Promise<Object>} Analysis result
    */
   async submitProfileAnalysis(submissionId, analysisData) {
     try {
+      const payload = {
+        ...analysisData,
+        submission_id: submissionId
+      };
+      
       const response = await apiClient.post(
-        `${ENDPOINTS.ADMIN.BASE}${ENDPOINTS.ADMIN.PROFILE_ANALYSES}`,
-        {
-          submission_id: submissionId,
-          ...analysisData
-        }
+        ENDPOINTS.ADMIN.PROFILE_ANALYSIS, 
+        payload
       );
       
       return {
@@ -129,72 +99,46 @@ export const adminService = {
         data: response.data
       };
     } catch (error) {
-      console.error('Error submitting profile analysis:', error);
+      console.error('Error submitting analysis:', error);
       return {
         success: false,
-        error: error.response?.data || 'Failed to submit analysis'
+        error: error.response?.data?.error || 'Failed to submit analysis'
       };
     }
   },
-  
+
   /**
-   * Get analysis for a specific submission
-   * @param {number} analysisId - ID of the analysis
-   * @returns {Promise<Object>} Analysis data
+   * Update submission status (processed/unprocessed)
+   * @param {number} submissionId - Submission ID
+   * @param {boolean} isProcessed - Is the submission processed
+   * @returns {Promise<Object>} Update result
    */
-  async getAnalysis(analysisId) {
+  async updateSubmissionStatus(submissionId, isProcessed) {
     try {
-      const response = await apiClient.get(
-        `${ENDPOINTS.ADMIN.BASE}${ENDPOINTS.ADMIN.PROFILE_ANALYSIS_DETAIL(analysisId)}`
-      );
+      const response = await apiClient.patch(`${ENDPOINTS.ADMIN.SUBMISSIONS}/${submissionId}/`, {
+        is_processed: isProcessed
+      });
       
       return {
         success: true,
         data: response.data
       };
     } catch (error) {
-      console.error('Error fetching analysis:', error);
+      console.error('Error updating submission status:', error);
       return {
         success: false,
-        error: error.response?.data?.error || 'Failed to fetch analysis'
+        error: error.response?.data?.error || 'Failed to update submission status'
       };
     }
   },
-  
-  /**
-   * Check if a submission has been analyzed
-   * @param {number} submissionId - ID of the submission
-   * @returns {Promise<Object>} Analysis status and ID if it exists
-   */
-  async checkAnalysisStatus(submissionId) {
-    try {
-      const response = await apiClient.get(
-        `${ENDPOINTS.ADMIN.BASE}${ENDPOINTS.ADMIN.ANALYSIS_STATUS(submissionId)}`
-      );
-      
-      return {
-        success: true,
-        data: response.data
-      };
-    } catch (error) {
-      console.error('Error checking analysis status:', error);
-      return {
-        success: false,
-        error: error.response?.data?.error || 'Failed to check analysis status'
-      };
-    }
-  },
-  
+
   /**
    * Get admin dashboard statistics
    * @returns {Promise<Object>} Dashboard statistics
    */
   async getDashboardStats() {
     try {
-      const response = await apiClient.get(
-        `${ENDPOINTS.ADMIN.BASE}${ENDPOINTS.ADMIN.DASHBOARD_STATS}`
-      );
-      
+      const response = await apiClient.get(ENDPOINTS.ADMIN.DASHBOARD_STATS);
       return {
         success: true,
         data: response.data
@@ -204,30 +148,6 @@ export const adminService = {
       return {
         success: false,
         error: error.response?.data?.error || 'Failed to fetch dashboard statistics'
-      };
-    }
-  },
-  
-  /**
-   * Delete a submission
-   * @param {number} submissionId - ID of the submission to delete
-   * @returns {Promise<Object>} Operation result
-   */
-  async deleteSubmission(submissionId) {
-    try {
-      await apiClient.delete(
-        `${ENDPOINTS.ADMIN.BASE}${ENDPOINTS.ADMIN.SUBMISSION_DETAIL(submissionId)}`
-      );
-      
-      return {
-        success: true,
-        message: 'Submission deleted successfully'
-      };
-    } catch (error) {
-      console.error('Error deleting submission:', error);
-      return {
-        success: false,
-        error: error.response?.data?.error || 'Failed to delete submission'
       };
     }
   }

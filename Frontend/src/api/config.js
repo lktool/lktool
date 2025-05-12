@@ -36,13 +36,12 @@ export const ENDPOINTS = {
   
   // Admin endpoints
   ADMIN: {
-    BASE: `${BASE_URL}/api/admin`,
-    SUBMISSIONS: '/submissions/',
-    SUBMISSION_DETAIL: (id) => `/submissions/${id}/`,
-    PROFILE_ANALYSES: '/analyses/',
-    PROFILE_ANALYSIS_DETAIL: (id) => `/analyses/${id}/`,
-    ANALYSIS_STATUS: (id) => `/submissions/${id}/analysis-status/`,
-    DASHBOARD_STATS: '/dashboard/stats/',
+    SUBMISSIONS: `${BASE_URL}/api/admin/submissions`,
+    SUBMIT_REPLY: (id) => `/api/contact/submissions/${id}/reply/`,
+    PROFILE_ANALYSIS: `${BASE_URL}/api/admin/analyses/`,
+    ANALYSIS_DETAIL: (id) => `/api/admin/analyses/${id}/`,
+    SUBMISSION_ANALYSIS_STATUS: (id) => `/api/admin/submissions/${id}/analysis-status/`,
+    DASHBOARD_STATS: `${BASE_URL}/api/admin/dashboard/stats/`,
   }
 };
 

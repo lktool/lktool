@@ -40,3 +40,14 @@ class ProfileAnalysisSerializer(serializers.ModelSerializer):
         submission.save(update_fields=['is_processed'])
         
         return analysis
+
+class SubmissionWithAnalysisSerializer(serializers.ModelSerializer):
+    analysis = ProfileAnalysisSerializer(read_only=True)
+    
+    class Meta:
+        model = ContactSubmission
+        fields = (
+            'id', 'email', 'linkedin_url', 'message', 
+            'is_processed', 'created_at', 'admin_reply',
+            'admin_reply_date', 'analysis'
+        )
