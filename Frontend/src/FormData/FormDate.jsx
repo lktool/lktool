@@ -375,22 +375,119 @@ const FormData = () => {
               </label>
             </fieldset>
 
-            {/* Add remaining fieldsets here - same as in original form */}
             {/* Profile Quality section */}
             <fieldset className="classroom-fieldset">
               <legend className="classroom-legend">2. Profile Quality</legend>
-              {/* Existing checkboxes */}
-              {/* ... */}
+              <label>
+                <input type="checkbox" name="hasProfileSummary" checked={form.hasProfileSummary} onChange={handleChange} />
+                Has Summary or About Section
+              </label>
+              <label>
+                <input type="checkbox" name="hasProfessionalPhoto" checked={form.hasProfessionalPhoto} onChange={handleChange} />
+                Has Professional Profile Picture
+              </label>
+              <label>
+                <input type="checkbox" name="hasOldPhoto" checked={form.hasOldPhoto} onChange={handleChange} />
+                Profile Picture Looks Outdated
+              </label>
+              <label>
+                <input type="checkbox" name="outdatedJobInfo" checked={form.outdatedJobInfo} onChange={handleChange} />
+                Has Outdated Job Info or Defunct Companies
+              </label>
+              <label>
+                <input type="checkbox" name="missingAboutOrEducation" checked={form.missingAboutOrEducation} onChange={handleChange} />
+                Missing or Incomplete Education/Skills Info
+              </label>
+              <label>
+                <input type="checkbox" name="profileCompleteness" checked={form.profileCompleteness} onChange={handleChange} />
+                Overall Profile is Well-Filled
+              </label>
+              <label>
+                <input type="checkbox" name="hasRecommendations" checked={form.hasRecommendations} onChange={handleChange} />
+                Has Given/Received Recommendations
+              </label>
+              <label></label>
+                <input type="checkbox" name="personalizedProfile" checked={form.personalizedProfile} onChange={handleChange} />
+                Personalized Profile (unique summary or achievements)
+              </label>
+              <label>Skills Endorsements Count:
+                <input name="skillsEndorsementsCount" type="number" value={form.skillsEndorsementsCount} onChange={handleChange} />
+              </label>
             </fieldset>
 
             {/* Activity Signals section */}
-            {/* ... */}
+            <fieldset className="classroom-fieldset"></fieldset>
+              <legend className="classroom-legend">3. Activity & Engagement</legend>
+              <label>
+                <input type="checkbox" name="recentActivity" checked={form.recentActivity} onChange={handleChange} />
+                Recent Posts or Interactions (within 6 months)
+              </label>
+              <label>
+                <input type="checkbox" name="engagementWithContent" checked={form.engagementWithContent} onChange={handleChange} />
+                Others Engage with Their Content
+              </label>
+              <label>
+                <input type="checkbox" name="engagementHistory" checked={form.engagementHistory} onChange={handleChange} />
+                Regularly Likes/Comments/Shares
+              </label>
+              <label>
+                <input type="checkbox" name="postHistoryOlderThanYear" checked={form.postHistoryOlderThanYear} onChange={handleChange} />
+                Has Posts Older Than 1 Year
+              </label>
+              <label>Last Post Date:
+                <input name="lastPostDate" type="date" value={form.lastPostDate} onChange={handleChange} />
+              </label>
+            </fieldset>
 
             {/* Outreach Suitability section */}
-            {/* ... */}
+            <fieldset className="classroom-fieldset"></fieldset>
+              <legend className="classroom-legend">4. Outreach Suitability</legend>
+              <label>
+                <input type="checkbox" name="profileUpdates" checked={form.profileUpdates} onChange={handleChange} />
+                Recently Updated Headline or Info
+              </label>
+              <label>
+                <input type="checkbox" name="sharedInterests" checked={form.sharedInterests} onChange={handleChange} />
+                Shared Interests or Mutual Connections
+              </label>
+              <label>
+                <input type="checkbox" name="openToNetworking" checked={form.openToNetworking} onChange={handleChange} />
+                Open to Connect or Recruit
+              </label>
+              <label>
+                <input type="checkbox" name="industryRelevance" checked={form.industryRelevance} onChange={handleChange} />
+                In a Relevant Industry
+              </label>
+              <label>
+                <input type="checkbox" name="activeJobTitles" checked={form.activeJobTitles} onChange={handleChange} />
+                Has Active, Relevant Job Titles
+              </label>
+            </fieldset>
 
             {/* Risk Signals section */}
-            {/* ... */}
+            <fieldset className="classroom-fieldset"></fieldset>
+              <legend className="classroom-legend classroom-danger">5. Low Score / Risk Signals</legend>
+              <label>
+                <input type="checkbox" name="newlyCreated" checked={form.newlyCreated} onChange={handleChange} />
+                Newly Created Account
+              </label>
+              <label>
+                <input type="checkbox" name="sparseJobHistory" checked={form.sparseJobHistory} onChange={handleChange} />
+                Sparse or Recently Added Job History
+              </label>
+              <label>
+                <input type="checkbox" name="defaultProfilePicture" checked={form.defaultProfilePicture} onChange={handleChange} />
+                Default/Stock Profile Picture
+              </label>
+              <label>
+                <input type="checkbox" name="lowConnections" checked={form.lowConnections} onChange={handleChange} />
+                Very Low (<100) Connections
+              </label>
+              <label>
+                <input type="checkbox" name="noEngagementOnPosts" checked={form.noEngagementOnPosts} onChange={handleChange} />
+                No Meaningful Engagement on Content
+              </label>
+            </fieldset>
 
             <div className="form-actions">
               <button type="button" className="cancel-button" onClick={handleCancel}>
@@ -405,8 +502,21 @@ const FormData = () => {
       )}
 
       {/* Preview container */}
-      {/* ... existing code ... */}
-
+      {currentView === 'preview' && showPreview && (
+        <div className="preview-container"></div>
+          <h2>Analysis Preview</h2>
+          <pre>{analysisPreview}</pre>
+          <div className="form-actions">
+            <button type="button" className="cancel-button" onClick={handleCancel}>
+              Cancel
+            </button>
+            <button type="button" className="classroom-submit-button" onClick={handleSendAnalysis} disabled={isReplying}>
+              {isReplying ? 'Sending...' : 'Send Analysis'}
+            </button>
+          </div>
+          {replyStatus && <p className="reply-status">{replyStatus}</p>}
+        </div>
+      )}
     </div>
   );
 };
