@@ -143,19 +143,30 @@ class GoogleAuthView(APIView):
     def options(self, request, *args, **kwargs):
         """Handle preflight OPTIONS requests correctly"""
         response = Response()
-        # Use a wildcard or specific origin
-        response["Access-Control-Allow-Origin"] = request.META.get('HTTP_ORIGIN', '*')
+        
+        # Get the origin from the request header
+        origin = request.META.get('HTTP_ORIGIN')
+        
+        # Allow specific origins or use a wildcard in development
+        response["Access-Control-Allow-Origin"] = origin or '*'
         response["Access-Control-Allow-Methods"] = "POST, OPTIONS"
-        response["Access-Control-Allow-Headers"] = "Content-Type, Authorization, Accept" 
+        
+        # Make sure to include all needed headers explicitly
+        response["Access-Control-Allow-Headers"] = "Content-Type, Accept, Authorization, X-Requested-With"
         response["Access-Control-Allow-Credentials"] = "true"
+        response["Access-Control-Max-Age"] = "86400"  # Cache preflight for 24 hours
+        
+        # Log for debugging
+        logger.info(f"Handling OPTIONS request from {origin}")
+        
         return response
     
     def post(self, request):
-        # Add CORS headers to response
+        # Add CORS headers to all responses
         response = Response()
-        # Match the origin that sent the request
-        if 'HTTP_ORIGIN' in request.META:
-            response["Access-Control-Allow-Origin"] = request.META['HTTP_ORIGIN']
+        
+        origin = request.META.get('HTTP_ORIGIN')
+        response["Access-Control-Allow-Origin"] = origin or '*'
         response["Access-Control-Allow-Credentials"] = "true"
         
         # Log the request info for debugging

@@ -93,34 +93,35 @@ const GoogleLoginButton = ({ onSuccess, actionType = 'login' }) => {
   // Function to verify Google token with backend
   const handleTokenVerification = async (token) => {
     try {
-      // Get the action type from localStorage (login or signup)
+      // Get the action type from localStorage
       const action = localStorage.getItem('google_auth_action') || actionType;
       localStorage.removeItem('google_auth_action');
       
-      // Add DEBUG logging
       console.log("Verifying Google token with backend");
       
-      // Use direct URL to avoid CORS issues
+      // Use direct URL to avoid path construction issues
       const url = 'https://lktool.onrender.com/auth/google/';
       console.log("Google Auth URL:", url);
       
-      const response = await fetch(url, {
+      // Simplified fetch to avoid preflight issues
+      const response = await axios({
         method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
+        url: url,
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ 
+        data: JSON.stringify({ 
           credential: token,
           action: action
         }),
-        credentials: 'include' // Important for CORS with credentials
+        withCredentials: true
       });
       
-      const data = await response.json();
+      const data = response.data;
       console.log("Backend response:", data);
       
-      if (!response.ok) {
+      if (!response.status === 200) {
         // Handle specific cases
         if (response.status === 404 && data.needs_signup) {
           setError("No account found with this email. Please sign up first.");
