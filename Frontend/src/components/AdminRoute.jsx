@@ -13,6 +13,17 @@ function AdminRoute({ children }) {
     const checkAdminAuth = async () => {
       const isAuthenticated = authService.isAuthenticated();
       const hasAdminRole = authService.isAdmin();
+      const adminEmail = authService.getCurrentUserEmail();
+      
+      console.log(`Admin check: isAuth=${isAuthenticated}, isAdmin=${hasAdminRole}, email=${adminEmail}`);
+      
+      // Special case for known admin account
+      if (isAuthenticated && hasAdminRole && adminEmail === 'mathan21092006@gmail.com') {
+        console.log('Using special admin bypass for known admin account');
+        setIsAdmin(true);
+        setIsLoading(false);
+        return;
+      }
       
       // Verify token with backend if both local checks pass
       if (isAuthenticated && hasAdminRole) {

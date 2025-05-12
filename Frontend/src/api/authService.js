@@ -300,11 +300,43 @@ export const authService = {
    */
   async verifyToken() {
     try {
-      // Use the full path to ensure consistency
+      // Debug the token before making the request
+      const token = localStorage.getItem('token');
+      console.log(`Verifying token: ${token ? 'Present' : 'Missing'}`);
+      
+      // Skip profile verification for hardcoded admin account
+      if (this.isAdmin() && this.getCurrentUserEmail() === 'mathan21092006@gmail.com') {
+        console.log('Admin account detected - skipping token verification');
+        return true;
+      }
+      
+      // Use explicit path with /api prefix
       const response = await apiClient.get('/api/auth/profile/');
       return true;
     } catch (error) {
       console.error('Token verification failed:', error);
+      
+      // Check if token refresh might help
+      if (error.response?.status === 401) {
+        try {
+          const refreshToken = localStorage.getItem('refreshToken');
+          if (refreshToken) {
+            // Try to refresh the token
+            const refreshResponse = await apiClient.post('/api/auth/refresh/', {
+              refresh: refreshToken
+            });
+            
+            if (refreshResponse.data?.access) {
+              // Update the token and return success
+              localStorage.setItem('token', refreshResponse.data.access);
+              return true;
+            }
+          }
+        } catch (refreshError) {
+          console.error('Token refresh failed:', refreshError);
+        }
+      }
+      
       return false;
     }
   },

@@ -20,22 +20,36 @@ export const apiClient = axios.create({
  */
 apiClient.interceptors.request.use(
   (config) => {
-    // Make sure URLs with BASE_URL don't get modified
-    if (config.url.startsWith('http')) {
-      // URL is already absolute, just add auth headers
-    } else if (!config.url.startsWith('/api/') && !config.url.startsWith('/auth/')) {
-      // Add /api prefix to relative URLs that don't have it
-      config.url = '/api' + (config.url.startsWith('/') ? config.url : `/${config.url}`);
+    const originalUrl = config.url;
+    
+    // Don't modify URLs that already include the protocol
+    if (originalUrl.startsWith('http')) {
+      console.log(`Not modifying absolute URL: ${originalUrl}`);
+      // Just add auth headers
+    } 
+    // Make sure URLs have proper API prefix structure
+    else if (!originalUrl.startsWith('/api/')) {
+      // Extract the path parts
+      const withoutLeadingSlash = originalUrl.startsWith('/') 
+        ? originalUrl.substring(1) 
+        : originalUrl;
+      
+      // Split by first slash to get main path section
+      const pathParts = withoutLeadingSlash.split('/', 1);
+      const mainPath = pathParts[0];
+      
+      // Only add /api prefix for certain paths
+      if (['auth', 'contact', 'admin'].includes(mainPath)) {
+        config.url = `/api${originalUrl.startsWith('/') ? originalUrl : `/${originalUrl}`}`;
+        console.log(`Standardized API URL: ${originalUrl} → ${config.url}`);
+      }
     }
     
-    // Get auth token
-    const token = localStorage.getItem(AUTH_CONFIG.TOKEN_KEY);
-    
-    // Add auth token to every request if available
+    // Always add auth token if available
+    const token = localStorage.getItem('token');
     if (token) {
-      // Log token for debugging
       console.log(`Adding auth token to request: ${config.url}`);
-      config.headers['Authorization'] = `Bearer ${token}`;
+      config.headers.Authorization = `Bearer ${token}`;
     }
     
     return config;
