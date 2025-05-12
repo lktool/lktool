@@ -55,8 +55,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = config("SECRET_KEY", default="unsafe-secret-for-dev")
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False  # Turn off debug in production
+# Debug mode - enable for development
+DEBUG = True  # Set to True temporarily to see detailed error messages
 
 # Update ALLOWED_HOSTS to include all necessary domains
 ALLOWED_HOSTS = [
@@ -359,3 +359,30 @@ ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD')
 
 # Add Google OAuth Client ID
 GOOGLE_OAUTH_CLIENT_ID = os.environ.get('GOOGLE_OAUTH_CLIENT_ID', '865917249576-o12qfisk9hpp4b10vjvdj2d1kqhunva9.apps.googleusercontent.com')
+
+# Make DEBUG logging visible
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'INFO',
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+        'unified_auth_api': {  # Add this logger for our app
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+    },
+}

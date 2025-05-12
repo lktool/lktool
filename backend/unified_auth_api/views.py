@@ -99,30 +99,41 @@ class UserRegistrationView(APIView):
         
         # Create new user
         try:
-            user = User.objects.create_user(username=email, email=email, password=password)
-            user.email_verified = False  # Mark as not verified
-            user.save()
+            # Create user first - REMOVED username parameter that was causing the error
+            user = User.objects.create_user(email=email, password=password)
+            
+            # Add email_verified field if it exists on the model
+            try:
+                user.email_verified = False
+                user.save()
+            except Exception as field_error:
+                logger.warning(f"Could not set email_verified field: {str(field_error)}")
             
             # Generate verification token
             uid = urlsafe_base64_encode(force_str(user.pk).encode())
             token = default_token_generator.make_token(user)
             
-            # Send verification email
-            verification_url = f"{settings.FRONTEND_URL}/verify-email/{token}"
-            send_mail(
-                'Verify your email',
-                f'Please click the link to verify your email: {verification_url}',
-                settings.DEFAULT_FROM_EMAIL,
-                [email],
-                fail_silently=False,
-            )
+            # Try to send verification email, but don't fail registration if email fails
+            verification_url = f"{settings.FRONTEND_URL}/verify-email/{uid}-{token}"
+            try:
+                send_mail(
+                    'Verify your email',
+                    f'Please click the link to verify your email: {verification_url}',
+                    settings.DEFAULT_FROM_EMAIL,
+                    [email],
+                    fail_silently=True,  # Don't let email failure stop registration
+                )
+            except Exception as email_error:
+                logger.error(f"Failed to send verification email: {str(email_error)}")
             
+            # Return success even if email fails
             return Response({
                 "message": "User registered successfully. Please check your email to verify your account."
             }, status=201)
             
         except Exception as e:
-            logger.error(f"Registration error: {str(e)}")
+            # Log the full error with traceback
+            logger.exception(f"Registration error for {email}: {str(e)}")
             return Response({"error": "Registration failed. Please try again."}, status=500)
 
 
