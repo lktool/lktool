@@ -406,7 +406,7 @@ const FormData = () => {
                 <input type="checkbox" name="hasRecommendations" checked={form.hasRecommendations} onChange={handleChange} />
                 Has Given/Received Recommendations
               </label>
-              <label></label>
+              <label>
                 <input type="checkbox" name="personalizedProfile" checked={form.personalizedProfile} onChange={handleChange} />
                 Personalized Profile (unique summary or achievements)
               </label>
@@ -416,7 +416,7 @@ const FormData = () => {
             </fieldset>
 
             {/* Activity Signals section */}
-            <fieldset className="classroom-fieldset"></fieldset>
+            <fieldset className="classroom-fieldset">
               <legend className="classroom-legend">3. Activity & Engagement</legend>
               <label>
                 <input type="checkbox" name="recentActivity" checked={form.recentActivity} onChange={handleChange} />
@@ -440,7 +440,7 @@ const FormData = () => {
             </fieldset>
 
             {/* Outreach Suitability section */}
-            <fieldset className="classroom-fieldset"></fieldset>
+            <fieldset className="classroom-fieldset">
               <legend className="classroom-legend">4. Outreach Suitability</legend>
               <label>
                 <input type="checkbox" name="profileUpdates" checked={form.profileUpdates} onChange={handleChange} />
@@ -465,7 +465,7 @@ const FormData = () => {
             </fieldset>
 
             {/* Risk Signals section */}
-            <fieldset className="classroom-fieldset"></fieldset>
+            <fieldset className="classroom-fieldset">
               <legend className="classroom-legend classroom-danger">5. Low Score / Risk Signals</legend>
               <label>
                 <input type="checkbox" name="newlyCreated" checked={form.newlyCreated} onChange={handleChange} />
@@ -481,7 +481,7 @@ const FormData = () => {
               </label>
               <label>
                 <input type="checkbox" name="lowConnections" checked={form.lowConnections} onChange={handleChange} />
-                Very Low (<100) Connections
+                Very Low (100) Connections
               </label>
               <label>
                 <input type="checkbox" name="noEngagementOnPosts" checked={form.noEngagementOnPosts} onChange={handleChange} />
@@ -503,7 +503,7 @@ const FormData = () => {
 
       {/* Preview container */}
       {currentView === 'preview' && showPreview && (
-        <div className="preview-container"></div>
+        <div className="preview-container">
           <h2>Analysis Preview</h2>
           <pre>{analysisPreview}</pre>
           <div className="form-actions">
