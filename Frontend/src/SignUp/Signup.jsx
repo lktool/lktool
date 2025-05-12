@@ -5,7 +5,8 @@ import React from "react";
 import { validateEmail } from "../Utils/validate";
 import { Link, useNavigate } from "react-router-dom";
 import GoogleLoginButton from "../components/GoogleLoginButton";
-import { unifiedAuthService } from '../api/unifiedAuthService'; // Use unified auth service
+// Update import to use the new API structure
+import { authService } from '../api';
 
 function Signup() {
   const [email, setEmail] = useState("");
@@ -100,8 +101,8 @@ function Signup() {
     // Debounce signup attempts
     signupAttemptRef.current = setTimeout(async () => {
       try {
-        // Use unifiedAuthService instead of authService
-        await unifiedAuthService.register(email, password, confirmPassword);
+        // Use authService instead of unifiedAuthService
+        await authService.register(email, password, confirmPassword);
         setSuccess(true); // Show verification needed message
       } catch (err) {
         console.error("Registration error:", err);
@@ -130,7 +131,7 @@ function Signup() {
   const handleResendVerification = async () => {
     try {
       setResendLoading(true);
-      await unifiedAuthService.resendVerification(email);
+      await authService.requestPasswordReset(email);
       setResendSuccess(true);
     } catch (error) {
       setResendError(error.message);

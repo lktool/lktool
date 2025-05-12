@@ -1,46 +1,24 @@
 from django.db import models
-from django.contrib.auth.models import AbstractUser, BaseUserManager
+from django.contrib.auth.models import AbstractUser
 from django.utils.translation import gettext_lazy as _
-from django.utils.timezone import now
 
-class CustomUserManager(BaseUserManager):
-    """
-    Custom user model manager where email is the unique identifier
-    instead of username.
-    """
-    def create_user(self, email, password=None, **extra_fields):
-        if not email:
-            raise ValueError(_('The Email field must be set'))
-        email = self.normalize_email(email)
-        user = self.model(email=email, **extra_fields)
-        if password:
-            user.set_password(password)
-        user.save()
-        return user
-
-    def create_superuser(self, email, password, **extra_fields):
-        extra_fields.setdefault('is_staff', True)
-        extra_fields.setdefault('is_superuser', True)
-        extra_fields.setdefault('is_active', True)
-        extra_fields.setdefault('is_verified', True)  # Superuser is verified by default
-
-        if extra_fields.get('is_staff') is not True:
-            raise ValueError(_('Superuser must have is_staff=True.'))
-        if extra_fields.get('is_superuser') is not True:
-            raise ValueError(_('Superuser must have is_superuser=True.'))
-        return self.create_user(email, password, **extra_fields)
+from .managers import CustomUserManager
 
 class CustomUser(AbstractUser):
-    # Remove the username field and set as None
-    username = None
+    """
+    Custom User model that uses email as unique identifier instead of username
+    """
+    ROLE_CHOICES = [
+        ('admin', 'Admin'),
+        ('user', 'Regular User'),
+    ]
     
-    # Use email as the unique identifier
+    username = None  # Remove username field
     email = models.EmailField(_('email address'), unique=True)
+    email_verified = models.BooleanField(default=False)
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='user')
+    google_id = models.CharField(max_length=255, blank=True, null=True)
     
-    # Add  field to track email verification
-    is_verified = models.BooleanField(default=False)
-    date_joined = models.DateTimeField(default=now)
-    # Set email as the USERNAME_FIELD
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
     
@@ -48,3 +26,6 @@ class CustomUser(AbstractUser):
     
     def __str__(self):
         return self.email
+        
+    def is_admin_user(self):
+        return self.role == 'admin' or self.is_staff or self.is_superuser

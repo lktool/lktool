@@ -1,8 +1,7 @@
 import { Navigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { unifiedAuthService } from '../api/unifiedAuthService';
-import axios from 'axios';
-import { API_CONFIG } from '../api/apiConfig';
+// Update import to use the new API structure
+import { authService } from '../api';
 import LoadingSpinner from './LoadingSpinner';
 
 function AdminRoute({ children }) {
@@ -12,17 +11,17 @@ function AdminRoute({ children }) {
   useEffect(() => {
     // Check if user is authenticated AND is admin
     const checkAdminAuth = async () => {
-      const isAuthenticated = unifiedAuthService.isAuthenticated();
-      const hasAdminRole = unifiedAuthService.isAdmin();
+      const isAuthenticated = authService.isAuthenticated();
+      const hasAdminRole = authService.isAdmin();
       
       // Verify token with backend if both local checks pass
       if (isAuthenticated && hasAdminRole) {
         try {
-          await unifiedAuthService.verifyToken();
+          await authService.verifyToken();
           setIsAdmin(true);
         } catch (error) {
           console.error('Admin authentication verification failed:', error);
-          unifiedAuthService.logout();
+          authService.logout();
           setIsAdmin(false);
         }
       } else {

@@ -1,66 +1,55 @@
-import axiosInstance from './axiosConfig';
-import { getContactUrl } from './apiConfig';
-import { API_ENDPOINTS } from './apiEndpoints';
-
 /**
- * Contact form service for handling contact form submissions
+ * Contact Service
+ * Handles contact form submissions and general inquiries
  */
+import { apiClient } from './interceptors';
+import { ENDPOINTS } from './config';
+
 export const contactService = {
   /**
-   * Submit contact form data to the backend
+   * Submit a contact message
+   * @param {Object} data - Contact form data
+   * @param {string} data.name - Name of the sender
+   * @param {string} data.email - Email of the sender
+   * @param {string} data.subject - Subject of the message
+   * @param {string} data.message - Message body
+   * @param {string} data.message_type - Type of message (general, feedback, etc.)
+   * @returns {Promise<Object>} Submission result
    */
-  async submitContactForm(linkedinUrl, message, email) {
+  async submitContactForm(data) {
     try {
-      console.log('Submitting contact form data');
-      
-      // Use getContactUrl helper to construct URL
-      const response = await axiosInstance.post(
-        getContactUrl(API_ENDPOINTS.CONTACT.SUBMIT),
-        {
-          linkedin_url: linkedinUrl,
-          message,
-          email
-        }
+      const response = await apiClient.post(
+        `${ENDPOINTS.CONTACT.BASE}${ENDPOINTS.CONTACT.CONTACT_MESSAGE}`, 
+        data
       );
       
-      console.log('Contact form submission successful');
-      return response.data;
+      return {
+        success: true,
+        message: response.data.message || 'Message sent successfully!'
+      };
     } catch (error) {
-      console.error('Contact form submission error:', error);
+      console.error('Error submitting contact form:', error);
       
-      // Add CSRF error handling
-      if (error.response && error.response.status === 403 && 
-          error.response.data && error.response.data.includes('CSRF verification failed')) {
-        throw {
-          error: 'CSRF verification failed. Please refresh the page and try again.',
-          isCsrfError: true
+      // Process validation errors
+      if (error.response?.data && typeof error.response.data === 'object') {
+        const errors = {};
+        Object.keys(error.response.data).forEach(key => {
+          errors[key] = Array.isArray(error.response.data[key]) 
+            ? error.response.data[key][0] 
+            : error.response.data[key];
+        });
+        
+        return {
+          success: false,
+          error: 'Please correct the errors in your form.',
+          validationErrors: errors
         };
       }
       
-      // Handle authentication errors
-      if (error.isAuthError || (error.response && error.response.status === 401)) {
-        throw { 
-          error: 'No authentication token available. Please login again.',
-          isAuthError: true
-        };
-      }
-      
-      // Specific handling for CORS errors
-      if (error.isCorsError || error.message === 'Network Error') {
-        throw { 
-          error: 'Cannot connect to the server. Please try again later.', 
-          isCorsError: true 
-        };
-      }
-      
-      // Handle other error types
-      if (error.response) {
-        // Return the server's error response
-        throw error.response.data;
-      } else {
-        // Network or other error
-        throw { error: error.message || 'An unexpected error occurred' };
-      }
+      return {
+        success: false,
+        error: error.response?.data?.message || 'Failed to send message'
+      };
     }
   }
 };

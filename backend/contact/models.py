@@ -16,6 +16,11 @@ class ContactSubmission(models.Model):
     is_processed = models.BooleanField(default=False)
     admin_reply = models.TextField(blank=True, null=True)
     admin_reply_date = models.DateTimeField(null=True, blank=True)
+    
+    # New contact form fields
+    name = models.CharField(max_length=255, blank=True, null=True)
+    subject = models.CharField(max_length=255, blank=True, null=True)
+    message_type = models.CharField(max_length=50, blank=True, null=True)
 
     def __str__(self):
         return f"Submission by {self.email} on {self.created_at.strftime('%Y-%m-%d')}"

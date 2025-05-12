@@ -13,8 +13,9 @@ import json
 import traceback
 from django.db import models
 from django.db.models import Q
+from django.utils import timezone
 
-from .serializers import ContactSerializer
+from .serializers import ContactSerializer, ContactFormSerializer
 from .models import ContactSubmission
 from .email_service import send_notification_email
 
@@ -87,6 +88,51 @@ class ContactFormView(APIView):
         
         # Debug validation errors
         print(f"Validation errors: {serializer.errors}")
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class ContactMessageView(APIView):
+    """
+    API endpoint for sending contact form messages
+    """
+    permission_classes = [AllowAny]
+    
+    def post(self, request):
+        # Create a copy of request data
+        data = request.data.copy()
+        
+        # Add authenticated user email if available
+        if request.user.is_authenticated:
+            data['email'] = request.user.email
+            
+        serializer = ContactFormSerializer(data=data)
+        if serializer.is_valid():
+            submission = serializer.save()
+            
+            # Send email notification to admin
+            try:
+                subject = f"New Contact Form Message: {submission.subject}"
+                message = f"""
+                A new contact form message has been submitted:
+                
+                From: {submission.name} <{submission.email}>
+                Subject: {submission.subject}
+                Type: {submission.message_type}
+                
+                Message:
+                {submission.message}
+                """
+                send_mail(
+                    subject=subject,
+                    message=message,
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[settings.ADMIN_EMAIL],
+                    fail_silently=True,
+                )
+            except Exception as e:
+                print(f"Failed to send contact notification: {e}")
+                
+            return Response({"message": "Your message has been sent successfully!"}, status=status.HTTP_201_CREATED)
+        
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class SubmitFormView(APIView):
@@ -245,3 +291,53 @@ class UserAnalysesView(APIView):
             })
         
         return Response(data)
+
+class AdminReplyView(APIView):
+    """
+    API endpoint for admins to reply to user submissions
+    """
+    permission_classes = [IsAdminUser]
+    
+    def post(self, request, submission_id):
+        try:
+            submission = ContactSubmission.objects.get(id=submission_id)
+            
+            # Update submission with admin reply
+            submission.admin_reply = request.data.get('reply')
+            submission.admin_reply_date = timezone.now()
+            submission.is_processed = True
+            submission.save()
+            
+            # Send email notification to user
+            try:
+                subject = f"Response to your LinkedIn Profile Submission"
+                message = f"""
+                Hello,
+                
+                We've reviewed your LinkedIn profile submission and provided feedback:
+                
+                {submission.admin_reply}
+                
+                You can view this response in your account dashboard.
+                
+                Thank you for using our service!
+                """
+                
+                send_mail(
+                    subject=subject,
+                    message=message,
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[submission.email],
+                    fail_silently=True,
+                )
+                
+                print(f"Reply notification email sent to {submission.email}")
+            except Exception as e:
+                print(f"Failed to send reply notification: {e}")
+            
+            return Response({"message": "Reply sent successfully"}, status=status.HTTP_200_OK)
+            
+        except ContactSubmission.DoesNotExist:
+            return Response({"error": "Submission not found"}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

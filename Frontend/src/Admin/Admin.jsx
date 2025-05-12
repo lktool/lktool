@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { unifiedAuthService } from '../api/unifiedAuthService';
+// Update import to use the new API structure
+import { authService } from '../api';
 import './Admin.css';
 
 function Admin() {
@@ -12,7 +13,7 @@ function Admin() {
 
   // Check if user is already logged in as admin
   useEffect(() => {
-    if (unifiedAuthService.isAuthenticated() && unifiedAuthService.isAdmin()) {
+    if (authService.isAuthenticated() && authService.isAdmin()) {
       navigate('/admin/dashboard');
     }
   }, [navigate]);
@@ -29,8 +30,8 @@ function Admin() {
     setError('');
     
     try {
-      // Use the same unified auth service
-      const response = await unifiedAuthService.login(email, password);
+      // Use the new auth service
+      const response = await authService.login(email, password);
       
       if (response.success) {
         if (response.isAdmin) {
@@ -39,7 +40,7 @@ function Admin() {
         } else {
           // Regular user tried to log into admin
           setError('You do not have admin privileges');
-          unifiedAuthService.logout();
+          authService.logout();
         }
       } else {
         setError(response.error || 'Invalid credentials');

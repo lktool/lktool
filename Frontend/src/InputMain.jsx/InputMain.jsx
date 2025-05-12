@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import { unifiedAuthService } from '../api/unifiedAuthService';
-import './InputMain.css'; // Ensure CSS is correctly imported
+// Update to use the correct service that handles LinkedIn profile submissions
+import { submissionService } from '../api';
+import './InputMain.css';
 import LoadingSpinner from '../components/LoadingSpinner';
 
 function InputMain() {
@@ -39,12 +40,13 @@ function InputMain() {
         setError('');
         
         try {
-            const response = await unifiedAuthService.submitLinkedInProfile({
+            // This is the key integration point with the backend contact app
+            const response = await submissionService.submitProfile({
                 linkedin_url: formData.linkedin_url,
                 message: formData.message,
             });
             
-            console.log('Submission response:', response.data);
+            console.log('Submission response:', response);
             
             // Reset form on success
             setFormData({
@@ -60,7 +62,7 @@ function InputMain() {
             }, 5000);
             
         } catch (err) {
-            console.error('Error submitting form:', err);
+            console.error('Error submitting profile:', err);
             setError(err.response?.data?.message || 'Something went wrong. Please try again.');
         } finally {
             setLoading(false);

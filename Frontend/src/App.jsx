@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { useEffect } from "react";
-import { unifiedAuthService } from './api/unifiedAuthService';  // Add this import
+// Update import to use the new API structure
+import { authService } from './api';
 import Landing from "./Landing/Landing";
 import Admin from "./Admin/Admin";
 import Login from './Login/Login';
@@ -16,6 +17,7 @@ import AdminRoute from "./components/AdminRoute";
 import NavBar from "./NavBar/NavBar"; 
 import UserSubmissions from "./UserSubmissions/UserSubmissions";
 import PublicOnlyRoute from "./components/PublicOnlyRoute";
+import Contact from "./Contact/Contact";
 
 function App() {
   useEffect(() => {
@@ -27,13 +29,13 @@ function App() {
       if (token) {
         try {
           // Verify token is still valid
-          const isValid = await unifiedAuthService.verifyToken();
+          const isValid = await authService.verifyToken();
           if (!isValid) {
-            unifiedAuthService.logout();
+            authService.logout();
           }
         } catch (error) {
           console.error('Token verification failed:', error);
-          unifiedAuthService.logout();
+          authService.logout();
         }
       }
     };
@@ -80,6 +82,9 @@ function App() {
             </PublicOnlyRoute>
           } />
           <Route path="/admin/dashboard" element={<AdminRoute><FormData /></AdminRoute>} />
+          
+          {/* Contact route - publicly accessible */}
+          <Route path="/contact" element={<Contact />} />
           
           {/* Not Found Route */}
           <Route path="/not-found" element={<NotFound />} />

@@ -34,3 +34,21 @@ class ContactSerializer(serializers.ModelSerializer):
             print(f"Error processing analysis field: {str(e)}")
             representation['analysis'] = {}
         return representation
+
+class ContactFormSerializer(serializers.ModelSerializer):
+    """Serializer for generic contact form submissions"""
+    class Meta:
+        model = ContactSubmission
+        fields = ['name', 'email', 'subject', 'message', 'message_type']
+        
+    def validate_email(self, value):
+        if not value:
+            raise serializers.ValidationError("Email address is required.")
+        return value.lower()
+        
+    def validate_message(self, value):
+        if not value:
+            raise serializers.ValidationError("Message is required.")
+        if len(value) < 10:
+            raise serializers.ValidationError("Message must be at least 10 characters long.")
+        return value

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { unifiedAuthService } from '../api/unifiedAuthService';
+// Update import to use the new API structure
+import { authService } from '../api';
 import LoadingSpinner from './LoadingSpinner';
 
 function ProtectedRoute({ children }) {
@@ -11,13 +12,13 @@ function ProtectedRoute({ children }) {
     const checkAuth = async () => {
       try {
         // Check auth status via token in localStorage
-        if (unifiedAuthService.isAuthenticated()) {
+        if (authService.isAuthenticated()) {
           // Verify the token
-          const isTokenValid = await unifiedAuthService.verifyToken();
+          const isTokenValid = await authService.verifyToken();
           setIsAuthenticated(isTokenValid);
           
           if (!isTokenValid) {
-            unifiedAuthService.logout();
+            authService.logout();
           }
         } else {
           setIsAuthenticated(false);

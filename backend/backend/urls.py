@@ -1,40 +1,32 @@
 """
 URL configuration for backend project.
-
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/5.2/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
 from django.urls import path, include, re_path
 from django.views.generic import TemplateView
 from django.conf import settings
 from django.conf.urls.static import static
-from unified_auth_api.views import GoogleAuthView  # Import the view directly
+from users.views import GoogleAuthView  # Import the view directly
+from contact.admin_views import AdminSubmissionsView, AdminSubmissionDetailView
 
 urlpatterns = [
-    # Django admin site (renamed to avoid conflict)
+    # Django admin site
     path("django-admin/", admin.site.urls),
-    path('api/auth/', include('unified_auth_api.urls')),
-
-    path('api/contact/', include('contact.urls')),
-
-    # Direct access route for Google authentication at root level
-    path('auth/google/', GoogleAuthView.as_view(), name='direct_google_auth'),
     
-    # Add a route directly at root for the Google endpoint (no "auth/" prefix)
+    # API endpoints
+    path('api/auth/', include('users.urls')),
+    path('api/contact/', include('contact.urls')),
+    
+    # Admin API endpoints - Include admin_panel URLs
+    path('api/admin/', include('admin_panel.urls')),
+    path('api/admin/submissions/', AdminSubmissionsView.as_view(), name='admin_submissions'),
+    path('api/admin/submissions/<int:submission_id>/', AdminSubmissionDetailView.as_view(), name='admin_submission_detail'),
+    
+    # Direct routes for Google auth (accessible from both paths)
+    path('auth/google/', GoogleAuthView.as_view(), name='direct_google_auth'),
     path('google/', GoogleAuthView.as_view(), name='root_google_auth'),
-
-    # SPA fallback - update pattern to exclude our new endpoint
+    
+    # SPA fallback - handle all other routes with React app
     re_path(
         r'^(?!django-admin/|api/|static/|media/|auth/|google/).*$',
         TemplateView.as_view(template_name="index.html"),

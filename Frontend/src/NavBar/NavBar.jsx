@@ -1,19 +1,20 @@
 import "./NavBar.css";
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { unifiedAuthService } from '../api/unifiedAuthService';
+// Update import to use the new API structure
+import { authService } from '../api';
 
 function NavBar() {
     const navigate = useNavigate();
     const location = useLocation();
-    const [isAuthenticated, setIsAuthenticated] = useState(unifiedAuthService.isAuthenticated());
-    const [isAdmin, setIsAdmin] = useState(unifiedAuthService.isAdmin());
+    const [isAuthenticated, setIsAuthenticated] = useState(authService.isAuthenticated());
+    const [isAdmin, setIsAdmin] = useState(authService.isAdmin());
 
     useEffect(() => {
         // Function to update authentication state
         const updateAuthState = () => {
-            setIsAuthenticated(unifiedAuthService.isAuthenticated());
-            setIsAdmin(unifiedAuthService.isAdmin());
+            setIsAuthenticated(authService.isAuthenticated());
+            setIsAdmin(authService.isAdmin());
         };
 
         // Check on component mount
@@ -29,7 +30,7 @@ function NavBar() {
     }, []);
 
     const handleLogout = () => {
-        unifiedAuthService.logout();
+        authService.logout();
         window.dispatchEvent(new Event('authChange'));
         navigate('/login');
     };
@@ -81,6 +82,9 @@ function NavBar() {
                     ) : (
                         <button onClick={handleLogout}>Logout</button>
                     )}
+
+                    {/* Contact link */}
+                    <Link to="/contact" className="nav-link">Contact</Link>
                 </div>
             </div>
         </nav>

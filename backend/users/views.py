@@ -1,332 +1,266 @@
-from django.shortcuts import render
-from rest_framework import generics, status, permissions
-from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework_simplejwt.views import TokenObtainPairView
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
-from django.contrib.auth import get_user_model
-from django.contrib.auth.tokens import default_token_generator
-from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
-from django.utils.encoding import force_bytes, force_str
-from django.core.mail import send_mail
+from django.contrib.auth import authenticate, get_user_model
 from django.conf import settings
-from .serializers import (
-    UserSerializer, RegisterSerializer, CustomTokenObtainPairSerializer,
-    PasswordResetSerializer, PasswordResetConfirmSerializer
-)
-from .utils import verify_email_token, send_verification_email, build_frontend_url
-import threading
-from django.db import transaction
+from django.utils.encoding import force_str
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.contrib.auth.tokens import default_token_generator
+from django.shortcuts import get_object_or_404
+from django.core.mail import send_mail
+from google.oauth2 import id_token
+from google.auth.transport import requests as google_requests
+
 import logging
-from django.utils.decorators import method_decorator
-from django.views.decorators.cache import cache_page
-from django.views.decorators.vary import vary_on_headers
+from .serializers import UserSerializer, RegisterSerializer, PasswordResetSerializer, PasswordResetConfirmSerializer
 
-logger = logging.getLogger(__name__)
 User = get_user_model()
+logger = logging.getLogger(__name__)
 
-class CustomTokenObtainPairView(TokenObtainPairView):
-    serializer_class = CustomTokenObtainPairSerializer
+class LoginView(APIView):
+    permission_classes = [AllowAny]
     
-    def post(self, request, *args, **kwargs):
-        # Optimize by caching frequently accessed users
-        response = super().post(request, *args, **kwargs)
-        return response
+    def post(self, request):
+        email = request.data.get("email")
+        password = request.data.get("password")
 
-class RegisterView(generics.CreateAPIView):
-    queryset = User.objects.all()
-    permission_classes = (permissions.AllowAny,)
-    serializer_class = RegisterSerializer
+        if not email or not password:
+            return Response({"detail": "Email and password required."}, status=400)
 
-    @transaction.atomic
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        
-        # Database write in transaction for atomicity and speed
-        user = serializer.save()
-        
-        # Make sure the user is NOT verified upon registration
-        user.is_verified = False
-        user.save()
-        
-        # Generate token for the user
-        refresh = RefreshToken.for_user(user)
-        
-        # Start email sending in background thread
-        if hasattr(settings, 'SEND_VERIFICATION_EMAIL') and settings.SEND_VERIFICATION_EMAIL:
-            email_thread = threading.Thread(
-                target=send_verification_email,
-                args=(user,)
-            )
-            email_thread.daemon = True  # Daemon thread won't block app shutdown
-            email_thread.start()
-        
-        return Response({
-            "user": UserSerializer(user).data,
-            "message": "User created successfully. Please check your email for verification instructions.",
-            "token": str(refresh.access_token),
-        }, status=status.HTTP_201_CREATED)
+        # Special case for admin credentials in settings
+        if hasattr(settings, 'ADMIN_EMAIL') and hasattr(settings, 'ADMIN_PASSWORD'):
+            if email == settings.ADMIN_EMAIL and password == settings.ADMIN_PASSWORD:
+                refresh = RefreshToken()
+                refresh["email"] = email
+                refresh["role"] = "admin"
+                return Response({
+                    "refresh": str(refresh),
+                    "access": str(refresh.access_token),
+                    "role": "admin",
+                    "email": email,
+                    "user_id": "admin"
+                })
 
-class EmailVerificationView(APIView):
-    """
-    View to handle email verification
-    """
-    permission_classes = (permissions.AllowAny,)
+        user = authenticate(request, email=email, password=password)
+        if user is not None:
+            # Check if email is verified
+            if hasattr(user, 'email_verified') and not user.email_verified:
+                return Response({
+                    "detail": "Email not verified. Please verify your email first."
+                }, status=401)
+                
+            refresh = RefreshToken.for_user(user)
+            refresh["email"] = user.email
+            refresh["role"] = user.role
+            refresh["user_id"] = user.id
+            
+            return Response({
+                "refresh": str(refresh),
+                "access": str(refresh.access_token),
+                "role": user.role,
+                "email": user.email,
+                "user_id": user.id
+            })
+
+        return Response({"detail": "Invalid credentials."}, status=401)
+
+class RegisterView(APIView):
+    permission_classes = [AllowAny]
+    
+    def post(self, request):
+        serializer = RegisterSerializer(data=request.data)
+        if serializer.is_valid():
+            user = serializer.save()
+            user.email_verified = False
+            user.save()
+            
+            # Generate verification token
+            uid = urlsafe_base64_encode(force_str(user.pk).encode())
+            token = default_token_generator.make_token(user)
+            
+            # Build verification URL
+            verification_url = f"{settings.FRONTEND_URL}/verify-email/{uid}-{token}"
+            
+            # Send verification email
+            try:
+                send_mail(
+                    'Verify Your Email',
+                    f'Please click the link to verify your email: {verification_url}',
+                    settings.DEFAULT_FROM_EMAIL,
+                    [user.email],
+                    fail_silently=False,
+                )
+            except Exception as e:
+                logger.error(f"Failed to send verification email: {str(e)}")
+            
+            return Response({
+                "message": "Registration successful! Please check your email to verify your account."
+            }, status=201)
+            
+        return Response(serializer.errors, status=400)
+
+class VerifyEmailView(APIView):
+    permission_classes = [AllowAny]
     
     def post(self, request):
         token = request.data.get('token')
         
-        # Enhanced debug logging
-        logger.info(f"Received verification request with token: {token[:10]}...")
-        
         if not token:
-            logger.error("Verification failed: No token provided")
-            return Response(
-                {'error': 'Verification token is required'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
-        email = verify_email_token(token)
-        
-        if email is None:
-            logger.error("Verification failed: Token expired")
-            return Response(
-                {'error': 'Verification link has expired. Please request a new one.'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        elif email is False:
-            logger.error("Verification failed: Invalid token")
-            return Response(
-                {'error': 'Invalid verification token.'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
-        logger.info(f"Token verified successfully for email: {email}")
+            return Response({"detail": "No verification token provided."}, status=400)
         
         try:
-            user = User.objects.get(email=email)
+            uid, token_key = token.split('-', 1)
+            user_id = force_str(urlsafe_base64_decode(uid))
+            user = get_object_or_404(User, pk=user_id)
             
-            if user.is_verified:
-                return Response(
-                    {'message': 'Email already verified. You can now log in.'},
-                    status=status.HTTP_200_OK
-                )
-            
-            user.is_verified = True
-            user.save()
-            
-            return Response(
-                {'message': 'Email successfully verified. You can now log in.'},
-                status=status.HTTP_200_OK
-            )
-        except User.DoesNotExist:
-            logger.error(f"User not found for email: {email}")
-            return Response(
-                {'error': 'User not found.'},
-                status=status.HTTP_404_NOT_FOUND
-            )
-
-class ResendVerificationEmailView(APIView):
-    """
-    View to resend verification email
-    """
-    permission_classes = (permissions.AllowAny,)
-    
-    def post(self, request):
-        email = request.data.get('email')
-        
-        if not email:
-            return Response(
-                {'error': 'Email is required'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-            
-        try:
-            user = User.objects.get(email=email)
-            
-            if user.is_verified:
-                return Response(
-                    {'message': 'Email already verified. You can now log in.'},
-                    status=status.HTTP_200_OK
-                )
-                
-            # Send verification email
-            send_verification_email(user)
-            
-            return Response(
-                {'message': 'Verification email sent successfully. Please check your inbox.'},
-                status=status.HTTP_200_OK
-            )
-            
-        except User.DoesNotExist:
-            # Don't reveal which emails exist for security
-            return Response(
-                {'message': 'If this email exists in our system, a verification email has been sent.'},
-                status=status.HTTP_200_OK
-            )
-
-class PasswordResetView(APIView):
-    permission_classes = (permissions.AllowAny,)
-    
-    def post(self, request):
-        try:
-            serializer = PasswordResetSerializer(data=request.data)
-            if serializer.is_valid():
-                email = serializer.validated_data['email']
-                try:
-                    user = User.objects.get(email=email)
-                    
-                    # Generate password reset token
-                    token = default_token_generator.make_token(user)
-                    uid = urlsafe_base64_encode(force_bytes(user.pk))
-                    
-                    # FIXED: Use the helper function to build URL with hash
-                    reset_url = build_frontend_url(f"/reset-password/{uid}/{token}")
-                    
-                    # Start email sending in background thread
-                    subject = 'Password Reset Request'
-                    
-                    # HTML message with proper formatting and escaping
-                    html_message = f"""
-                    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                        <h2 style="color: #328E6E;">Password Reset</h2>
-                        <p>Hello,</p>
-                        <p>We received a request to reset your password. Click the link below to set a new password:</p>
-                        <p style="text-align: center; margin: 30px 0;">
-                            <a href="{reset_url}" style="background-color: #67AE6E; color: white; padding: 12px 20px; text-decoration: none; border-radius: 4px; display: inline-block;">
-                                Reset Password
-                            </a>
-                        </p>
-                        <p>Or copy and paste this link in your browser:</p>
-                        <p style="word-break: break-all; background-color: #f5f5f5; padding: 10px; border-radius: 4px;">
-                            {reset_url}
-                        </p>
-                        <p>This link will expire in 24 hours.</p>
-                        <p>If you didn't request a password reset, please ignore this email.</p>
-                    </div>
-                    """
-                    
-                    message = f'Please click the following link to reset your password: {reset_url}'
-                    
-                    try:
-                        email_thread = threading.Thread(
-                            target=send_email_async,
-                            args=(subject, message, settings.DEFAULT_FROM_EMAIL, [user.email], html_message)
-                        )
-                        email_thread.daemon = True
-                        email_thread.start()
-                        
-                        logger.info(f"Password reset email queued for: {email}")
-                    except Exception as email_err:
-                        logger.error(f"Failed to queue password reset email: {str(email_err)}")
-                    
-                    # Return success immediately without waiting for email
-                    return Response(
-                        {"message": "Password reset email has been sent."},
-                        status=status.HTTP_200_OK
-                    )
-                except User.DoesNotExist:
-                    # Don't reveal which emails are in the system
-                    logger.info(f"Password reset requested for non-existent email: {email}")
-                    return Response(
-                        {"message": "Password reset email has been sent."},
-                        status=status.HTTP_200_OK
-                    )
+            if default_token_generator.check_token(user, token_key):
+                user.email_verified = True
+                user.save()
+                return Response({"detail": "Email verified successfully."}, status=200)
             else:
-                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+                return Response({"detail": "Invalid or expired verification token."}, status=400)
+                
         except Exception as e:
-            # Log the error for debugging
-            logger.error(f"Password reset error: {str(e)}")
-            return Response(
-                {"error": "An unexpected error occurred."},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+            logger.error(f"Email verification error: {str(e)}")
+            return Response({"detail": "Invalid verification token format."}, status=400)
 
-class PasswordResetConfirmView(APIView):
-    permission_classes = (permissions.AllowAny,)
+class ProfileView(APIView):
+    permission_classes = [IsAuthenticated]
     
-    def post(self, request, uidb64, token):
-        try:
-            uid = force_str(urlsafe_base64_decode(uidb64))
-            user = User.objects.get(pk=uid)
-            
-            # Check if token is valid
-            if default_token_generator.check_token(user, token):
-                serializer = PasswordResetConfirmSerializer(data=request.data)
-                if serializer.is_valid():
-                    # Set new password
-                    user.set_password(serializer.validated_data['password'])
-                    user.save()
-                    return Response(
-                        {"message": "Password has been reset successfully."},
-                        status=status.HTTP_200_OK
-                    )
-                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-            return Response(
-                {"error": "Invalid token"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        except (User.DoesNotExist, ValueError, TypeError):
-            return Response(
-                {"error": "Invalid request"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-
-class UserProfileView(APIView):
-    """
-    View to retrieve the authenticated user's profile
-    """
-    permission_classes = (permissions.IsAuthenticated,)  # Ensure this is set
-         
-    @method_decorator(cache_page(60 * 5))  # Cache for 5 minutes
-    @method_decorator(vary_on_headers('Authorization'))
     def get(self, request):
-        if not request.user.is_authenticated:
-            return Response({"detail": "Authentication credentials were not provided."},
-                          status=status.HTTP_401_UNAUTHORIZED)
+        # Handle special case for admin user with token
+        if hasattr(request.auth, 'payload'):
+            payload = request.auth.payload
+            if payload.get('role') == 'admin' and payload.get('email') == getattr(settings, 'ADMIN_EMAIL', None):
+                return Response({
+                    "email": settings.ADMIN_EMAIL,
+                    "role": "admin",
+                    "is_staff": True,
+                    "id": "admin"
+                })
         
-        # CRITICAL FIX: Ensure user is verified
-        if not getattr(request.user, 'is_verified', True):
-            return Response({"detail": "Email not verified. Please verify your email first."},
-                          status=status.HTTP_403_FORBIDDEN)
+        # Regular user
         serializer = UserSerializer(request.user)
         return Response(serializer.data)
 
-class VerifyTokenView(APIView):
-    """
-    View to verify token validity
-    """
-    permission_classes = (permissions.IsAuthenticated,)
+class GoogleAuthView(APIView):
+    permission_classes = [AllowAny]
     
-    def get(self, request):
-        # If we got here, the token is valid (IsAuthenticated check passed)
-        return Response({
-            'valid': True,
-            'user_id': request.user.id,
-            'email': request.user.email
-        })
-
-class CheckEmailStatusView(APIView):
-    """
-    Check if an email exists and is verified (for debugging)
-    """
-    permission_classes = (permissions.AllowAny,)
+    def options(self, request, *args, **kwargs):
+        """Handle preflight OPTIONS requests correctly"""
+        response = Response()
+        origin = request.META.get('HTTP_ORIGIN', '*')
+        response["Access-Control-Allow-Origin"] = origin
+        response["Access-Control-Allow-Methods"] = "POST, OPTIONS"
+        response["Access-Control-Allow-Headers"] = "Content-Type, Accept, Authorization, X-Requested-With"
+        response["Access-Control-Allow-Credentials"] = "true"
+        return response
     
     def post(self, request):
-        email = request.data.get('email')
+        response = Response()
+        origin = request.META.get('HTTP_ORIGIN', '*')
+        response["Access-Control-Allow-Origin"] = origin
+        response["Access-Control-Allow-Credentials"] = "true"
         
-        if not email:
-            return Response({'error': 'Email is required'}, status=status.HTTP_400_BAD_REQUEST)
+        credential = request.data.get('credential')
+        action = request.data.get('action', 'login')
         
-        # Normalize the email
-        email = email.lower().strip()
+        if not credential:
+            response.data = {"error": "Google credential is required"}
+            response.status_code = 400
+            return response
         
         try:
-            user = User.objects.get(email=email)
-            return Response({
-                'exists': True,
-                'is_verified': user.is_verified
-            })
-        except User.DoesNotExist:
-            return Response({'exists': False})
+            # Verify Google token
+            client_id = settings.GOOGLE_OAUTH_CLIENT_ID
+            idinfo = id_token.verify_oauth2_token(
+                credential, google_requests.Request(), client_id)
+                
+            # Check issuer
+            if idinfo['iss'] not in ['accounts.google.com', 'https://accounts.google.com']:
+                response.data = {"error": "Wrong issuer"}
+                response.status_code = 400
+                return response
+                
+            # Get user info from token
+            google_id = idinfo['sub']
+            email = idinfo['email']
+            email_verified = idinfo.get('email_verified', False)
+            
+            # Check if user exists
+            try:
+                user = User.objects.get(email=email)
+                
+                # Handle signup attempt for existing user
+                if action == 'signup':
+                    response.data = {
+                        "error": "User already exists with this email",
+                        "needs_login": True
+                    }
+                    response.status_code = 409
+                    return response
+                    
+                # Update Google ID if not set
+                if not user.google_id:
+                    user.google_id = google_id
+                    user.save(update_fields=['google_id'])
+                
+                # Create tokens
+                refresh = RefreshToken.for_user(user)
+                refresh["email"] = user.email
+                refresh["role"] = user.role
+                refresh["user_id"] = user.id
+                
+                response.data = {
+                    "access": str(refresh.access_token),
+                    "refresh": str(refresh),
+                    "email": user.email,
+                    "role": user.role,
+                    "user_id": user.id,
+                    "is_new_user": False
+                }
+                response.status_code = 200
+                return response
+                
+            except User.DoesNotExist:
+                # Handle login attempt for non-existent user
+                if action == 'login':
+                    response.data = {
+                        "error": "No account exists with this email",
+                        "needs_signup": True
+                    }
+                    response.status_code = 404
+                    return response
+                
+                # Create new user for signup
+                user = User.objects.create_user(
+                    email=email,
+                    password=None,
+                    google_id=google_id,
+                    email_verified=email_verified
+                )
+                
+                # Create tokens
+                refresh = RefreshToken.for_user(user)
+                refresh["email"] = user.email
+                refresh["role"] = user.role
+                refresh["user_id"] = user.id
+                
+                response.data = {
+                    "access": str(refresh.access_token),
+                    "refresh": str(refresh),
+                    "email": user.email,
+                    "role": user.role,
+                    "user_id": user.id,
+                    "is_new_user": True
+                }
+                response.status_code = 201
+                return response
+                
+        except Exception as e:
+            logger.exception(f"Google auth error: {str(e)}")
+            response.data = {"error": f"Authentication failed: {str(e)}"}
+            response.status_code = 500
+            return response

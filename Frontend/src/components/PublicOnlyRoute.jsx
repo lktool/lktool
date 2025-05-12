@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
-import { unifiedAuthService } from '../api/unifiedAuthService';
+// Update import to use the new API structure
+import { authService } from '../api';
 import LoadingSpinner from './LoadingSpinner';
 
 function PublicOnlyRoute({ children, adminRedirect = '/admin/dashboard', userRedirect = '/inputMain' }) {
@@ -8,14 +9,14 @@ function PublicOnlyRoute({ children, adminRedirect = '/admin/dashboard', userRed
   
   useEffect(() => {
     const checkAuth = async () => {
-      const isAuthenticated = unifiedAuthService.isAuthenticated();
+      const isAuthenticated = authService.isAuthenticated();
       
       if (isAuthenticated) {
-        const isAdmin = unifiedAuthService.isAdmin();
-        const isValid = await unifiedAuthService.verifyToken();
+        const isAdmin = authService.isAdmin();
+        const isValid = await authService.verifyToken();
         
         if (!isValid) {
-          unifiedAuthService.logout();
+          authService.logout();
           setAuthStatus({ checking: false, isAuthenticated: false, isAdmin: false });
         } else {
           setAuthStatus({ checking: false, isAuthenticated: true, isAdmin });

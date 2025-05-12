@@ -4,7 +4,8 @@ import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { validateEmail } from "../Utils/validate";
 import GoogleLoginButton from "../components/GoogleLoginButton";
-import { unifiedAuthService } from '../api/unifiedAuthService';
+// Update import to use the new API structure
+import { authService } from '../api';
 
 function Login() {
     const [email, setEmail] = useState('');
@@ -60,10 +61,10 @@ function Login() {
         if (expiredToken === 'true') {
             setError('Your session has expired. Please log in again.');
             localStorage.removeItem('expired_token');
-            unifiedAuthService.logout();
+            authService.logout();
         }
         
-        if (unifiedAuthService.isAuthenticated()) {
+        if (authService.isAuthenticated()) {
             navigate('/inputMain');
         }
     }, [navigate]);
@@ -88,7 +89,7 @@ function Login() {
         setError('');
         
         try {
-            const response = await unifiedAuthService.login(email, password);
+            const response = await authService.login(email, password);
             
             if (response.success) {
                 // If admin credentials were used on the user login page
@@ -127,7 +128,7 @@ function Login() {
         setResendStatus({ sent: false, loading: true });
         
         try {
-            await unifiedAuthService.resendVerification(email);
+            await authService.requestPasswordReset(email);
             setResendStatus({ sent: true, loading: false });
             setError("");
         } catch (err) {

@@ -77,11 +77,11 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "users",
-    "contact",  # Add the new contact app
+    "contact",
+    "admin_panel",  # Add the new admin_panel app
     "rest_framework",
     "rest_framework_simplejwt",
     "corsheaders",
-    "unified_auth_api",
 ]
 
 # Create a custom middleware to debug CORS requests
@@ -114,9 +114,8 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    'admin_api.middleware.AdminAuthMiddleware',  # Updated path - moved middleware to its own file
+    'users.middleware.RoleBasedMiddleware',  # Add custom role middleware
     'django.middleware.cache.FetchFromCacheMiddleware',
-    'unified_auth_api.middleware.RoleMiddleware',
 ]
 
 ROOT_URLCONF = "backend.urls"
@@ -233,17 +232,13 @@ SIMPLE_JWT = {
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
     'ROTATE_REFRESH_TOKENS': False,
     'BLACKLIST_AFTER_ROTATION': True,
-    'UPDATE_LAST_LOGIN': True,  # Track last login time
+    'UPDATE_LAST_LOGIN': True,
     'AUTH_HEADER_TYPES': ('Bearer',),
     'AUTH_HEADER_NAME': 'HTTP_AUTHORIZATION',
     'USER_ID_FIELD': 'id',
     'USER_ID_CLAIM': 'user_id',
     'TOKEN_TYPE_CLAIM': 'token_type',
     'JTI_CLAIM': 'jti',
-    'TOKEN_USER_CLASS': 'users.CustomUser',  # Your custom user model
-    'SLIDING_TOKEN_REFRESH_EXP_CLAIM': 'refresh_exp',
-    'SLIDING_TOKEN_LIFETIME': timedelta(days=1),
-    'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=7),
 }
 
 # Fix CORS settings
