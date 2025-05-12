@@ -55,10 +55,19 @@ const FormData = () => {
         console.log("Fetching submissions with admin token");
         // Use adminService instead of adminSubmissionService
         const result = await adminService.getSubmissions({ status: 'pending' });
-        console.log("Submissions fetched:", result.data.length);
-        setSubmissions(result.data);
+        console.log("Submissions API response:", result);
+        
+        // Check if result is successful and has data array
+        if (result.success && Array.isArray(result.data)) {
+          setSubmissions(result.data);
+          console.log("Submissions fetched:", result.data.length);
+        } else {
+          console.warn("Invalid submissions data format", result);
+          setSubmissions([]); // Set empty array to prevent errors
+        }
       } catch (error) {
         console.error('Error fetching submissions:', error);
+        setSubmissions([]); // Set empty array to prevent errors
       } finally {
         setLoading(false);
       }

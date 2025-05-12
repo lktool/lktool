@@ -20,8 +20,14 @@ export const apiClient = axios.create({
  */
 apiClient.interceptors.request.use(
   (config) => {
+    // Don't modify URLs that already include the base URL or start with http
+    if (config.url.startsWith('http') || config.url.startsWith(BASE_URL)) {
+      // URL is already absolute, don't modify it
+      return config;
+    }
+
     // Make sure API URLs have the /api prefix consistently
-    if (!config.url.startsWith('http') && !config.url.startsWith('/api/') && config.url !== '/auth/refresh/') {
+    if (!config.url.startsWith('/api/') && !config.url.startsWith('/auth/')) {
       config.url = '/api' + (config.url.startsWith('/') ? config.url : `/${config.url}`);
     }
     

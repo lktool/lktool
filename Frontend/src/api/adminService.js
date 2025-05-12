@@ -13,19 +13,27 @@ export const adminService = {
    */
   async getSubmissions(filters = {}) {
     try {
+      console.log(`Fetching submissions from: ${ENDPOINTS.ADMIN.SUBMISSIONS}`);
+      
       const response = await apiClient.get(ENDPOINTS.ADMIN.SUBMISSIONS, {
         params: filters
       });
       
+      // Add defensive check for response data
+      if (!response || !response.data) {
+        throw new Error('Invalid response format');
+      }
+      
       return { 
         success: true,
-        data: response.data
+        data: Array.isArray(response.data) ? response.data : []
       };
     } catch (error) {
       console.error('Error fetching submissions:', error);
       return {
         success: false,
-        error: error.response?.data?.error || 'Failed to fetch submissions'
+        error: error.response?.data?.error || 'Failed to fetch submissions',
+        data: [] // Always return an array to prevent "length" errors
       };
     }
   },

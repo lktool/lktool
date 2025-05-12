@@ -34,13 +34,14 @@ export const ENDPOINTS = {
     ADMIN_REPLY: (id) => `/submissions/${id}/reply/`,
   },
   
-  // Admin endpoints
+  // Admin endpoints - Fix paths to include /api prefix consistently
   ADMIN: {
-    SUBMISSIONS: `${BASE_URL}/api/admin/submissions`,
-    SUBMIT_REPLY: (id) => `/api/contact/submissions/${id}/reply/`,
+    // Fix: Make sure all admin endpoints use the full URL with /api prefix
+    SUBMISSIONS: `${BASE_URL}/api/admin/submissions/`,
+    SUBMIT_REPLY: (id) => `${BASE_URL}/api/contact/submissions/${id}/reply/`,
     PROFILE_ANALYSIS: `${BASE_URL}/api/admin/analyses/`,
-    ANALYSIS_DETAIL: (id) => `/api/admin/analyses/${id}/`,
-    SUBMISSION_ANALYSIS_STATUS: (id) => `/api/admin/submissions/${id}/analysis-status/`,
+    ANALYSIS_DETAIL: (id) => `${BASE_URL}/api/admin/analyses/${id}/`,
+    SUBMISSION_ANALYSIS_STATUS: (id) => `${BASE_URL}/api/admin/submissions/${id}/analysis-status/`,
     DASHBOARD_STATS: `${BASE_URL}/api/admin/dashboard/stats/`,
   }
 };
