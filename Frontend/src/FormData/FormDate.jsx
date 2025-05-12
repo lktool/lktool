@@ -53,7 +53,11 @@ const FormData = () => {
       setLoading(true);
       try {
         console.log("Fetching submissions with admin token");
-        // Use adminService instead of adminSubmissionService
+        
+        // Explicitly log admin token availability
+        const token = localStorage.getItem('token');
+        console.log(`Admin token available: ${!!token}`);
+        
         const result = await adminService.getSubmissions({ status: 'pending' });
         console.log("Submissions API response:", result);
         
@@ -67,6 +71,8 @@ const FormData = () => {
         }
       } catch (error) {
         console.error('Error fetching submissions:', error);
+        console.error('Error details:', error.response?.data || 'No response data');
+        console.error('Error status:', error.response?.status);
         setSubmissions([]); // Set empty array to prevent errors
       } finally {
         setLoading(false);
@@ -75,6 +81,18 @@ const FormData = () => {
     
     fetchSubmissions();
   }, []);
+
+  useEffect(() => {
+    if (selectedSubmission) {
+      // Pre-load LinkedIn URL for analysis
+      console.log(`Selected submission: ${selectedSubmission.id} - ${selectedSubmission.linkedin_url}`);
+      
+      // Could pre-set some fields based on URL structure or previously saved analysis
+      if (selectedSubmission.linkedin_url.includes('premium')) {
+        setForm(prev => ({...prev, accountType: 'premium'}));
+      }
+    }
+  }, [selectedSubmission]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -230,7 +248,7 @@ const FormData = () => {
     setReplyStatus('');
 
     try {
-      // Use adminService for reply submission
+      // After the reply submission, we should trigger the analysis submission too
       const result = await adminService.submitReply(selectedSubmission.id, replyText);
       
       if (result.success) {
