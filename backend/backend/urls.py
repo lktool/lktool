@@ -28,11 +28,15 @@ urlpatterns = [
 
     path('api/contact/', include('contact.urls')),
 
-    # Direct access route for Google authentication
+    # Direct access route for Google authentication at root level
     path('auth/google/', GoogleAuthView.as_view(), name='direct_google_auth'),
+    
+    # Add a route directly at root for the Google endpoint (no "auth/" prefix)
+    path('google/', GoogleAuthView.as_view(), name='root_google_auth'),
 
+    # SPA fallback - update pattern to exclude our new endpoint
     re_path(
-        r'^(?!django-admin/|api/|static/|media/|auth/).*$',
+        r'^(?!django-admin/|api/|static/|media/|auth/|google/).*$',
         TemplateView.as_view(template_name="index.html"),
         name="spa-fallback"
     ),

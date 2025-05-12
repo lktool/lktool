@@ -100,8 +100,8 @@ const GoogleLoginButton = ({ onSuccess, actionType = 'login' }) => {
       
       console.log("Verifying Google token with backend");
       
-      // Use direct URL to avoid path construction issues
-      const url = 'https://lktool.onrender.com/auth/google/';
+      // Try with '/google/' endpoint (no 'auth/' prefix) which we just added
+      const url = 'https://lktool.onrender.com/google/';
       console.log("Google Auth URL:", url);
       
       // Simplified fetch to avoid preflight issues
