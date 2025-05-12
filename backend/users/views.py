@@ -1,20 +1,20 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
-from rest_framework.permissions = AllowAny, IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
-from django.contrib.auth = authenticate, get_user_model
-from django.conf = settings
-from django.utils.encoding = force_str
-from django.utils.http = urlsafe_base64_encode, urlsafe_base64_decode
-from django.contrib.auth.tokens = default_token_generator
-from django.shortcuts = get_object_or_404
-from django.core.mail = send_mail
-from google.oauth2 = id_token
-from google.auth.transport = requests as google_requests
+from django.contrib.auth import authenticate, get_user_model
+from django.conf import settings
+from django.utils.encoding import force_str
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.contrib.auth.tokens import default_token_generator
+from django.shortcuts import get_object_or_404
+from django.core.mail import send_mail
+from google.oauth2 import id_token
+from google.auth.transport import requests as google_requests
 
 import logging
-from .serializers = UserSerializer, RegisterSerializer, PasswordResetSerializer, PasswordResetConfirmSerializer
+from .serializers import UserSerializer, RegisterSerializer, PasswordResetSerializer, PasswordResetConfirmSerializer
 
 User = get_user_model()
 logger = logging.getLogger(__name__)
@@ -182,24 +182,13 @@ class ProfileView(APIView):
         # Handle special case for admin user with token
         if hasattr(request.auth, 'payload'):
             payload = request.auth.payload
-            
-            # Log the payload for debugging
-            print(f"Profile request payload: {payload}")
-            
-            # Add explicit check for ADMIN_EMAIL in settings
-            admin_email = getattr(settings, 'ADMIN_EMAIL', None)
-            print(f"Checking admin: Request email={payload.get('email')}, Settings email={admin_email}")
-            
-            if payload.get('role') == 'admin' and payload.get('email') == admin_email:
-                print(f"Admin access granted for {admin_email}")
+            if payload.get('role') == 'admin' and payload.get('email') == getattr(settings, 'ADMIN_EMAIL', None):
                 return Response({
-                    "email": admin_email,
+                    "email": settings.ADMIN_EMAIL,
                     "role": "admin",
                     "is_staff": True,
                     "id": "admin"
                 })
-            else:
-                print(f"Not admin: role={payload.get('role')}, email match={payload.get('email') == admin_email}")
         
         # Regular user
         serializer = UserSerializer(request.user)
