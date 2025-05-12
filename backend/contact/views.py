@@ -146,8 +146,45 @@ class SubmitFormView(APIView):
             print(f"Associating submission with authenticated user: {request.user.email}")
             submission = serializer.save(user=request.user)
             
-            # Don't try to save analysis data since the field doesn't exist
-            return Response(ContactSerializer(submission).data, status=status.HTTP_201_CREATED)
+            # Send email notification to admin
+            try:
+                subject = f"New LinkedIn Profile Submission: {submission.email}"
+                message = f"""
+                A new LinkedIn profile has been submitted:
+                
+                Email: {submission.email}
+                LinkedIn URL: {submission.linkedin_url}
+                
+                Message:
+                {submission.message or 'No additional message provided'}
+                
+                You can review this submission in the admin dashboard.
+                """
+                
+                # Print debug information before sending
+                print(f"Attempting to send admin notification email to {settings.ADMIN_EMAIL}")
+                
+                send_mail(
+                    subject=subject,
+                    message=message,
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[settings.ADMIN_EMAIL],
+                    fail_silently=False,
+                )
+                
+                print(f"Admin notification email sent successfully to {settings.ADMIN_EMAIL}")
+            except Exception as e:
+                print(f"Failed to send admin notification email: {str(e)}")
+                # Log the error but don't affect the user response
+                logger.error(f"Failed to send admin notification: {str(e)}", exc_info=True)
+            
+            # Return the submission data along with a success message
+            return Response({
+                "success": True, 
+                "data": serializer.data,
+                "message": "LinkedIn profile submitted successfully!"
+            }, status=status.HTTP_201_CREATED)
+            
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET'])

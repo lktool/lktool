@@ -291,7 +291,7 @@ CSRF_TRUSTED_ORIGINS = [
     "http://127.0.0.1:3000",
 ]
 
-# Email Configuration - Properly load from environment
+# Email Configuration - Properly load from environment with defaults
 EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
 EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
 EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 587))
@@ -299,12 +299,22 @@ EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'True').lower() == 'true'
 EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
 
-# Handle environment variables with quotes
-DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', '')
-if DEFAULT_FROM_EMAIL and (DEFAULT_FROM_EMAIL.startswith('"') and DEFAULT_FROM_EMAIL.endswith('"')):
-    DEFAULT_FROM_EMAIL = DEFAULT_FROM_EMAIL[1:-1]
-if not DEFAULT_FROM_EMAIL:
-    DEFAULT_FROM_EMAIL = EMAIL_HOST_USER or 'noreply@yoursite.com'
+# Default to EMAIL_HOST_USER if no DEFAULT_FROM_EMAIL is provided
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL') or EMAIL_HOST_USER or 'noreply@lktool.com'
+
+# Admin email for receiving notifications
+ADMIN_EMAIL = os.environ.get('ADMIN_EMAIL') or DEFAULT_FROM_EMAIL
+
+# Show email settings in logs for debugging
+print(f"\n--- Email Configuration ---")
+print(f"EMAIL_BACKEND: {EMAIL_BACKEND}")
+print(f"EMAIL_HOST: {EMAIL_HOST}")
+print(f"EMAIL_PORT: {EMAIL_PORT}")
+print(f"EMAIL_USE_TLS: {EMAIL_USE_TLS}")
+print(f"EMAIL_HOST_USER: {EMAIL_HOST_USER}")
+print(f"DEFAULT_FROM_EMAIL: {DEFAULT_FROM_EMAIL}")
+print(f"ADMIN_EMAIL: {ADMIN_EMAIL}")
+print("-------------------------\n")
 
 # Frontend URL for email verification links
 FRONTEND_URL = os.environ.get('FRONTEND_URL', 'https://projectsection-ten.vercel.app/')
