@@ -2,91 +2,66 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAdminUser
-from rest_framework.pagination import PageNumberPagination
-from django.db.models import Q
+from django.core.paginator import Paginator
 from .models import ContactSubmission
-from .serializers import ContactSerializer
-
-class SubmissionPagination(PageNumberPagination):
-    page_size = 10
-    page_size_query_param = 'page_size'
-    max_page_size = 100
+from .serializers import ContactSubmissionSerializer
 
 class AdminSubmissionsView(APIView):
     """
-    API endpoint for admins to view and filter all submissions
+    API endpoint for admin to view submissions
     """
     permission_classes = [IsAdminUser]
-    pagination_class = SubmissionPagination
     
     def get(self, request):
+        # Check if user is admin - extra safeguard
+        if not request.user.is_staff and not getattr(request.user, 'role', '') == 'admin':
+            print(f"Access denied for user {request.user} - role: {getattr(request.user, 'role', 'unknown')}")
+            return Response({"error": "Admin access required"}, status=status.HTTP_403_FORBIDDEN)
+        
+        print(f"Admin access granted for user {request.user.email}")
+        
         # Get filter parameters
         status_filter = request.query_params.get('status')
-        search_query = request.query_params.get('search')
+        page = int(request.query_params.get('page', 1))
+        page_size = int(request.query_params.get('page_size', 10))
         
-        # Start with all submissions
-        queryset = ContactSubmission.objects.all()
+        # Build query
+        submissions = ContactSubmission.objects.all().order_by('-created_at')
         
-        # Apply status filter
-        if status_filter:
-            if status_filter == 'processed':
-                queryset = queryset.filter(is_processed=True)
-            elif status_filter == 'pending':
-                queryset = queryset.filter(is_processed=False)
-        
-        # Apply search filter
-        if search_query:
-            queryset = queryset.filter(
-                Q(email__icontains=search_query) | 
-                Q(linkedin_url__icontains=search_query) |
-                Q(message__icontains=search_query)
-            )
+        # Apply filters
+        if status_filter == 'pending':
+            submissions = submissions.filter(is_processed=False)
+        elif status_filter == 'processed':
+            submissions = submissions.filter(is_processed=True)
             
-        # Apply sorting (default to newest first)
-        sort_by = request.query_params.get('sort', '-created_at')
-        queryset = queryset.order_by(sort_by)
+        # Paginate results
+        paginator = Paginator(submissions, page_size)
+        page_obj = paginator.get_page(page)
         
-        # Paginate the results
-        paginator = self.pagination_class()
-        paginated_queryset = paginator.paginate_queryset(queryset, request)
+        # Serialize data
+        serializer = ContactSubmissionSerializer(page_obj, many=True)
         
-        # Serialize and return
-        serializer = ContactSerializer(paginated_queryset, many=True)
-        return paginator.get_paginated_response(serializer.data)
+        return Response({
+            'submissions': serializer.data,
+            'total_count': paginator.count,
+            'total_pages': paginator.num_pages,
+            'current_page': page
+        })
 
 class AdminSubmissionDetailView(APIView):
     """
-    API endpoint for admins to view, update or delete a specific submission
+    API endpoint for admin to get a specific submission
     """
     permission_classes = [IsAdminUser]
     
     def get(self, request, submission_id):
+        # Check if user is admin - extra safeguard
+        if not request.user.is_staff and not getattr(request.user, 'role', '') == 'admin':
+            return Response({"error": "Admin access required"}, status=status.HTTP_403_FORBIDDEN)
+            
         try:
             submission = ContactSubmission.objects.get(id=submission_id)
-            serializer = ContactSerializer(submission)
+            serializer = ContactSubmissionSerializer(submission)
             return Response(serializer.data)
-        except ContactSubmission.DoesNotExist:
-            return Response({"error": "Submission not found"}, status=status.HTTP_404_NOT_FOUND)
-    
-    def put(self, request, submission_id):
-        try:
-            submission = ContactSubmission.objects.get(id=submission_id)
-            
-            # Update only allowed fields
-            if 'is_processed' in request.data:
-                submission.is_processed = request.data.get('is_processed')
-            
-            submission.save()
-            
-            serializer = ContactSerializer(submission)
-            return Response(serializer.data)
-        except ContactSubmission.DoesNotExist:
-            return Response({"error": "Submission not found"}, status=status.HTTP_404_NOT_FOUND)
-    
-    def delete(self, request, submission_id):
-        try:
-            submission = ContactSubmission.objects.get(id=submission_id)
-            submission.delete()
-            return Response({"message": "Submission deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
         except ContactSubmission.DoesNotExist:
             return Response({"error": "Submission not found"}, status=status.HTTP_404_NOT_FOUND)

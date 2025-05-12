@@ -15,21 +15,32 @@ export const adminService = {
     try {
       console.log(`Fetching submissions from: ${ENDPOINTS.ADMIN.SUBMISSIONS}`);
       
+      // Add authorization debugging
+      const token = localStorage.getItem('token');
+      console.log(`Using auth token: ${token ? 'Present' : 'Missing'}`);
+      
       const response = await apiClient.get(ENDPOINTS.ADMIN.SUBMISSIONS, {
-        params: filters
+        params: filters,
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
       });
       
-      // Add defensive check for response data
-      if (!response || !response.data) {
-        throw new Error('Invalid response format');
-      }
+      console.log('Submissions response:', response);
       
       return { 
         success: true,
-        data: Array.isArray(response.data) ? response.data : []
+        data: Array.isArray(response.data.submissions) ? response.data.submissions : []
       };
     } catch (error) {
       console.error('Error fetching submissions:', error);
+      console.error('Error details:', error.response?.data);
+      
+      // Check if we have a 403 (permission) error
+      if (error.response?.status === 403) {
+        console.error('Permission denied - Admin permissions required');
+      }
+      
       return {
         success: false,
         error: error.response?.data?.error || 'Failed to fetch submissions',

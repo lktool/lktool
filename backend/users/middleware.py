@@ -1,40 +1,45 @@
 from django.http import JsonResponse
-import re
+from django.contrib.auth.models import Group
+from django.conf import settings
 from rest_framework_simplejwt.authentication import JWTAuthentication
+import re
+import logging
+
+logger = logging.getLogger(__name__)
 
 class RoleBasedMiddleware:
+    """
+    Middleware to ensure that JWT token-based roles are correctly processed
+    """
+    
     def __init__(self, get_response):
         self.get_response = get_response
-        self.jwt_auth = JWTAuthentication()
-        
-        # Define URL patterns that require admin role
-        self.admin_patterns = [
-            re.compile(r'^/api/admin/'),
-        ]
-        
+    
     def __call__(self, request):
-        # Check if URL requires admin role
-        path = request.path
-        requires_admin = any(pattern.match(path) for pattern in self.admin_patterns)
-        
-        if requires_admin:
-            # Try to authenticate with JWT
+        # Process JWT token if present
+        if 'HTTP_AUTHORIZATION' in request.META and request.META['HTTP_AUTHORIZATION'].startswith('Bearer '):
             try:
-                auth_header = request.META.get('HTTP_AUTHORIZATION', '')
-                if not auth_header.startswith('Bearer '):
-                    return JsonResponse({"detail": "Admin access required"}, status=403)
+                # Using JWT auth to get the token and user
+                jwt_auth = JWTAuthentication()
+                validated_token = jwt_auth.get_validated_token(
+                    request.META['HTTP_AUTHORIZATION'].split(' ')[1]
+                )
                 
-                token = auth_header.split(' ')[1]
-                validated_token = self.jwt_auth.get_validated_token(token)
-                
-                # Check for admin role in token
-                is_admin = validated_token.get('role') == 'admin'
-                if not is_admin:
-                    return JsonResponse({"detail": "Admin access required"}, status=403)
-                
+                # Check if this is an admin token
+                if validated_token.get('role') == 'admin':
+                    # Debug logging
+                    logger.info(f"Admin JWT token detected: {validated_token.get('email')}")
+                    
+                    # Mark the request as having admin privileges
+                    request.is_admin_token = True
+                    
+                    # If the path is related to admin endpoints
+                    if '/api/admin/' in request.path or request.path.startswith('/admin/'):
+                        logger.info(f"Admin endpoint accessed: {request.path}")
+                    
             except Exception as e:
-                return JsonResponse({"detail": f"Admin access required: {str(e)}"}, status=403)
+                logger.error(f"JWT validation error: {str(e)}")
+                # Don't block the request, just log the error
         
-        # Continue with the request
         response = self.get_response(request)
         return response

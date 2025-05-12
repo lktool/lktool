@@ -7,7 +7,7 @@ import { BASE_URL, AUTH_CONFIG, REQUEST_CONFIG } from './config';
 
 // Fix API base URL configuration to ensure it has consistent trailing slash
 export const apiClient = axios.create({
-  baseURL: 'https://lktool.onrender.com',
+  baseURL: BASE_URL,
   timeout: 15000,
   headers: {
     'Content-Type': 'application/json'
@@ -20,21 +20,22 @@ export const apiClient = axios.create({
  */
 apiClient.interceptors.request.use(
   (config) => {
-    // Don't modify URLs that already include the base URL or start with http
-    if (config.url.startsWith('http') || config.url.startsWith(BASE_URL)) {
-      // URL is already absolute, don't modify it
-      return config;
-    }
-
-    // Make sure API URLs have the /api prefix consistently
-    if (!config.url.startsWith('/api/') && !config.url.startsWith('/auth/')) {
+    // Make sure URLs with BASE_URL don't get modified
+    if (config.url.startsWith('http')) {
+      // URL is already absolute, just add auth headers
+    } else if (!config.url.startsWith('/api/') && !config.url.startsWith('/auth/')) {
+      // Add /api prefix to relative URLs that don't have it
       config.url = '/api' + (config.url.startsWith('/') ? config.url : `/${config.url}`);
     }
     
-    // Add auth token if available
-    const token = localStorage.getItem('token');
+    // Get auth token
+    const token = localStorage.getItem(AUTH_CONFIG.TOKEN_KEY);
+    
+    // Add auth token to every request if available
     if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+      // Log token for debugging
+      console.log(`Adding auth token to request: ${config.url}`);
+      config.headers['Authorization'] = `Bearer ${token}`;
     }
     
     return config;
@@ -53,45 +54,30 @@ apiClient.interceptors.response.use(
     return response;
   },
   async (error) => {
-    const originalRequest = error.config;
-    
-    // If error is unauthorized and we haven't tried to refresh token yet
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
-      
-      try {
-        const refreshToken = localStorage.getItem(AUTH_CONFIG.REFRESH_TOKEN_KEY);
-        
-        // Only try to refresh if we have a refresh token
-        if (refreshToken) {
-          // Get a new token
+    // Handle 401 by attempting token refresh
+    if (error.response && error.response.status === 401) {
+      // Try to refresh token
+      const refreshToken = localStorage.getItem(AUTH_CONFIG.REFRESH_TOKEN_KEY);
+      if (refreshToken) {
+        try {
           const response = await axios.post(`${BASE_URL}/api/auth/refresh/`, {
             refresh: refreshToken
           });
           
-          // Update the stored token
-          if (response.data?.access) {
+          if (response.data.access) {
+            // Update token in localStorage
             localStorage.setItem(AUTH_CONFIG.TOKEN_KEY, response.data.access);
             
-            // Update the authorization header
-            originalRequest.headers['Authorization'] = `Bearer ${response.data.access}`;
-            
-            // Retry the original request
-            return apiClient(originalRequest);
+            // Update the failed request with new token and retry
+            const config = error.config;
+            config.headers['Authorization'] = `Bearer ${response.data.access}`;
+            return axios(config);
           }
+        } catch (refreshError) {
+          console.error('Token refresh failed:', refreshError);
         }
-      } catch (refreshError) {
-        // If refresh fails, log out the user
-        localStorage.removeItem(AUTH_CONFIG.TOKEN_KEY);
-        localStorage.removeItem(AUTH_CONFIG.REFRESH_TOKEN_KEY);
-        localStorage.removeItem(AUTH_CONFIG.USER_ROLE_KEY);
-        localStorage.removeItem(AUTH_CONFIG.USER_EMAIL_KEY);
-        
-        // Dispatch auth change event
-        window.dispatchEvent(new Event(AUTH_CONFIG.AUTH_CHANGE_EVENT));
       }
     }
-    
     return Promise.reject(error);
   }
 );
