@@ -131,10 +131,18 @@ function Signup() {
   const handleResendVerification = async () => {
     try {
       setResendLoading(true);
-      await authService.requestPasswordReset(email);
-      setResendSuccess(true);
+      setResendError(null);
+      // Use the correct resendVerification method
+      const response = await authService.resendVerification(email);
+      
+      if (response.success) {
+        setResendSuccess(true);
+      } else {
+        setResendError(response.error || 'Failed to resend verification email');
+      }
     } catch (error) {
-      setResendError(error.message);
+      console.error('Error resending verification:', error);
+      setResendError('An unexpected error occurred');
     } finally {
       setResendLoading(false);
     }

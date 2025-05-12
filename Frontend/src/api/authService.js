@@ -191,6 +191,33 @@ export const authService = {
       };
     }
   },
+
+  /**
+   * Resend verification email
+   * @param {string} email - User's email
+   * @returns {Promise<Object>} Result of verification email request
+   */
+  async resendVerification(email) {
+    try {
+      console.log(`Requesting verification email for: ${email}`);
+      
+      const response = await apiClient.post(
+        `${ENDPOINTS.AUTH.BASE}${ENDPOINTS.AUTH.RESEND_VERIFICATION}`,
+        { email }
+      );
+      
+      return {
+        success: true,
+        message: response.data.detail || 'Verification email sent!'
+      };
+    } catch (error) {
+      console.error('Failed to resend verification email:', error);
+      return {
+        success: false,
+        error: error.response?.data?.detail || 'Failed to resend verification email'
+      };
+    }
+  },
   
   /**
    * Request password reset for an email
@@ -238,8 +265,14 @@ export const authService = {
    */
   async resetPassword(uid, token, password, password2) {
     try {
+      console.log(`Attempting password reset for uid: ${uid}`);
       const endpoint = `${ENDPOINTS.AUTH.BASE}${ENDPOINTS.AUTH.CONFIRM_PASSWORD_RESET(uid, token)}`;
-      const response = await apiClient.post(endpoint, { password, password2 });
+      console.log(`Using endpoint: ${endpoint}`);
+      
+      const response = await apiClient.post(endpoint, { 
+        password, 
+        password2 
+      });
       
       return {
         success: true,
@@ -247,9 +280,17 @@ export const authService = {
       };
     } catch (error) {
       console.error('Password reset error:', error);
+      
+      if (error.response?.data?.detail) {
+        return { 
+          success: false, 
+          error: error.response.data.detail 
+        };
+      }
+      
       return {
         success: false,
-        error: error.response?.data?.detail || 'Failed to reset password'
+        error: 'Failed to reset password. The link may be invalid or expired.'
       };
     }
   },
@@ -260,7 +301,7 @@ export const authService = {
    */
   async verifyToken() {
     try {
-      await apiClient.get(`${ENDPOINTS.AUTH.BASE}${ENDPOINTS.AUTH.PROFILE}`);
+      const response = await apiClient.get(`${ENDPOINTS.AUTH.BASE}${ENDPOINTS.AUTH.PROFILE}`);
       return true;
     } catch (error) {
       console.error('Token verification failed:', error);
@@ -269,12 +310,13 @@ export const authService = {
   },
   
   /**
-   * Get current user profile
+   * Get user profile
    * @returns {Promise<Object>} User profile data
    */
   async getProfile() {
     try {
       const response = await apiClient.get(`${ENDPOINTS.AUTH.BASE}${ENDPOINTS.AUTH.PROFILE}`);
+      
       return {
         success: true,
         profile: response.data

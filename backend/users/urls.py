@@ -8,6 +8,7 @@ from .views import (
     GoogleAuthView,
     PasswordResetView,  # Add this import
     PasswordResetConfirmView,  # Add this import
+    ResendVerificationView,  # Add this import
 )
 
 urlpatterns = [
@@ -19,4 +20,5 @@ urlpatterns = [
     path('google/', GoogleAuthView.as_view(), name='google_auth'),
     path('password-reset/', PasswordResetView.as_view(), name='password_reset'),
     path('password-reset-confirm/<uidb64>/<token>/', PasswordResetConfirmView.as_view(), name='password_reset_confirm'),
+    path('resend-verification/', ResendVerificationView.as_view(), name='resend_verification'),
 ]

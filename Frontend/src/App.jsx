@@ -17,7 +17,7 @@ import AdminRoute from "./components/AdminRoute";
 import NavBar from "./NavBar/NavBar"; 
 import UserSubmissions from "./UserSubmissions/UserSubmissions";
 import PublicOnlyRoute from "./components/PublicOnlyRoute";
-
+import ResetPassword from "./ResetPassword/ResetPassword";
 
 function App() {
   useEffect(() => {
@@ -67,7 +67,11 @@ function App() {
           } />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           
+          {/* Add the password reset route */}
+          <Route path="/reset-password/:uid/:token" element={<ResetPassword />} />
+          
           {/* Auth callback routes */}
+          {/* Update this route to match the backend format with uid-token */}
           <Route path="/verify-email/:token" element={<VerifyEmail />} />
           <Route path="/auth/google/callback" element={<GoogleAuthCallback />} />
           

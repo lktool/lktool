@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { submissionService } from '../api';
 import LoadingSpinner from '../components/LoadingSpinner';
 import './UserSubmissions.css';
-import { formatDate } from '../Utils/dateUtils';  // Use capital 'U' if directory is capitalized
+import { formatDate } from '../Utils/dateUtils'; 
 
 const UserSubmissions = () => {
     const [submissions, setSubmissions] = useState([]);

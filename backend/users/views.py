@@ -132,6 +132,49 @@ class VerifyEmailView(APIView):
             logger.error(f"Email verification error: {str(e)}")
             return Response({"detail": "Invalid verification token format."}, status=400)
 
+class ResendVerificationView(APIView):
+    """
+    API endpoint for resending the verification email
+    """
+    permission_classes = [AllowAny]
+    
+    def post(self, request):
+        email = request.data.get('email')
+        if not email:
+            return Response({"detail": "Email is required."}, status=400)
+        
+        try:
+            user = User.objects.get(email=email)
+            
+            # Skip if email is already verified
+            if hasattr(user, 'email_verified') and user.email_verified:
+                return Response({"detail": "Email is already verified."}, status=200)
+                
+            # Generate verification token
+            uid = urlsafe_base64_encode(force_str(user.pk).encode())
+            token = default_token_generator.make_token(user)
+            
+            # Build verification URL - using correct format
+            verification_url = f"{settings.FRONTEND_URL}/verify-email/{uid}-{token}"
+            
+            # Send verification email
+            send_mail(
+                'Verify Your Email',
+                f'Please click the link to verify your email: {verification_url}',
+                settings.DEFAULT_FROM_EMAIL,
+                [user.email],
+                fail_silently=False,
+            )
+            
+            return Response({"detail": "Verification email sent."}, status=200)
+            
+        except User.DoesNotExist:
+            # Don't reveal that the user doesn't exist
+            return Response({"detail": "If an account exists with this email, a verification email has been sent."}, status=200)
+        except Exception as e:
+            logger.error(f"Failed to resend verification email: {str(e)}")
+            return Response({"detail": "Error sending verification email."}, status=500)
+
 class ProfileView(APIView):
     permission_classes = [IsAuthenticated]
     

@@ -19,10 +19,15 @@ function VerifyEmail() {
             setIsLoading(true);
             
             try {
-                // Use new auth service instead of unifiedAuthService
+                // No need to modify the token - the backend expects it in the uid-token format
                 const response = await authService.verifyEmail(token);
                 setIsVerified(true);
                 setMessage('Your email has been successfully verified! You can now log in.');
+                
+                // Auto-redirect to login after 3 seconds
+                setTimeout(() => {
+                    navigate('/login');
+                }, 3000);
             } catch (error) {
                 console.error('Email verification failed:', error);
                 setError('Email verification failed. The link may have expired or is invalid.');
@@ -32,7 +37,7 @@ function VerifyEmail() {
         };
         
         verifyEmailToken();
-    }, [token]);
+    }, [token, navigate]);
 
     return (
         <div className="verify-email-container">
