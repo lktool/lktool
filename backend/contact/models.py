@@ -1,7 +1,22 @@
 from django.db import models
+from django.utils import timezone
 from django.conf import settings
 
 class ContactSubmission(models.Model):
+    # Basic fields
+    email = models.EmailField()
+    linkedin_url = models.URLField()
+    message = models.TextField(blank=True)
+    
+    # Status fields
+    is_processed = models.BooleanField(default=False)
+    created_at = models.DateTimeField(default=timezone.now)
+    
+    # Admin response fields
+    admin_reply = models.TextField(blank=True, null=True)
+    admin_reply_date = models.DateTimeField(null=True, blank=True)
+    
+    # Foreign key to user if authenticated (optional)
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL, 
         on_delete=models.SET_NULL, 
@@ -9,21 +24,9 @@ class ContactSubmission(models.Model):
         blank=True,
         related_name='submissions'
     )
-    linkedin_url = models.URLField(max_length=500)
-    message = models.TextField(blank=True)
-    email = models.EmailField()
-    created_at = models.DateTimeField(auto_now_add=True)
-    is_processed = models.BooleanField(default=False)
-    admin_reply = models.TextField(blank=True, null=True)
-    admin_reply_date = models.DateTimeField(null=True, blank=True)
     
-    # New contact form fields
-    name = models.CharField(max_length=255, blank=True, null=True)
-    subject = models.CharField(max_length=255, blank=True, null=True)
-    message_type = models.CharField(max_length=50, blank=True, null=True)
-
-    def __str__(self):
-        return f"Submission by {self.email} on {self.created_at.strftime('%Y-%m-%d')}"
-
     class Meta:
         ordering = ['-created_at']
+        
+    def __str__(self):
+        return f"Submission by {self.email} on {self.created_at}"

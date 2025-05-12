@@ -93,8 +93,7 @@ function NavBar() {
                     ) : (
                         <button onClick={handleLogout}>Logout</button>
                     )}
-
-                    <Link to="/contact" className="nav-link">Contact</Link>
+    
                 </div>
             </div>
         </nav>
