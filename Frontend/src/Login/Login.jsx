@@ -89,11 +89,16 @@ function Login() {
         setError('');
         
         try {
+            console.log("Logging in with:", email); // Debug log
+            
             const response = await authService.login(email, password);
+            console.log("Login response:", response); // Debug login response
             
             if (response.success) {
                 // If admin credentials were used on the user login page
                 if (response.isAdmin) {
+                    console.log("Admin login successful"); // Debug admin login
+                    
                     // Ask if they want to go to admin dashboard or continue as regular user
                     const goToAdmin = window.confirm(
                         "You have admin privileges. Would you like to go to the admin dashboard?"
@@ -109,6 +114,7 @@ function Login() {
                     navigate(redirectPath || '/');
                 }
             } else {
+                console.error("Login failed:", response.error);
                 setError(response.error || 'Login failed');
             }
         } catch (err) {

@@ -300,7 +300,8 @@ export const authService = {
    */
   async verifyToken() {
     try {
-      const response = await apiClient.get(`${ENDPOINTS.AUTH.BASE}${ENDPOINTS.AUTH.PROFILE}`);
+      // Use the full path to ensure consistency
+      const response = await apiClient.get('/api/auth/profile/');
       return true;
     } catch (error) {
       console.error('Token verification failed:', error);

@@ -5,11 +5,13 @@
 import axios from 'axios';
 import { BASE_URL, AUTH_CONFIG, REQUEST_CONFIG } from './config';
 
-// Create axios instance with default configuration
+// Fix API base URL configuration to ensure it has consistent trailing slash
 export const apiClient = axios.create({
-  baseURL: BASE_URL,
-  headers: REQUEST_CONFIG.DEFAULT_HEADERS,
-  timeout: REQUEST_CONFIG.TIMEOUT,
+  baseURL: 'https://lktool.onrender.com',
+  timeout: 15000,
+  headers: {
+    'Content-Type': 'application/json'
+  }
 });
 
 /**
@@ -18,12 +20,15 @@ export const apiClient = axios.create({
  */
 apiClient.interceptors.request.use(
   (config) => {
-    // Get the token from localStorage
-    const token = localStorage.getItem(AUTH_CONFIG.TOKEN_KEY);
+    // Make sure API URLs have the /api prefix consistently
+    if (!config.url.startsWith('http') && !config.url.startsWith('/api/') && config.url !== '/auth/refresh/') {
+      config.url = '/api' + (config.url.startsWith('/') ? config.url : `/${config.url}`);
+    }
     
-    // If token exists, add it to the request headers
+    // Add auth token if available
+    const token = localStorage.getItem('token');
     if (token) {
-      config.headers['Authorization'] = `Bearer ${token}`;
+      config.headers.Authorization = `Bearer ${token}`;
     }
     
     return config;

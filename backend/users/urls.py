@@ -6,9 +6,9 @@ from .views import (
     ProfileView,
     VerifyEmailView,
     GoogleAuthView,
-    PasswordResetView,  # Add this import
-    PasswordResetConfirmView,  # Add this import
-    ResendVerificationView,  # Add this import
+    PasswordResetView,
+    PasswordResetConfirmView,
+    ResendVerificationView,
 )
 
 urlpatterns = [
@@ -16,6 +16,8 @@ urlpatterns = [
     path('signup/', RegisterView.as_view(), name='register'),
     path('refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('profile/', ProfileView.as_view(), name='profile'),
+    # Add an additional profile path without trailing slash for flexibility
+    path('profile', ProfileView.as_view(), name='profile_no_slash'),
     path('verify-email/', VerifyEmailView.as_view(), name='verify_email'),
     path('google/', GoogleAuthView.as_view(), name='google_auth'),
     path('password-reset/', PasswordResetView.as_view(), name='password_reset'),
