@@ -21,7 +21,7 @@ export const ENDPOINTS = {
     RESEND_VERIFICATION: '/resend-verification/',
     // Google Auth has multiple endpoints
     GOOGLE: '/google/',
-    GOOGLE_ALT: `${BASE_URL}/api/auth/google/`, // Use API path
+    GOOGLE_ALT: `${BASE_URL}/api/auth/google/`, // This is the endpoint that works reliably
     GOOGLE_DIRECT: `${BASE_URL}/auth/google/`, // Alternative endpoint
   },
   

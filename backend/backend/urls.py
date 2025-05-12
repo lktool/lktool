@@ -22,11 +22,9 @@ urlpatterns = [
     path('api/admin/submissions/', AdminSubmissionsView.as_view(), name='admin_submissions'),
     path('api/admin/submissions/<int:submission_id>/', AdminSubmissionDetailView.as_view(), name='admin_submission_detail'),
     
-    # Direct routes for Google auth (accessible from both paths)
+    # Consolidated Google auth routes - ensure all variations are available
     path('auth/google/', GoogleAuthView.as_view(), name='direct_google_auth'),
     path('google/', GoogleAuthView.as_view(), name='root_google_auth'),
-    
-    # Add one more route with api prefix to match our updated frontend
     path('api/auth/google/', GoogleAuthView.as_view(), name='api_google_auth'),
     
     # SPA fallback - handle all other routes with React app

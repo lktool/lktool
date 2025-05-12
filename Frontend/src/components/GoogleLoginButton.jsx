@@ -1,6 +1,5 @@
-import React from 'react';
-import { useState } from 'react';
-import axios from 'axios'; // Add axios import
+import React, { useState } from 'react';
+import axios from 'axios';
 import { OAUTH_CONFIG } from '../api/config';
 import './GoogleLoginButton.css';
 
@@ -18,20 +17,15 @@ const GoogleLoginButton = ({ onSuccess, actionType = 'login' }) => {
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   
-  // Function to handle Google sign-in manually
   const handleGoogleSignIn = () => {
-    // Show loading state
     setIsLoading(true);
     setError(null);
     
-    // Use values from central config
     const googleAuthUrl = 'https://accounts.google.com/o/oauth2/v2/auth';
     const { CLIENT_ID, REDIRECT_URI, RESPONSE_TYPE, SCOPE, PROMPT } = OAUTH_CONFIG.GOOGLE;
     
-    // Store the action type in localStorage for the callback to use
     localStorage.setItem('google_auth_action', actionType);
     
-    // Create the OAuth URL with correct parameters
     const params = {
       client_id: CLIENT_ID,
       redirect_uri: REDIRECT_URI,
@@ -43,7 +37,6 @@ const GoogleLoginButton = ({ onSuccess, actionType = 'login' }) => {
     
     const url = `${googleAuthUrl}?${new URLSearchParams(params).toString()}`;
     
-    // Open a new window for the Google login
     const authWindow = window.open(url, '_blank', 'width=500,height=600');
     
     if (!authWindow) {
@@ -52,13 +45,11 @@ const GoogleLoginButton = ({ onSuccess, actionType = 'login' }) => {
       return;
     }
     
-    // Listen for messages from the popup window
     const messageHandler = (event) => {
       if (event.origin !== window.location.origin) return;
       
       if (event.data.type === 'GOOGLE_AUTH_SUCCESS') {
         window.removeEventListener('message', messageHandler);
-        // Call backend with the token
         handleTokenVerification(event.data.token);
       } else if (event.data.type === 'GOOGLE_AUTH_ERROR') {
         window.removeEventListener('message', messageHandler);
@@ -69,19 +60,15 @@ const GoogleLoginButton = ({ onSuccess, actionType = 'login' }) => {
     
     window.addEventListener('message', messageHandler);
     
-    // Function to check if the window has been closed
     const checkWindowClosed = setInterval(() => {
       if (authWindow.closed) {
         clearInterval(checkWindowClosed);
         window.removeEventListener('message', messageHandler);
         setIsLoading(false);
         
-        // Check if we can get the token from local storage (set by the callback page)
         const token = localStorage.getItem('google_token');
         if (token) {
-          // Call your backend to verify the token
           handleTokenVerification(token);
-          // Clear the token from localStorage after using it
           localStorage.removeItem('google_token');
         } else {
           setError("Authentication was cancelled or failed");
@@ -90,65 +77,31 @@ const GoogleLoginButton = ({ onSuccess, actionType = 'login' }) => {
     }, 500);
   };
   
-  // Function to verify Google token with backend
   const handleTokenVerification = async (token) => {
     try {
-      // Get the action type from localStorage
       const action = localStorage.getItem('google_auth_action') || actionType;
       localStorage.removeItem('google_auth_action');
       
-      console.log("Verifying Google token with backend");
+      // Using the now-working API endpoint
+      const url = 'https://lktool.onrender.com/api/auth/google/';
       
-      // Try multiple endpoints in sequence
-      const endpoints = [
-        'https://lktool.onrender.com/api/auth/google/',
-        'https://lktool.onrender.com/auth/google/',
-        'https://lktool.onrender.com/google/'
-      ];
-      
-      let response = null;
-      let errorMsg = null;
-      
-      // Try each endpoint until one works
-      for (let i = 0; i < endpoints.length; i++) {
-        try {
-          const url = endpoints[i];
-          console.log(`Trying endpoint ${i+1}/${endpoints.length}: ${url}`);
-          
-          response = await axios({
-            method: 'POST',
-            url: url,
-            headers: {
-              'Accept': 'application/json',
-              'Content-Type': 'application/json'
-            },
-            data: { 
-              credential: token,
-              action: action
-            },
-            withCredentials: true
-          });
-          
-          // If we got a successful response, break out of the loop
-          if (response && response.status === 200 && response.data) {
-            console.log(`Endpoint ${url} successful!`);
-            break;
-          }
-        } catch (err) {
-          errorMsg = err;
-          console.warn(`Endpoint ${endpoints[i]} failed: ${err.message}`);
-        }
-      }
-      
-      // If no endpoint worked
-      if (!response || !response.data) {
-        throw errorMsg || new Error('All Google auth endpoints failed');
-      }
+      const response = await axios({
+        method: 'POST',
+        url: url,
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        },
+        data: { 
+          credential: token,
+          action: action
+        },
+        withCredentials: true
+      });
       
       const data = response.data;
-      console.log("Backend response:", data);
       
-      // Store tokens from the response
+      // Store tokens in localStorage
       if (data.access) {
         localStorage.setItem('token', data.access);
         if (data.refresh) {
@@ -158,7 +111,9 @@ const GoogleLoginButton = ({ onSuccess, actionType = 'login' }) => {
         localStorage.setItem('userRole', data.role || 'user');
         localStorage.setItem('userEmail', data.email);
         
-        // Call the onSuccess callback
+        // Explicitly trigger auth change event
+        window.dispatchEvent(new Event('authChange'));
+        
         if (onSuccess) {
           onSuccess(data.is_new_user);
         }
@@ -166,14 +121,11 @@ const GoogleLoginButton = ({ onSuccess, actionType = 'login' }) => {
         throw new Error('Authentication failed. Please try again.');
       }
     } catch (error) {
-      console.error('Error during Google authentication:', error);
-      
-      // Handle 409 Conflict (user already exists)
+      // Handle common error cases
       if (error.response?.status === 409) {
         if (actionType === 'signup' && error.response.data?.needs_login) {
           setError("An account already exists with this email. Please log in instead.");
           
-          // Optionally redirect to login
           if (window.confirm("An account with this email already exists. Would you like to log in instead?")) {
             window.location.href = '/login';
           }
@@ -181,12 +133,10 @@ const GoogleLoginButton = ({ onSuccess, actionType = 'login' }) => {
         }
       }
       
-      // Handle 404 Not Found (user doesn't exist)
       if (error.response?.status === 404) {
         if (actionType === 'login' && error.response.data?.needs_signup) {
           setError("No account found with this email. Please sign up first.");
           
-          // Optionally redirect to signup
           if (window.confirm("No account found with this email. Would you like to sign up instead?")) {
             window.location.href = '/signup';
           }

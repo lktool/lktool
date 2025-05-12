@@ -123,45 +123,22 @@ export const authService = {
    */
   async googleAuth(credential, action = 'login') {
     try {
-      // Try multiple endpoints in sequence
-      const endpoints = [
-        ENDPOINTS.AUTH.GOOGLE_ALT,       // First try /api/auth/google/
-        ENDPOINTS.AUTH.GOOGLE_DIRECT,    // Then try /auth/google/
-        `${BASE_URL}/google/`            // Finally try direct /google/
-      ];
+      // Use the API endpoint that works reliably
+      const endpoint = ENDPOINTS.AUTH.GOOGLE_ALT;
       
-      let response = null;
-      let error = null;
+      const response = await apiClient.post(endpoint, { credential, action });
       
-      // Try each endpoint until one works
-      for (const endpoint of endpoints) {
-        try {
-          console.log(`Trying Google auth endpoint: ${endpoint}`);
-          response = await apiClient.post(endpoint, { credential, action });
-          if (response.data?.access) {
-            // Found a working endpoint, break out of the loop
-            break;
-          }
-        } catch (err) {
-          // Store the last error
-          error = err;
-          console.warn(`Endpoint ${endpoint} failed: ${err.message}`);
-        }
+      if (response.data?.access) {
+        this._storeAuthData(response.data);
+        
+        return {
+          success: true,
+          isNewUser: response.data.is_new_user || false,
+          isAdmin: response.data.role === 'admin'
+        };
       }
       
-      // If no endpoint worked, throw the last error
-      if (!response || !response.data?.access) {
-        throw error || new Error('All Google auth endpoints failed');
-      }
-      
-      // Process successful response
-      this._storeAuthData(response.data);
-      
-      return {
-        success: true,
-        isNewUser: response.data.is_new_user || false,
-        isAdmin: response.data.role === 'admin'
-      };
+      return { success: false, error: 'Invalid response from server' };
     } catch (error) {
       console.error('Google auth error:', error);
       

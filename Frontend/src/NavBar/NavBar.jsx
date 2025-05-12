@@ -1,41 +1,57 @@
 import "./NavBar.css";
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-// Update import to use the new API structure
 import { authService } from '../api';
 
 function NavBar() {
     const navigate = useNavigate();
     const location = useLocation();
-    const [isAuthenticated, setIsAuthenticated] = useState(authService.isAuthenticated());
-    const [isAdmin, setIsAdmin] = useState(authService.isAdmin());
+    const [isAuthenticated, setIsAuthenticated] = useState(false);
+    const [isAdmin, setIsAdmin] = useState(false);
+
+    // Function to update auth state
+    const updateAuthState = () => {
+        const authStatus = authService.isAuthenticated();
+        setIsAuthenticated(authStatus);
+        setIsAdmin(authStatus && authService.isAdmin());
+    };
 
     useEffect(() => {
-        // Function to update authentication state
-        const updateAuthState = () => {
-            setIsAuthenticated(authService.isAuthenticated());
-            setIsAdmin(authService.isAdmin());
-        };
-
-        // Check on component mount
+        // Check auth state on mount and location change
         updateAuthState();
-
-        // Add an event listener for auth changes
+        
+        // Add event listener for auth changes
         window.addEventListener('authChange', updateAuthState);
-
-        // Clean up on unmount
+        
+        // Additional check for localStorage changes
+        const handleStorageChange = (event) => {
+            if (event.key === 'token' || event.key === null) {
+                updateAuthState();
+            }
+        };
+        
+        window.addEventListener('storage', handleStorageChange);
+        
+        // Clean up
         return () => {
             window.removeEventListener('authChange', updateAuthState);
+            window.removeEventListener('storage', handleStorageChange);
         };
-    }, []);
+    }, [location.pathname]); // Re-check when route changes
+
+    // Force auth check on every render as backup
+    useEffect(() => {
+        updateAuthState();
+    });
 
     const handleLogout = () => {
         authService.logout();
-        window.dispatchEvent(new Event('authChange'));
+        setIsAuthenticated(false);
+        setIsAdmin(false);
         navigate('/login');
     };
 
-    // Hide navbar on specific pages where it's not needed
+    // Hide navbar on specific pages
     const hideNavbarPaths = ['/forgot-password'];
     if (hideNavbarPaths.includes(location.pathname)) {
         return null;
@@ -44,9 +60,8 @@ function NavBar() {
     // Home link destination based on authentication status and role
     const getHomeDestination = () => {
         if (!isAuthenticated) {
-            return '/'; // Public landing page
+            return '/';
         }
-
         return isAdmin ? '/admin/dashboard' : '/inputMain';
     };
 
@@ -57,10 +72,8 @@ function NavBar() {
                     <h2>LK Tool Box</h2>
                 </div>
                 <div className="navbar-profiles-controls">
-                    {/* Dynamic Home Link - Points to role-appropriate destination */}
                     <Link to={getHomeDestination()}>Home</Link>
 
-                    {/* Authenticated user links */}
                     {isAuthenticated && !isAdmin && (
                         <>
                             <Link to="/inputMain">Submit Profile</Link>
@@ -68,12 +81,10 @@ function NavBar() {
                         </>
                     )}
 
-                    {/* Admin links */}
                     {isAuthenticated && isAdmin && (
                         <Link to="/admin/dashboard">Admin Dashboard</Link>
                     )}
 
-                    {/* Authentication links */}
                     {!isAuthenticated ? (
                         <>
                             <Link to="/login">Login</Link>
@@ -83,7 +94,6 @@ function NavBar() {
                         <button onClick={handleLogout}>Logout</button>
                     )}
 
-                    {/* Contact link */}
                     <Link to="/contact" className="nav-link">Contact</Link>
                 </div>
             </div>
