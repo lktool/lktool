@@ -1,18 +1,20 @@
 import logging
 from django.core.mail import send_mail as django_send_mail
+from django.core.mail import EmailMultiAlternatives
 from django.conf import settings
 import traceback
 
 logger = logging.getLogger(__name__)
 
-def send_notification_email(subject, message, recipient_list=None):
+def send_notification_email(subject, message, recipient_list=None, html_message=None):
     """
-    Send email notification with better error handling and logging
+    Send email notification with HTML support and better error handling
     
     Args:
         subject (str): Email subject
-        message (str): Email body content
+        message (str): Plain text email content
         recipient_list (list): List of recipient email addresses
+        html_message (str): Optional HTML content of the email
     """
     if recipient_list is None:
         recipient_list = [settings.ADMIN_EMAIL]
@@ -26,14 +28,25 @@ def send_notification_email(subject, message, recipient_list=None):
             logger.error("Email settings are not configured properly")
             return False
             
-        # Send the email
-        result = django_send_mail(
-            subject=subject,
-            message=message,
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=recipient_list,
-            fail_silently=False
-        )
+        # If we have HTML content, use EmailMultiAlternatives for both formats
+        if html_message:
+            email = EmailMultiAlternatives(
+                subject=subject,
+                body=message,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                to=recipient_list
+            )
+            email.attach_alternative(html_message, "text/html")
+            result = email.send(fail_silently=False)
+        else:
+            # Regular plain text email
+            result = django_send_mail(
+                subject=subject,
+                message=message,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=recipient_list,
+                fail_silently=False
+            )
         
         if result:
             logger.info(f"Email notification sent successfully to {recipient_list}")

@@ -77,3 +77,63 @@ select {
 .classroom-submit-button:hover {
   background-color: #28795b;
 }
+
+/* Analysis Preview */
+.analysis-preview-container {
+  background-color: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+  max-width: 800px;
+}
+
+.analysis-preview-container h2 {
+  color: #328E6E;
+  margin-bottom: 15px;
+}
+
+.analysis-content {
+  background-color: white;
+  border: 1px solid #eee;
+  border-radius: 5px;
+  padding: 15px;
+  max-height: 400px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  font-family: monospace;
+  margin-bottom: 20px;
+}
+
+.preview-controls {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.edit-button {
+  background-color: #f0f0f0;
+  border: 1px solid #ddd;
+  color: #333;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.send-button {
+  background-color: #328E6E;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.send-button:hover {
+  background-color: #287058;
+}
+
+.send-button:disabled {
+  background-color: #aaa;
+  cursor: not-allowed;
+}

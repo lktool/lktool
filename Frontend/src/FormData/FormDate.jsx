@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import "./FormData.css";
-// Update import to use the new API structure
 import { adminService } from '../api';
 import LoadingSpinner from '../components/LoadingSpinner';
 
 const FormData = () => {
-  // Form state for LinkedIn analysis
   const [form, setForm] = useState({
     connections: '',
     hasVerificationShield: false,
@@ -39,57 +37,38 @@ const FormData = () => {
     noEngagementOnPosts: false,
   });
 
-  // Admin reply state
   const [submissions, setSubmissions] = useState([]);
   const [selectedSubmission, setSelectedSubmission] = useState(null);
   const [replyText, setReplyText] = useState('');
   const [isReplying, setIsReplying] = useState(false);
   const [replyStatus, setReplyStatus] = useState('');
   const [loading, setLoading] = useState(false);
+  const [analysisPreview, setAnalysisPreview] = useState('');
+  const [showPreview, setShowPreview] = useState(false);
 
-  // Load submissions when component mounts
   useEffect(() => {
     const fetchSubmissions = async () => {
       setLoading(true);
       try {
-        console.log("Fetching submissions with admin token");
-        
-        // Explicitly log admin token availability
-        const token = localStorage.getItem('token');
-        console.log(`Admin token available: ${!!token}`);
-        
         const result = await adminService.getSubmissions({ status: 'pending' });
-        console.log("Submissions API response:", result);
-        
-        // Check if result is successful and has data array
         if (result.success && Array.isArray(result.data)) {
           setSubmissions(result.data);
-          console.log("Submissions fetched:", result.data.length);
         } else {
-          console.warn("Invalid submissions data format", result);
-          setSubmissions([]); // Set empty array to prevent errors
+          setSubmissions([]);
         }
       } catch (error) {
-        console.error('Error fetching submissions:', error);
-        console.error('Error details:', error.response?.data || 'No response data');
-        console.error('Error status:', error.response?.status);
-        setSubmissions([]); // Set empty array to prevent errors
+        setSubmissions([]);
       } finally {
         setLoading(false);
       }
     };
-    
     fetchSubmissions();
   }, []);
 
   useEffect(() => {
     if (selectedSubmission) {
-      // Pre-load LinkedIn URL for analysis
-      console.log(`Selected submission: ${selectedSubmission.id} - ${selectedSubmission.linkedin_url}`);
-      
-      // Could pre-set some fields based on URL structure or previously saved analysis
       if (selectedSubmission.linkedin_url.includes('premium')) {
-        setForm(prev => ({...prev, accountType: 'premium'}));
+        setForm(prev => ({ ...prev, accountType: 'premium' }));
       }
     }
   }, [selectedSubmission]);
@@ -99,19 +78,13 @@ const FormData = () => {
     setForm({ ...form, [name]: type === 'checkbox' ? checked : value });
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
+  const generateAnalysisPreview = () => {
     if (!selectedSubmission) {
       setReplyStatus('Please select a submission first');
       return;
     }
-    
-    console.log('LinkedIn Profile Data:', form);
-    setIsReplying(true);
-    
+
     try {
-      // Calculate a simple risk score based on risk signals
       const riskFactors = [
         form.newlyCreated,
         form.sparseJobHistory,
@@ -120,17 +93,14 @@ const FormData = () => {
         form.noEngagementOnPosts
       ];
       const riskCount = riskFactors.filter(Boolean).length;
-      
-      // Determine risk level based on risk factors count
+
       let riskLevel = 'medium';
       if (riskCount >= 3) {
         riskLevel = 'high';
       } else if (riskCount <= 1) {
         riskLevel = 'low';
       }
-      
-      // Calculate a simple profile score (0-100)
-      // More positive factors increase score, risk factors decrease it
+
       const positiveFactors = [
         form.hasVerificationShield,
         form.hasCustomURL,
@@ -151,27 +121,21 @@ const FormData = () => {
         form.industryRelevance,
         form.activeJobTitles
       ];
-      
-      // Count true values in positive factors
+
       const positiveCount = positiveFactors.filter(Boolean).length;
-      
-      // Calculate a weighted score - positive factors matter more (max ~85) than risk factors (max ~15)
       const maxPositiveScore = 85;
       const maxNegativeImpact = 15;
-      
+
       const positiveScore = (positiveCount / positiveFactors.length) * maxPositiveScore;
       const negativeImpact = (riskCount / riskFactors.length) * maxNegativeImpact;
-      
-      // Calculate final score (0-100 range)
+
       const score = Math.round(Math.max(0, Math.min(100, positiveScore - negativeImpact)));
-      
-      // Generate a summary based on the analysis
+
       let summary = `LinkedIn Profile Analysis\n\n`;
       summary += `Overall Score: ${score}/100\n`;
       summary += `Risk Level: ${riskLevel.charAt(0).toUpperCase() + riskLevel.slice(1)}\n\n`;
       summary += `Key Observations:\n`;
-      
-      // Add positive observations
+
       if (form.hasVerificationShield) summary += "✓ Profile has verification shield\n";
       if (form.hasProfileSummary) summary += "✓ Profile has a summary section\n";
       if (form.hasProfessionalPhoto) summary += "✓ Profile has a professional photo\n";
@@ -179,16 +143,14 @@ const FormData = () => {
       if (form.hasRecommendations) summary += "✓ Profile has recommendations\n";
       if (form.personalizedProfile) summary += "✓ Profile content is personalized\n";
       if (form.recentActivity) summary += "✓ Profile shows recent activity\n";
-      
-      // Add negative observations
+
       if (form.hasOldPhoto) summary += "✗ Profile photo appears outdated\n";
       if (form.outdatedJobInfo) summary += "✗ Profile contains outdated job information\n";
       if (form.missingAboutOrEducation) summary += "✗ Profile is missing About or Education sections\n";
       if (form.noEngagementOnPosts) summary += "✗ Profile shows no engagement on posts\n";
       if (form.defaultProfilePicture) summary += "✗ Profile uses a default picture\n";
       if (form.lowConnections) summary += "✗ Profile has very few connections\n";
-      
-      // Add recommendations based on analysis
+
       summary += "\nRecommendations:\n";
       if (form.missingAboutOrEducation) summary += "• Complete the About and Education sections\n";
       if (form.hasOldPhoto || form.defaultProfilePicture) summary += "• Update profile picture to a recent, professional photo\n";
@@ -196,34 +158,85 @@ const FormData = () => {
       if (!form.hasRecommendations) summary += "• Ask colleagues for recommendations\n";
       if (!form.hasCustomURL) summary += "• Create a custom LinkedIn URL\n";
       if (!form.recentActivity) summary += "• Increase activity by sharing relevant content\n";
-      
-      // Submit analysis to backend
-      const result = await adminService.submitProfileAnalysis(selectedSubmission.id, {
-        ...form,
+
+      setAnalysisPreview(summary);
+      setReplyText(summary);
+      setShowPreview(true);
+
+      return {
         summary,
         score,
         risk_level: riskLevel
-      });
-      
+      };
+    } catch (error) {
+      console.error('Error generating analysis:', error);
+      setReplyStatus('Failed to generate analysis');
+      return null;
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!selectedSubmission) {
+      setReplyStatus('Please select a submission first');
+      return;
+    }
+
+    setIsReplying(true);
+
+    const analysisData = generateAnalysisPreview();
+
+    if (!analysisData) {
+      setIsReplying(false);
+      return;
+    }
+
+    try {
+      setShowPreview(true);
+      setIsReplying(false);
+    } catch (error) {
+      console.error('Error generating preview:', error);
+      setReplyStatus('Failed to generate preview');
+      setIsReplying(false);
+    }
+  };
+
+  const handleSendAnalysis = async () => {
+    if (!selectedSubmission || !replyText.trim()) {
+      setReplyStatus('Please generate an analysis first');
+      return;
+    }
+
+    setIsReplying(true);
+    setReplyStatus('');
+
+    try {
+      const analysisData = generateAnalysisPreview();
+
+      if (!analysisData) {
+        setIsReplying(false);
+        return;
+      }
+
+      const result = await adminService.submitReply(selectedSubmission.id, replyText);
+
       if (result.success) {
-        setReplyStatus('Analysis submitted successfully!');
-        
-        // Also submit a reply to the user with the summary
-        await adminService.submitReply(selectedSubmission.id, summary);
-        
-        // Update local submission data to show as processed
-        const updatedSubmissions = submissions.map(sub => 
-          sub.id === selectedSubmission.id 
-            ? {...sub, is_processed: true, admin_reply: summary} 
+        setReplyStatus('Analysis and reply sent successfully!');
+
+        const updatedSubmissions = submissions.map(sub =>
+          sub.id === selectedSubmission.id
+            ? { ...sub, admin_reply: replyText, is_processed: true }
             : sub
         );
         setSubmissions(updatedSubmissions);
+        setShowPreview(false);
       } else {
-        setReplyStatus(result.error || 'Failed to submit analysis');
+        setReplyStatus(result.error || 'Failed to send reply');
       }
     } catch (error) {
-      console.error('Error submitting analysis:', error);
-      setReplyStatus('Failed to submit analysis');
+      console.error('Error sending analysis:', error);
+      setReplyStatus('Failed to send analysis');
     } finally {
       setIsReplying(false);
     }
@@ -238,57 +251,8 @@ const FormData = () => {
     setReplyText(e.target.value);
   };
 
-  const handleSubmitReply = async () => {
-    if (!selectedSubmission || !replyText.trim()) {
-      setReplyStatus('Please enter a reply message');
-      return;
-    }
-
-    setIsReplying(true);
-    setReplyStatus('');
-
-    try {
-      // After the reply submission, we should trigger the analysis submission too
-      const result = await adminService.submitReply(selectedSubmission.id, replyText);
-      
-      if (result.success) {
-        setReplyStatus('Reply sent successfully');
-        
-        // Update local submission data
-        const updatedSubmissions = submissions.map(sub => 
-          sub.id === selectedSubmission.id 
-            ? {...sub, admin_reply: replyText, is_processed: true} 
-            : sub
-        );
-        setSubmissions(updatedSubmissions);
-      } else {
-        setReplyStatus(result.error || 'Failed to send reply');
-      }
-    } catch (error) {
-      console.error('Error sending reply:', error);
-      setReplyStatus('Failed to send reply');
-    } finally {
-      setIsReplying(false);
-    }
-  };
-
-  const handleMarkProcessed = async (id, isProcessed) => {
-    try {
-      await adminService.updateSubmissionStatus(id, isProcessed);
-      // Update the local submissions list
-      setSubmissions(submissions.map(sub => 
-        sub.id === id 
-          ? {...sub, is_processed: isProcessed} 
-          : sub
-      ));
-    } catch (error) {
-      console.error('Error updating submission status:', error);
-    }
-  };
-
   return (
     <div className="admin-dashboard">
-      {/* Submissions list */}
       <div className="submissions-list">
         <h2>Pending Submissions</h2>
         {loading ? (
@@ -298,8 +262,8 @@ const FormData = () => {
         ) : (
           <ul className="submission-cards">
             {submissions.map(submission => (
-              <li 
-                key={submission.id} 
+              <li
+                key={submission.id}
                 className={`submission-item ${selectedSubmission?.id === submission.id ? 'selected' : ''}`}
                 onClick={() => handleSelectSubmission(submission)}
               >
@@ -314,11 +278,9 @@ const FormData = () => {
         )}
       </div>
 
-      {/* LinkedIn Profile Analysis Form */}
       <form onSubmit={handleSubmit} className="classroom-form-data">
         <h2 className="classroom-heading">LinkedIn Profile Analyzer</h2>
-        
-        {/* Profile Basics */}
+
         <fieldset className="classroom-fieldset">
           <legend className="classroom-legend">1. Profile Basics</legend>
           <label>Connections:
@@ -346,7 +308,6 @@ const FormData = () => {
           </label>
         </fieldset>
 
-        {/* Profile Quality */}
         <fieldset className="classroom-fieldset">
           <legend className="classroom-legend">2. Profile Quality</legend>
           {[
@@ -369,7 +330,6 @@ const FormData = () => {
           </label>
         </fieldset>
 
-        {/* Activity Signals */}
         <fieldset className="classroom-fieldset">
           <legend className="classroom-legend">3. Activity & Engagement</legend>
           {[
@@ -388,7 +348,6 @@ const FormData = () => {
           </label>
         </fieldset>
 
-        {/* Outreach Suitability */}
         <fieldset className="classroom-fieldset">
           <legend className="classroom-legend">4. Outreach Suitability</legend>
           {[
@@ -405,7 +364,6 @@ const FormData = () => {
           ))}
         </fieldset>
 
-        {/* Low Score Signals */}
         <fieldset className="classroom-fieldset">
           <legend className="classroom-legend classroom-danger">5. Low Score / Risk Signals</legend>
           {[
@@ -423,44 +381,65 @@ const FormData = () => {
         </fieldset>
 
         <button type="submit" className="classroom-submit-button">
-          Submit Profile Analysis
+          {showPreview ? 'Update Analysis' : 'Generate Analysis Preview'}
         </button>
       </form>
 
-      {/* Reply Form Container */}
-      <div className="submissions-container">
-        {selectedSubmission && (
-          <div className="reply-form-container">
-            <h3>Reply to Submission</h3>
-            <div className="submission-details">
-              <p><strong>LinkedIn URL:</strong> <a href={selectedSubmission.linkedin_url}>{selectedSubmission.linkedin_url}</a></p>
-              <p><strong>Message:</strong> {selectedSubmission.message}</p>
-            </div>
-            
-            <textarea
-              value={replyText}
-              onChange={handleReplyChange}
-              placeholder="Enter your reply to the user..."
-              rows={5}
-              className="reply-textarea"
-            />
-            
-            {replyStatus && (
-              <div className={`reply-status ${replyStatus.includes('success') ? 'success' : 'error'}`}>
-                {replyStatus}
-              </div>
-            )}
-            
+      {showPreview && (
+        <div className="analysis-preview-container">
+          <h2>Analysis Preview</h2>
+          <div className="analysis-content">
+            <pre>{analysisPreview}</pre>
+          </div>
+          <div className="preview-controls">
             <button
-              className="send-reply-button"
-              onClick={handleSubmitReply}
-              disabled={isReplying || !replyText.trim()}
+              className="edit-button"
+              onClick={() => setShowPreview(false)}
             >
-              {isReplying ? 'Sending...' : 'Send Reply'}
+              Edit Analysis
+            </button>
+            <button
+              className="send-button"
+              onClick={handleSendAnalysis}
+              disabled={isReplying}
+            >
+              {isReplying ? 'Sending...' : 'Send Analysis to User'}
             </button>
           </div>
-        )}
-      </div>
+        </div>
+      )}
+
+      {selectedSubmission && (
+        <div className="reply-form-container">
+          <h3>Reply to Submission</h3>
+          <div className="submission-details">
+            <p><strong>LinkedIn URL:</strong> <a href={selectedSubmission.linkedin_url}>{selectedSubmission.linkedin_url}</a></p>
+            <p><strong>Message:</strong> {selectedSubmission.message}</p>
+          </div>
+
+          <textarea
+            value={replyText}
+            onChange={handleReplyChange}
+            placeholder="Enter your reply to the user..."
+            rows={5}
+            className="reply-textarea"
+          />
+
+          {replyStatus && (
+            <div className={`reply-status ${replyStatus.includes('success') ? 'success' : 'error'}`}>
+              {replyStatus}
+            </div>
+          )}
+
+          <button
+            className="send-reply-button"
+            onClick={handleSendAnalysis}
+            disabled={isReplying || !replyText.trim()}
+          >
+            {isReplying ? 'Sending...' : 'Send Reply'}
+          </button>
+        </div>
+      )}
     </div>
   );
 };

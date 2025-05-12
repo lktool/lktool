@@ -77,3 +77,27 @@ class ContactSubmissionSerializer(serializers.ModelSerializer):
             data['admin_reply_date'] = None
             
         return data
+
+class AdminAnalysisSerializer(serializers.Serializer):
+    """Serializer for LinkedIn profile analysis data"""
+    connections = serializers.IntegerField(required=False, allow_null=True)
+    hasVerificationShield = serializers.BooleanField(default=False)
+    accountType = serializers.CharField(default='normal')
+    accountAgeYears = serializers.FloatField(required=False, allow_null=True)
+    hasCustomURL = serializers.BooleanField(default=False)
+    hasProfileSummary = serializers.BooleanField(default=False)
+    hasProfessionalPhoto = serializers.BooleanField(default=True)
+    hasOldPhoto = serializers.BooleanField(default=False)
+    outdatedJobInfo = serializers.BooleanField(default=False)
+    missingAboutOrEducation = serializers.BooleanField(default=False)
+    profileCompleteness = serializers.BooleanField(default=False)
+    skillsEndorsementsCount = serializers.IntegerField(required=False, allow_null=True)
+    hasRecommendations = serializers.BooleanField(default=False)
+    personalizedProfile = serializers.BooleanField(default=False)
+    recentActivity = serializers.BooleanField(default=True)
+    engagementWithContent = serializers.BooleanField(default=False)
+    engagementHistory = serializers.BooleanField(default=False)
+    postHistoryOlderThanYear = serializers.BooleanField(default=False)
+    score = serializers.IntegerField(required=True)
+    risk_level = serializers.CharField(required=True)
+    summary = serializers.CharField(required=True)

@@ -89,16 +89,27 @@ export const adminService = {
   },
 
   /**
-   * Submit a reply to a user submission
+   * Submit a reply to a user submission with analysis data
    * @param {number} submissionId - Submission ID
    * @param {string} reply - Admin reply text
+   * @param {Object} analysisData - Optional analysis data 
    * @returns {Promise<Object>} Reply result
    */
-  async submitReply(submissionId, reply) {
+  async submitReply(submissionId, reply, analysisData = null) {
     try {
-      const response = await apiClient.post(`${ENDPOINTS.ADMIN.SUBMIT_REPLY(submissionId)}`, {
-        reply
-      });
+      const payload = {
+        reply,
+      };
+      
+      // If analysis data is provided, include it in the payload
+      if (analysisData) {
+        payload.analysis = analysisData;
+      }
+      
+      const response = await apiClient.post(
+        `${ENDPOINTS.ADMIN.SUBMIT_REPLY(submissionId)}`, 
+        payload
+      );
       
       return {
         success: true,
