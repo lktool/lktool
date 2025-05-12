@@ -264,3 +264,91 @@ class GoogleAuthView(APIView):
             response.data = {"error": f"Authentication failed: {str(e)}"}
             response.status_code = 500
             return response
+
+class PasswordResetView(APIView):
+    """
+    API endpoint for requesting a password reset email
+    """
+    permission_classes = [AllowAny]  # Important - this should be open to anonymous users
+    
+    def post(self, request):
+        email = request.data.get('email')
+        if not email:
+            return Response({"detail": "Email is required."}, status=400)
+        
+        try:
+            user = User.objects.get(email=email)
+            
+            # Generate token and uid for password reset
+            uid = urlsafe_base64_encode(force_str(user.pk).encode())
+            token = default_token_generator.make_token(user)
+            
+            # Build reset URL
+            reset_url = f"{settings.FRONTEND_URL}/reset-password/{uid}/{token}"
+            
+            # Send email
+            subject = "Password Reset Request"
+            message = f"""
+            You requested a password reset for your account.
+            Please click the link below to reset your password:
+            
+            {reset_url}
+            
+            If you didn't request this, you can safely ignore this email.
+            """
+            
+            send_mail(
+                subject=subject,
+                message=message,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[email],
+                fail_silently=False,
+            )
+            
+            return Response({"detail": "Password reset email sent."}, status=200)
+            
+        except User.DoesNotExist:
+            # Don't reveal that the user doesn't exist for security
+            return Response({"detail": "Password reset email sent if account exists."}, status=200)
+        except Exception as e:
+            logger.error(f"Password reset error: {str(e)}")
+            return Response({"detail": "Error sending password reset email."}, status=500)
+
+class PasswordResetConfirmView(APIView):
+    """
+    API endpoint to confirm password reset and set new password
+    """
+    permission_classes = [AllowAny]
+    
+    def post(self, request, uidb64, token):
+        try:
+            # Get user from uid
+            uid = force_str(urlsafe_base64_decode(uidb64))
+            user = User.objects.get(pk=uid)
+            
+            # Validate token
+            if not default_token_generator.check_token(user, token):
+                return Response({"detail": "Invalid or expired token."}, status=400)
+            
+            # Get passwords from request
+            password = request.data.get('password')
+            password2 = request.data.get('password2')
+            
+            # Validate passwords
+            if not password or not password2:
+                return Response({"detail": "Both password fields are required."}, status=400)
+                
+            if password != password2:
+                return Response({"detail": "Passwords don't match."}, status=400)
+            
+            # Set new password
+            user.set_password(password)
+            user.save()
+            
+            return Response({"detail": "Password has been reset successfully."}, status=200)
+            
+        except User.DoesNotExist:
+            return Response({"detail": "Invalid reset link."}, status=400)
+        except Exception as e:
+            logger.error(f"Password reset confirm error: {str(e)}")
+            return Response({"detail": "Error resetting password."}, status=500)

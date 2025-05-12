@@ -52,10 +52,15 @@ export const authService = {
    */
   async register(email, password, password2) {
     try {
+      console.log(`Attempting registration with email: ${email}`);
+      console.log(`Using endpoint: ${ENDPOINTS.AUTH.BASE}${ENDPOINTS.AUTH.SIGNUP}`);
+      
       const response = await apiClient.post(
         `${ENDPOINTS.AUTH.BASE}${ENDPOINTS.AUTH.SIGNUP}`,
         { email, password, password2 }
       );
+      
+      console.log('Registration response:', response.data);
       
       return {
         success: true,
@@ -64,6 +69,7 @@ export const authService = {
       };
     } catch (error) {
       console.error('Registration error:', error);
+      console.error('Error response:', error.response?.data);
       
       if (error.response?.data) {
         const errorData = error.response.data;
@@ -74,6 +80,7 @@ export const authService = {
         if (errorData.password2) return { success: false, error: `Password confirmation error: ${errorData.password2[0]}` };
         if (errorData.message) return { success: false, error: errorData.message };
         if (errorData.error) return { success: false, error: errorData.error };
+        if (errorData.detail) return { success: false, error: errorData.detail };
       }
       
       return { success: false, error: 'Registration failed. Please try again.' };
@@ -164,10 +171,15 @@ export const authService = {
    */
   async requestPasswordReset(email) {
     try {
+      console.log(`Requesting password reset for email: ${email}`);
+      console.log(`Using endpoint: ${ENDPOINTS.AUTH.BASE}${ENDPOINTS.AUTH.REQUEST_PASSWORD_RESET}`);
+      
       const response = await apiClient.post(
         `${ENDPOINTS.AUTH.BASE}${ENDPOINTS.AUTH.REQUEST_PASSWORD_RESET}`,
         { email }
       );
+      
+      console.log('Password reset response:', response.data);
       
       return {
         success: true,
@@ -175,9 +187,15 @@ export const authService = {
       };
     } catch (error) {
       console.error('Password reset request error:', error);
+      console.error('Error response:', error.response?.data);
+      
+      if (error.response?.data?.detail) {
+        return { success: false, error: error.response.data.detail };
+      }
+      
       return {
         success: false,
-        error: error.response?.data?.detail || 'Failed to request password reset'
+        error: 'Failed to request password reset. Please try again.'
       };
     }
   },

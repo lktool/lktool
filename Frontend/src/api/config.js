@@ -12,12 +12,12 @@ export const ENDPOINTS = {
   AUTH: {
     BASE: `${BASE_URL}/api/auth`,
     LOGIN: '/login/',
-    SIGNUP: '/signup/',
+    SIGNUP: '/signup/',  // Make sure this matches the backend URL pattern
     REFRESH_TOKEN: '/refresh/',
     PROFILE: '/profile/',
     VERIFY_EMAIL: '/verify-email/',
-    REQUEST_PASSWORD_RESET: '/password-reset/',
-    CONFIRM_PASSWORD_RESET: (uid, token) => `/password-reset/${uid}/${token}/`,
+    REQUEST_PASSWORD_RESET: '/password-reset/',  // Make sure this matches the backend URL pattern
+    CONFIRM_PASSWORD_RESET: (uid, token) => `/password-reset-confirm/${uid}/${token}/`,
     RESEND_VERIFICATION: '/resend-verification/',
     // Google Auth has multiple endpoints
     GOOGLE: '/google/',
