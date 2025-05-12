@@ -73,6 +73,8 @@ function App() {
           {/* Auth callback routes */}
           {/* Update this route to match the backend format with uid-token */}
           <Route path="/verify-email/:token" element={<VerifyEmail />} />
+          
+          {/* This route handles the Google OAuth callback - matches the redirect URI */}
           <Route path="/auth/google/callback" element={<GoogleAuthCallback />} />
           
           {/* Protected Routes - Only for authenticated users */}

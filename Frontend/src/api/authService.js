@@ -123,23 +123,45 @@ export const authService = {
    */
   async googleAuth(credential, action = 'login') {
     try {
-      // Use the direct google endpoint
-      const response = await apiClient.post(
-        ENDPOINTS.AUTH.GOOGLE_ALT,
-        { credential, action }
-      );
+      // Try multiple endpoints in sequence
+      const endpoints = [
+        ENDPOINTS.AUTH.GOOGLE_ALT,       // First try /api/auth/google/
+        ENDPOINTS.AUTH.GOOGLE_DIRECT,    // Then try /auth/google/
+        `${BASE_URL}/google/`            // Finally try direct /google/
+      ];
       
-      if (response.data?.access) {
-        this._storeAuthData(response.data);
-        
-        return {
-          success: true,
-          isNewUser: response.data.is_new_user || false,
-          isAdmin: response.data.role === 'admin'
-        };
+      let response = null;
+      let error = null;
+      
+      // Try each endpoint until one works
+      for (const endpoint of endpoints) {
+        try {
+          console.log(`Trying Google auth endpoint: ${endpoint}`);
+          response = await apiClient.post(endpoint, { credential, action });
+          if (response.data?.access) {
+            // Found a working endpoint, break out of the loop
+            break;
+          }
+        } catch (err) {
+          // Store the last error
+          error = err;
+          console.warn(`Endpoint ${endpoint} failed: ${err.message}`);
+        }
       }
       
-      return { success: false, error: 'Invalid response from server' };
+      // If no endpoint worked, throw the last error
+      if (!response || !response.data?.access) {
+        throw error || new Error('All Google auth endpoints failed');
+      }
+      
+      // Process successful response
+      this._storeAuthData(response.data);
+      
+      return {
+        success: true,
+        isNewUser: response.data.is_new_user || false,
+        isAdmin: response.data.role === 'admin'
+      };
     } catch (error) {
       console.error('Google auth error:', error);
       

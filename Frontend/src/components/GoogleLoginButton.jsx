@@ -1,6 +1,7 @@
 import React from 'react';
 import { useState } from 'react';
 import axios from 'axios'; // Add axios import
+import { OAUTH_CONFIG } from '../api/config';
 import './GoogleLoginButton.css';
 
 // Google logo SVG for the custom button
@@ -23,23 +24,21 @@ const GoogleLoginButton = ({ onSuccess, actionType = 'login' }) => {
     setIsLoading(true);
     setError(null);
     
-    // Create a new window for Google OAuth
+    // Use values from central config
     const googleAuthUrl = 'https://accounts.google.com/o/oauth2/v2/auth';
-    // Fix the double slash in the redirect URI
-    const redirectUri = 'https://projectsection-ten.vercel.app/auth/google/callback';
-    const clientId = '865917249576-o12qfisk9hpp4b10vjvdj2d1kqhunva9.apps.googleusercontent.com';
+    const { CLIENT_ID, REDIRECT_URI, RESPONSE_TYPE, SCOPE, PROMPT } = OAUTH_CONFIG.GOOGLE;
     
     // Store the action type in localStorage for the callback to use
     localStorage.setItem('google_auth_action', actionType);
     
     // Create the OAuth URL with correct parameters
     const params = {
-      client_id: clientId,
-      redirect_uri: redirectUri,
-      response_type: 'id_token',
-      scope: 'email profile',
+      client_id: CLIENT_ID,
+      redirect_uri: REDIRECT_URI,
+      response_type: RESPONSE_TYPE,
+      scope: SCOPE,
+      prompt: PROMPT,
       nonce: Math.random().toString(36).substring(2, 15),
-      prompt: 'select_account',
     };
     
     const url = `${googleAuthUrl}?${new URLSearchParams(params).toString()}`;
@@ -100,8 +99,8 @@ const GoogleLoginButton = ({ onSuccess, actionType = 'login' }) => {
       
       console.log("Verifying Google token with backend");
       
-      // Try with '/google/' endpoint (no 'auth/' prefix) which we just added
-      const url = 'https://lktool.onrender.com/google/';
+      // Try with API path instead of root path
+      const url = 'https://lktool.onrender.com/api/auth/google/';
       console.log("Google Auth URL:", url);
       
       // Simplified fetch to avoid preflight issues

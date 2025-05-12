@@ -21,7 +21,7 @@ export const ENDPOINTS = {
     RESEND_VERIFICATION: '/resend-verification/',
     // Google Auth has multiple endpoints
     GOOGLE: '/google/',
-    GOOGLE_ALT: `${BASE_URL}/google/`, // Root-level endpoint
+    GOOGLE_ALT: `${BASE_URL}/api/auth/google/`, // Use API path
     GOOGLE_DIRECT: `${BASE_URL}/auth/google/`, // Alternative endpoint
   },
   
@@ -64,11 +64,11 @@ export const REQUEST_CONFIG = {
   TIMEOUT: 30000, // 30 seconds
 };
 
-// OAuth configuration
+// OAuth configuration - Ensure this matches Google Console settings
 export const OAUTH_CONFIG = {
   GOOGLE: {
-    REDIRECT_URI: 'https://projectsection-ten.vercel.app/auth/google/callback',
-    CLIENT_ID: '865917249576-o12qfisk9hpp4b10vjvdj2d1kqhunva9.apps.googleusercontent.com',
+    REDIRECT_URI: 'https://projectsection-ten.vercel.app/auth/google/callback', // Matches Google Console
+    CLIENT_ID: '865917249576-o12qfisk9hpp4b10vjvdj2d1kqhunva9.apps.googleusercontent.com', // Client ID looks correct
     RESPONSE_TYPE: 'id_token',
     SCOPE: 'email profile',
     PROMPT: 'select_account',
