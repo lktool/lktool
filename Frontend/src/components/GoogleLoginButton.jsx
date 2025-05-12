@@ -99,42 +99,54 @@ const GoogleLoginButton = ({ onSuccess, actionType = 'login' }) => {
       
       console.log("Verifying Google token with backend");
       
-      // Try with API path instead of root path
-      const url = 'https://lktool.onrender.com/api/auth/google/';
-      console.log("Google Auth URL:", url);
+      // Try multiple endpoints in sequence
+      const endpoints = [
+        'https://lktool.onrender.com/api/auth/google/',
+        'https://lktool.onrender.com/auth/google/',
+        'https://lktool.onrender.com/google/'
+      ];
       
-      // Simplified fetch to avoid preflight issues
-      const response = await axios({
-        method: 'POST',
-        url: url,
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
-        },
-        data: { 
-          credential: token,
-          action: action
-        },
-        withCredentials: true
-      });
+      let response = null;
+      let errorMsg = null;
+      
+      // Try each endpoint until one works
+      for (let i = 0; i < endpoints.length; i++) {
+        try {
+          const url = endpoints[i];
+          console.log(`Trying endpoint ${i+1}/${endpoints.length}: ${url}`);
+          
+          response = await axios({
+            method: 'POST',
+            url: url,
+            headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json'
+            },
+            data: { 
+              credential: token,
+              action: action
+            },
+            withCredentials: true
+          });
+          
+          // If we got a successful response, break out of the loop
+          if (response && response.status === 200 && response.data) {
+            console.log(`Endpoint ${url} successful!`);
+            break;
+          }
+        } catch (err) {
+          errorMsg = err;
+          console.warn(`Endpoint ${endpoints[i]} failed: ${err.message}`);
+        }
+      }
+      
+      // If no endpoint worked
+      if (!response || !response.data) {
+        throw errorMsg || new Error('All Google auth endpoints failed');
+      }
       
       const data = response.data;
       console.log("Backend response:", data);
-      
-      if (!response.status === 200) {
-        // Handle specific cases
-        if (response.status === 404 && data.needs_signup) {
-          setError("No account found with this email. Please sign up first.");
-          return;
-        } 
-        
-        if (response.status === 409 && data.needs_login) {
-          setError("An account already exists with this email. Please log in instead.");
-          return;
-        }
-        
-        throw new Error(data.error || `Failed to authenticate (${response.status})`);
-      }
       
       // Store tokens from the response
       if (data.access) {
@@ -155,7 +167,34 @@ const GoogleLoginButton = ({ onSuccess, actionType = 'login' }) => {
       }
     } catch (error) {
       console.error('Error during Google authentication:', error);
-      setError(error.message || 'Error during Google authentication');
+      
+      // Handle 409 Conflict (user already exists)
+      if (error.response?.status === 409) {
+        if (actionType === 'signup' && error.response.data?.needs_login) {
+          setError("An account already exists with this email. Please log in instead.");
+          
+          // Optionally redirect to login
+          if (window.confirm("An account with this email already exists. Would you like to log in instead?")) {
+            window.location.href = '/login';
+          }
+          return;
+        }
+      }
+      
+      // Handle 404 Not Found (user doesn't exist)
+      if (error.response?.status === 404) {
+        if (actionType === 'login' && error.response.data?.needs_signup) {
+          setError("No account found with this email. Please sign up first.");
+          
+          // Optionally redirect to signup
+          if (window.confirm("No account found with this email. Would you like to sign up instead?")) {
+            window.location.href = '/signup';
+          }
+          return;
+        }
+      }
+      
+      setError(error.response?.data?.error || error.message || 'Error during Google authentication');
     } finally {
       setIsLoading(false);
     }
