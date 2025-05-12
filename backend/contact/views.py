@@ -89,6 +89,26 @@ class ContactFormView(APIView):
         print(f"Validation errors: {serializer.errors}")
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+class SubmitFormView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def post(self, request):
+        # Add the authenticated user's email to the submission data
+        data = request.data.copy()
+        data['email'] = request.user.email
+        
+        print(f"Processing submission with data: {data}")
+        
+        serializer = ContactSerializer(data=data)
+        if serializer.is_valid():
+            # Associate the submission with the authenticated user
+            print(f"Associating submission with authenticated user: {request.user.email}")
+            submission = serializer.save(user=request.user)
+            
+            # Don't try to save analysis data since the field doesn't exist
+            return Response(ContactSerializer(submission).data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 @api_view(['GET'])
 @permission_classes([IsAdminUser])
 def test_email(request):
