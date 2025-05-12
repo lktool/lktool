@@ -17,7 +17,7 @@ import AdminRoute from "./components/AdminRoute";
 import NavBar from "./NavBar/NavBar"; 
 import UserSubmissions from "./UserSubmissions/UserSubmissions";
 import PublicOnlyRoute from "./components/PublicOnlyRoute";
-import Contact from "./Contact/Contact";
+
 
 function App() {
   useEffect(() => {
@@ -82,9 +82,6 @@ function App() {
             </PublicOnlyRoute>
           } />
           <Route path="/admin/dashboard" element={<AdminRoute><FormData /></AdminRoute>} />
-          
-          {/* Contact route - publicly accessible */}
-          <Route path="/contact" element={<Contact />} />
           
           {/* Not Found Route */}
           <Route path="/not-found" element={<NotFound />} />

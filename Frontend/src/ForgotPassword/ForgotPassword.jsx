@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { unifiedAuthService } from '../api/unifiedAuthService'; // Changed from authService
+import { authService } from '../api'; // Updated to use new API structure
 import './ForgotPassword.css';
 
 function ForgotPassword() {
@@ -21,8 +21,8 @@ function ForgotPassword() {
         setLoading(true);
 
         try {
-            // Use unified auth service instead
-            await unifiedAuthService.requestPasswordReset(email);
+            // Use new authService instead of unifiedAuthService
+            await authService.requestPasswordReset(email);
             setSuccess(true);
         } catch (err) {
             console.error('Password reset request failed:', err);

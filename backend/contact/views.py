@@ -66,18 +66,15 @@ class ContactFormView(APIView):
                 
                 You can review this submission in the admin dashboard.
                 """
-                from_email = settings.DEFAULT_FROM_EMAIL
                 recipient_list = [settings.ADMIN_EMAIL]
                 
                 # Log email attempt
-                print(f"Attempting to send email to {recipient_list} from {from_email}")
+                print(f"Attempting to send email to {recipient_list} from {settings.DEFAULT_FROM_EMAIL}")
                 
-                send_mail(
+                send_notification_email(
                     subject=subject,
                     message=message,
-                    from_email=from_email,
-                    recipient_list=recipient_list,
-                    fail_silently=False,
+                    recipient_list=recipient_list
                 )
                 print("Email sent successfully")
             except Exception as e:
@@ -121,12 +118,10 @@ class ContactMessageView(APIView):
                 Message:
                 {submission.message}
                 """
-                send_mail(
+                send_notification_email(
                     subject=subject,
                     message=message,
-                    from_email=settings.DEFAULT_FROM_EMAIL,
-                    recipient_list=[settings.ADMIN_EMAIL],
-                    fail_silently=True,
+                    recipient_list=[settings.ADMIN_EMAIL]
                 )
             except Exception as e:
                 print(f"Failed to send contact notification: {e}")
@@ -308,7 +303,7 @@ class AdminReplyView(APIView):
             submission.is_processed = True
             submission.save()
             
-            # Send email notification to user
+            # Send email notification to user using the email_service
             try:
                 subject = f"Response to your LinkedIn Profile Submission"
                 message = f"""
@@ -323,12 +318,10 @@ class AdminReplyView(APIView):
                 Thank you for using our service!
                 """
                 
-                send_mail(
+                send_notification_email(
                     subject=subject,
                     message=message,
-                    from_email=settings.DEFAULT_FROM_EMAIL,
-                    recipient_list=[submission.email],
-                    fail_silently=True,
+                    recipient_list=[submission.email]
                 )
                 
                 print(f"Reply notification email sent to {submission.email}")

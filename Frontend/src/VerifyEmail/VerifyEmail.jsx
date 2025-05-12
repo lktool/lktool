@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
-import { unifiedAuthService } from '../api/unifiedAuthService'; // Changed from authService
+import { authService } from '../api'; // Changed from unifiedAuthService
 import './VerifyEmail.css';
 
 function VerifyEmail() {
@@ -19,8 +19,8 @@ function VerifyEmail() {
             setIsLoading(true);
             
             try {
-                // Use unified auth service
-                const response = await unifiedAuthService.verifyEmail(token);
+                // Use new auth service instead of unifiedAuthService
+                const response = await authService.verifyEmail(token);
                 setIsVerified(true);
                 setMessage('Your email has been successfully verified! You can now log in.');
             } catch (error) {
