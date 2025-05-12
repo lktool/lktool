@@ -5,20 +5,18 @@ from rest_framework.permissions import IsAdminUser
 from django.core.paginator import Paginator
 from .models import ContactSubmission
 from .serializers import ContactSubmissionSerializer
+from users.authentication import AdminJWTAuthentication
 
 class AdminSubmissionsView(APIView):
     """
     API endpoint for admin to view submissions
     """
     permission_classes = [IsAdminUser]
+    authentication_classes = [AdminJWTAuthentication]
     
     def get(self, request):
-        # Check if user is admin - extra safeguard
-        if not request.user.is_staff and not getattr(request.user, 'role', '') == 'admin':
-            print(f"Access denied for user {request.user} - role: {getattr(request.user, 'role', 'unknown')}")
-            return Response({"error": "Admin access required"}, status=status.HTTP_403_FORBIDDEN)
-        
-        print(f"Admin access granted for user {request.user.email}")
+        # Debug info
+        print(f"AdminSubmissionsView - user: {request.user}, is_staff: {request.user.is_staff}, role: {getattr(request.user, 'role', 'unknown')}")
         
         # Get filter parameters
         status_filter = request.query_params.get('status')
@@ -53,12 +51,11 @@ class AdminSubmissionDetailView(APIView):
     API endpoint for admin to get a specific submission
     """
     permission_classes = [IsAdminUser]
+    authentication_classes = [AdminJWTAuthentication]
     
     def get(self, request, submission_id):
-        # Check if user is admin - extra safeguard
-        if not request.user.is_staff and not getattr(request.user, 'role', '') == 'admin':
-            return Response({"error": "Admin access required"}, status=status.HTTP_403_FORBIDDEN)
-            
+        print(f"AdminSubmissionDetailView - user: {request.user}, is_staff: {request.user.is_staff}")
+        
         try:
             submission = ContactSubmission.objects.get(id=submission_id)
             serializer = ContactSubmissionSerializer(submission)

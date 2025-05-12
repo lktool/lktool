@@ -3,7 +3,7 @@
  * Handles admin-specific API calls
  */
 import { apiClient } from './interceptors';
-import { ENDPOINTS } from './config';
+import { ENDPOINTS, AUTH_CONFIG } from './config';
 
 export const adminService = {
   /**
@@ -13,11 +13,17 @@ export const adminService = {
    */
   async getSubmissions(filters = {}) {
     try {
-      console.log(`Fetching submissions from: ${ENDPOINTS.ADMIN.SUBMISSIONS}`);
+      console.log(`Fetching admin submissions from: ${ENDPOINTS.ADMIN.SUBMISSIONS}`);
       
-      // Add authorization debugging
-      const token = localStorage.getItem('token');
-      console.log(`Using auth token: ${token ? 'Present' : 'Missing'}`);
+      // Get admin token
+      const token = localStorage.getItem(AUTH_CONFIG.TOKEN_KEY);
+      const isAdmin = localStorage.getItem(AUTH_CONFIG.USER_ROLE_KEY) === 'admin';
+      
+      console.log(`Admin check: token exists=${!!token}, isAdmin=${isAdmin}`);
+      
+      if (!token || !isAdmin) {
+        throw new Error('Not authenticated as admin');
+      }
       
       const response = await apiClient.get(ENDPOINTS.ADMIN.SUBMISSIONS, {
         params: filters,
@@ -26,25 +32,37 @@ export const adminService = {
         }
       });
       
-      console.log('Submissions response:', response);
+      console.log('Admin submissions response status:', response.status);
+      
+      if (!response.data?.submissions) {
+        console.warn('Unexpected response format:', response.data);
+        return { 
+          success: false,
+          error: 'Invalid response format from server',
+          data: []
+        };
+      }
       
       return { 
         success: true,
-        data: Array.isArray(response.data.submissions) ? response.data.submissions : []
+        data: response.data.submissions
       };
     } catch (error) {
-      console.error('Error fetching submissions:', error);
-      console.error('Error details:', error.response?.data);
+      console.error('Error fetching admin submissions:', error);
+      console.error('Error details:', error.response?.data || 'No response data');
       
-      // Check if we have a 403 (permission) error
-      if (error.response?.status === 403) {
-        console.error('Permission denied - Admin permissions required');
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        console.error('Authentication error - clearing admin token');
+        // Force re-login on auth errors
+        localStorage.removeItem(AUTH_CONFIG.TOKEN_KEY);
+        localStorage.removeItem(AUTH_CONFIG.REFRESH_TOKEN_KEY);
+        window.dispatchEvent(new Event(AUTH_CONFIG.AUTH_CHANGE_EVENT));
       }
       
       return {
         success: false,
         error: error.response?.data?.error || 'Failed to fetch submissions',
-        data: [] // Always return an array to prevent "length" errors
+        data: []
       };
     }
   },

@@ -219,11 +219,13 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # Add these settings for JWT Authentication
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
+        'users.authentication.AdminJWTAuthentication',  # Use our custom auth class
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',  # Change this from AllowAny to IsAuthenticated
+        'rest_framework.permissions.IsAuthenticated',
     ],
+    'EXCEPTION_HANDLER': 'users.utils.custom_exception_handler',
 }
 
 # Simple JWT settings optimized for performance

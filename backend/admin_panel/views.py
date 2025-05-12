@@ -12,16 +12,21 @@ from .models import ProfileAnalysis
 from .serializers import ProfileAnalysisSerializer, SubmissionWithAnalysisSerializer
 from contact.models import ContactSubmission
 from contact.serializers import ContactSerializer
+from users.authentication import AdminJWTAuthentication
 
 class ProfileAnalysisCreateView(APIView):
     """API endpoint for creating a profile analysis"""
     permission_classes = [IsAdminUser]
+    authentication_classes = [AdminJWTAuthentication]
     
     def post(self, request):
         # Extract submission ID from request
         submission_id = request.data.get('submission_id')
         if not submission_id:
             return Response({'error': 'Submission ID is required'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Debug info
+        print(f"ProfileAnalysisCreateView - user: {request.user}, submission_id: {submission_id}")
         
         # Check if submission exists
         submission = get_object_or_404(ContactSubmission, id=submission_id)
@@ -33,7 +38,7 @@ class ProfileAnalysisCreateView(APIView):
         # Prepare data for serializer
         data = request.data.copy()
         data['submission'] = submission_id
-        data['created_by'] = request.user.id
+        data['created_by'] = getattr(request.user, 'id', 0)  # Handle admin user which has id=0
         
         # Create analysis
         serializer = ProfileAnalysisSerializer(data=data)
@@ -51,6 +56,7 @@ class ProfileAnalysisCreateView(APIView):
 class ProfileAnalysisDetailView(APIView):
     """API endpoint for retrieving a profile analysis"""
     permission_classes = [IsAdminUser]
+    authentication_classes = [AdminJWTAuthentication]
     
     def get(self, request, analysis_id):
         analysis = get_object_or_404(ProfileAnalysis, id=analysis_id)
@@ -68,6 +74,7 @@ class ProfileAnalysisDetailView(APIView):
 class SubmissionAnalysisStatusView(APIView):
     """API endpoint to check analysis status for a submission"""
     permission_classes = [IsAdminUser]
+    authentication_classes = [AdminJWTAuthentication]
     
     def get(self, request, submission_id):
         submission = get_object_or_404(ContactSubmission, id=submission_id)
@@ -83,6 +90,7 @@ class SubmissionAnalysisStatusView(APIView):
 class AdminDashboardStatsView(APIView):
     """API endpoint to get stats for admin dashboard"""
     permission_classes = [IsAdminUser]
+    authentication_classes = [AdminJWTAuthentication]
     
     def get(self, request):
         # Get overall stats
