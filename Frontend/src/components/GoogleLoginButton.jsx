@@ -1,6 +1,5 @@
 import React from 'react';
 import { useState } from 'react';
-import { getApiUrl, API_CONFIG } from '../api/apiConfig';
 import './GoogleLoginButton.css';
 
 // Google logo SVG for the custom button
@@ -53,10 +52,28 @@ const GoogleLoginButton = ({ onSuccess, actionType = 'login' }) => {
       return;
     }
     
+    // Listen for messages from the popup window
+    const messageHandler = (event) => {
+      if (event.origin !== window.location.origin) return;
+      
+      if (event.data.type === 'GOOGLE_AUTH_SUCCESS') {
+        window.removeEventListener('message', messageHandler);
+        // Call backend with the token
+        handleTokenVerification(event.data.token);
+      } else if (event.data.type === 'GOOGLE_AUTH_ERROR') {
+        window.removeEventListener('message', messageHandler);
+        setIsLoading(false);
+        setError(event.data.error || "Authentication failed");
+      }
+    };
+    
+    window.addEventListener('message', messageHandler);
+    
     // Function to check if the window has been closed
     const checkWindowClosed = setInterval(() => {
       if (authWindow.closed) {
         clearInterval(checkWindowClosed);
+        window.removeEventListener('message', messageHandler);
         setIsLoading(false);
         
         // Check if we can get the token from local storage (set by the callback page)
@@ -82,11 +99,17 @@ const GoogleLoginButton = ({ onSuccess, actionType = 'login' }) => {
       
       // Add DEBUG logging
       console.log("Verifying Google token with backend");
-      console.log("API URL:", getApiUrl(API_CONFIG.AUTH.GOOGLE_AUTH));
       
-      const response = await fetch(getApiUrl(API_CONFIG.AUTH.GOOGLE_AUTH), {
+      // Use direct URL to avoid CORS issues
+      const url = 'https://lktool.onrender.com/auth/google/';
+      console.log("Google Auth URL:", url);
+      
+      const response = await fetch(url, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
         body: JSON.stringify({ 
           credential: token,
           action: action
@@ -112,12 +135,15 @@ const GoogleLoginButton = ({ onSuccess, actionType = 'login' }) => {
         throw new Error(data.error || `Failed to authenticate (${response.status})`);
       }
       
-      if (data.token) {
-        // Store the token
-        localStorage.setItem('token', data.token);
-        if (data.refresh_token) {
-          localStorage.setItem('refreshToken', data.refresh_token);
+      // Store tokens from the response
+      if (data.access) {
+        localStorage.setItem('token', data.access);
+        if (data.refresh) {
+          localStorage.setItem('refreshToken', data.refresh);
         }
+        
+        localStorage.setItem('userRole', data.role || 'user');
+        localStorage.setItem('userEmail', data.email);
         
         // Call the onSuccess callback
         if (onSuccess) {

@@ -140,22 +140,48 @@ class UserRegistrationView(APIView):
 class GoogleAuthView(APIView):
     permission_classes = [AllowAny]
     
+    def options(self, request, *args, **kwargs):
+        """Handle preflight OPTIONS requests correctly"""
+        response = Response()
+        # Use a wildcard or specific origin
+        response["Access-Control-Allow-Origin"] = request.META.get('HTTP_ORIGIN', '*')
+        response["Access-Control-Allow-Methods"] = "POST, OPTIONS"
+        response["Access-Control-Allow-Headers"] = "Content-Type, Authorization, Accept" 
+        response["Access-Control-Allow-Credentials"] = "true"
+        return response
+    
     def post(self, request):
+        # Add CORS headers to response
+        response = Response()
+        # Match the origin that sent the request
+        if 'HTTP_ORIGIN' in request.META:
+            response["Access-Control-Allow-Origin"] = request.META['HTTP_ORIGIN']
+        response["Access-Control-Allow-Credentials"] = "true"
+        
+        # Log the request info for debugging
+        logger.info(f"Google Auth request received. Origin: {request.META.get('HTTP_ORIGIN', 'unknown')}")
+        logger.info(f"Request body keys: {request.data.keys()}")
+        
         credential = request.data.get('credential')
         action = request.data.get('action', 'login')  # Default to login
         
         if not credential:
-            return Response({"error": "Google credential is required"}, status=400)
+            logger.error("Missing credential in request")
+            response.data = {"error": "Google credential is required"}
+            response.status_code = 400
+            return response
         
         try:
-            # Verify Google token
+            # Process the credential
             client_id = settings.GOOGLE_OAUTH_CLIENT_ID
             idinfo = id_token.verify_oauth2_token(
                 credential, google_requests.Request(), client_id)
                 
             # Check issuer
             if idinfo['iss'] not in ['accounts.google.com', 'https://accounts.google.com']:
-                return Response({"error": "Wrong issuer"}, status=400)
+                response.data = {"error": "Wrong issuer"}
+                response.status_code = 400
+                return response
                 
             # Get user info from token
             google_id = idinfo['sub']
@@ -163,17 +189,21 @@ class GoogleAuthView(APIView):
             email_verified = idinfo['email_verified']
             
             if not email_verified:
-                return Response({"error": "Google email not verified"}, status=400)
+                response.data = {"error": "Google email not verified"}
+                response.status_code = 400
+                return response
                 
             # Check if user exists
             try:
                 user = User.objects.get(email=email)
                 # Existing user - login flow
                 if action == 'signup':
-                    return Response({
+                    response.data = {
                         "error": "User already exists with this email", 
                         "needs_login": True
-                    }, status=409)
+                    }
+                    response.status_code = 409
+                    return response
                     
                 # Create tokens for existing user
                 refresh = RefreshToken.for_user(user)
@@ -181,22 +211,26 @@ class GoogleAuthView(APIView):
                 refresh["role"] = "admin" if user.is_staff else "user"
                 refresh["user_id"] = user.id
                 
-                return Response({
+                response.data = {
                     "access": str(refresh.access_token),
                     "refresh": str(refresh),
                     "email": user.email,
                     "role": "admin" if user.is_staff else "user",
                     "user_id": user.id,
                     "is_new_user": False
-                })
+                }
+                response.status_code = 200
+                return response
                 
             except User.DoesNotExist:
                 # New user - signup flow
                 if action == 'login':
-                    return Response({
+                    response.data = {
                         "error": "User doesn't exist with this email", 
                         "needs_signup": True
-                    }, status=404)
+                    }
+                    response.status_code = 404
+                    return response
                 
                 # Create new user from Google credentials
                 user = User.objects.create_user(
@@ -213,22 +247,28 @@ class GoogleAuthView(APIView):
                 refresh["role"] = "user"
                 refresh["user_id"] = user.id
                 
-                return Response({
+                response.data = {
                     "access": str(refresh.access_token),
                     "refresh": str(refresh),
                     "email": user.email,
                     "role": "user",
                     "user_id": user.id,
                     "is_new_user": True
-                })
+                }
+                response.status_code = 200
+                return response
                 
         except ValueError as e:
             # Invalid token
             logger.error(f"Google auth error: {str(e)}")
-            return Response({"error": "Invalid token"}, status=400)
+            response.data = {"error": "Invalid token"}
+            response.status_code = 400
+            return response
         except Exception as e:
-            logger.error(f"Google auth error: {str(e)}")
-            return Response({"error": "Authentication failed"}, status=500)
+            logger.exception(f"Google auth error: {str(e)}")
+            response.data = {"error": "Authentication failed"}
+            response.status_code = 500
+            return response
 
 
 class TokenRefreshView(BaseTokenRefreshView):

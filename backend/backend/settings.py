@@ -246,40 +246,26 @@ SIMPLE_JWT = {
     'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=7),
 }
 
-# Optimize CORS settings for better performance
+# Fix CORS settings for all origins in development
+CORS_ALLOW_ALL_ORIGINS = True
+
+# If specific origins are needed, ensure they're included
 CORS_ALLOWED_ORIGINS = [
     "https://projectsection-ten.vercel.app",
     "http://localhost:5173",
     "http://localhost:3000",
 ]
 
-# For development/debugging only - set to False in production
-CORS_ALLOW_ALL_ORIGINS = True
-
-# Allow credentials in requests
+# Enable CORS for credentials
 CORS_ALLOW_CREDENTIALS = True
 
-# Fix URL regex to include both API and auth paths
-CORS_URLS_REGEX = r'^/(api|auth)/.*$'
-
-# Enable preflight caching to reduce OPTIONS requests
-CORS_PREFLIGHT_MAX_AGE = 86400  # 24 hours in seconds
-
-# Allow all headers for debugging/development
+# Ensure all headers are allowed in development
 CORS_ALLOW_HEADERS = [
-    'accept',
-    'accept-encoding',
-    'authorization',
-    'content-type',
-    'dnt',
-    'origin',
-    'user-agent',
-    'x-csrftoken',
-    'x-requested-with',
-    'cache-control',
-    'pragma',
-    'expires',
+    '*',  # Allow all headers temporarily
 ]
+
+# Fix URL pattern to include ALL paths
+CORS_URLS_REGEX = r'^.*$'  # Match all paths
 
 # Email Configuration - Properly load from environment
 EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
