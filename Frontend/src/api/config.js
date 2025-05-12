@@ -10,7 +10,7 @@ export const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://lktool.onr
 export const ENDPOINTS = {
   // Auth endpoints
   AUTH: {
-    BASE: `${BASE_URL}/api/auth`,
+    BASE: `${BASE_URL}/api/auth`,  // Ensure this has /api/ prefix
     LOGIN: '/login/',
     SIGNUP: '/signup/',  // Make sure this matches the backend URL pattern
     REFRESH_TOKEN: '/refresh/',

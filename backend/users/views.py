@@ -73,8 +73,14 @@ class RegisterView(APIView):
         serializer = RegisterSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
-            user.email_verified = False
-            user.save()
+            
+            # Only try to set email_verified if the field exists
+            try:
+                user.email_verified = False
+                user.save()
+            except Exception as e:
+                # Log the error but continue
+                print(f"Warning: Could not set email_verified: {e}")
             
             # Generate verification token
             uid = urlsafe_base64_encode(force_str(user.pk).encode())

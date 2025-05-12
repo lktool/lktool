@@ -242,33 +242,54 @@ SIMPLE_JWT = {
 }
 
 # Fix CORS settings
-CORS_ALLOW_ALL_ORIGINS = True  # Most permissive setting for debugging
+CORS_ALLOW_ALL_ORIGINS = True  # Keep this for development
 
-# List allowed origins explicitly 
+# Add proper CORS configuration with explicit allowed origins
 CORS_ALLOWED_ORIGINS = [
     "https://projectsection-ten.vercel.app",
     "http://localhost:5173",
     "http://localhost:3000",
-]
-
-# Allow all URLs for CORS 
-CORS_URLS_REGEX = r'^.*$'
-
-# Simplify headers configuration - use specific headers instead
-CORS_ALLOW_HEADERS = [
-    "accept",
-    "accept-encoding", 
-    "authorization",
-    "content-type",
-    "origin",
-    "user-agent",
+    "http://127.0.0.1:5173",
+    "http://127.0.0.1:3000",
 ]
 
 # Allow credentials
 CORS_ALLOW_CREDENTIALS = True
 
+# Explicitly add these headers
+CORS_ALLOW_HEADERS = [
+    "accept",
+    "accept-encoding", 
+    "authorization",
+    "content-type",
+    "dnt",
+    "origin",
+    "user-agent",
+    "x-csrftoken",
+    "x-requested-with",
+]
+
 # Let preflight responses be cached for 1 hour
 CORS_PREFLIGHT_MAX_AGE = 3600
+
+# Allow all methods
+CORS_ALLOW_METHODS = [
+    "DELETE",
+    "GET",
+    "OPTIONS",
+    "PATCH",
+    "POST",
+    "PUT",
+]
+
+# Trust all origins for CSRF
+CSRF_TRUSTED_ORIGINS = [
+    "https://projectsection-ten.vercel.app",
+    "http://localhost:5173",
+    "http://localhost:3000",
+    "http://127.0.0.1:5173",
+    "http://127.0.0.1:3000",
+]
 
 # Email Configuration - Properly load from environment
 EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
@@ -337,6 +358,9 @@ CSRF_TRUSTED_ORIGINS = [
     'https://projectsection-ten.vercel.app',
     'https://lktools.onrender.com',
     'http://localhost:5173',
+    "http://localhost:3000",
+    "http://127.0.0.1:5173",
+    "http://127.0.0.1:3000",
 ]
 
 # Set X-Frame-Options to deny by default

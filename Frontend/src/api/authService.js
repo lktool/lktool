@@ -53,10 +53,14 @@ export const authService = {
   async register(email, password, password2) {
     try {
       console.log(`Attempting registration with email: ${email}`);
-      console.log(`Using endpoint: ${ENDPOINTS.AUTH.BASE}${ENDPOINTS.AUTH.SIGNUP}`);
       
+      // Construct the full URL for debugging
+      const fullUrl = `${ENDPOINTS.AUTH.BASE}${ENDPOINTS.AUTH.SIGNUP}`;
+      console.log(`Using endpoint: ${fullUrl}`);
+      
+      // Make request with full URL to avoid any path manipulation
       const response = await apiClient.post(
-        `${ENDPOINTS.AUTH.BASE}${ENDPOINTS.AUTH.SIGNUP}`,
+        fullUrl,
         { email, password, password2 }
       );
       
@@ -69,18 +73,42 @@ export const authService = {
       };
     } catch (error) {
       console.error('Registration error:', error);
-      console.error('Error response:', error.response?.data);
+      
+      // Show detailed error response for debugging
+      if (error.response?.data) {
+        console.error('Error response:', error.response.data);
+      }
       
       if (error.response?.data) {
         const errorData = error.response.data;
         
-        // Field-specific errors
-        if (errorData.email) return { success: false, error: `Email error: ${errorData.email[0]}` };
-        if (errorData.password) return { success: false, error: `Password error: ${errorData.password[0]}` };
-        if (errorData.password2) return { success: false, error: `Password confirmation error: ${errorData.password2[0]}` };
+        // Field-specific errors with improved output
+        if (errorData.email && Array.isArray(errorData.email)) {
+          return { success: false, error: `Email error: ${errorData.email[0]}` };
+        }
+        if (errorData.password && Array.isArray(errorData.password)) {
+          return { success: false, error: `Password error: ${errorData.password[0]}` };
+        }
+        if (errorData.password2 && Array.isArray(errorData.password2)) {
+          return { success: false, error: `Confirm password error: ${errorData.password2[0]}` };
+        }
+        // Handle non-array error formats
+        if (errorData.email) {
+          return { success: false, error: typeof errorData.email === 'string' ? errorData.email : `Email error: ${JSON.stringify(errorData.email)}` };
+        }
+        if (errorData.password) {
+          return { success: false, error: typeof errorData.password === 'string' ? errorData.password : `Password error: ${JSON.stringify(errorData.password)}` };
+        }
+        if (errorData.password2) {
+          return { success: false, error: typeof errorData.password2 === 'string' ? errorData.password2 : `Confirm password error: ${JSON.stringify(errorData.password2)}` };
+        }
+        
         if (errorData.message) return { success: false, error: errorData.message };
         if (errorData.error) return { success: false, error: errorData.error };
         if (errorData.detail) return { success: false, error: errorData.detail };
+        
+        // Return the raw error data if none of the above matched
+        return { success: false, error: `Registration failed: ${JSON.stringify(errorData)}` };
       }
       
       return { success: false, error: 'Registration failed. Please try again.' };
