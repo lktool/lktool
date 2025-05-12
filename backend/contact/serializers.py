@@ -52,3 +52,28 @@ class ContactFormSerializer(serializers.ModelSerializer):
         if len(value) < 10:
             raise serializers.ValidationError("Message must be at least 10 characters long.")
         return value
+
+# Add the missing serializer used in admin_views.py
+class ContactSubmissionSerializer(serializers.ModelSerializer):
+    """Serializer for admin view of submissions with all details"""
+    class Meta:
+        model = ContactSubmission
+        fields = '__all__'
+    
+    def to_representation(self, instance):
+        """Handle the case where related data might be missing"""
+        data = super().to_representation(instance)
+        
+        # Safely handle user relation if it exists
+        if instance.user:
+            try:
+                data['user_email'] = instance.user.email
+            except:
+                data['user_email'] = None
+                
+        # Safely handle admin_reply fields
+        if not instance.admin_reply:
+            data['admin_reply'] = None
+            data['admin_reply_date'] = None
+            
+        return data
