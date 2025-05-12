@@ -1,5 +1,6 @@
 import React from 'react';
 import { useState } from 'react';
+import axios from 'axios'; // Add axios import
 import './GoogleLoginButton.css';
 
 // Google logo SVG for the custom button
@@ -111,10 +112,10 @@ const GoogleLoginButton = ({ onSuccess, actionType = 'login' }) => {
           'Accept': 'application/json',
           'Content-Type': 'application/json'
         },
-        data: JSON.stringify({ 
+        data: { 
           credential: token,
           action: action
-        }),
+        },
         withCredentials: true
       });
       
