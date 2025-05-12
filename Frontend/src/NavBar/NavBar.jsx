@@ -72,7 +72,7 @@ function NavBar() {
                     <h2>LK Tool Box</h2>
                 </div>
                 <div className="navbar-profiles-controls">
-                    <Link to={getHomeDestination()}>Home</Link>
+                    {/* <Link to={getHomeDestination()}>Home</Link> */}
 
                     {isAuthenticated && !isAdmin && (
                         <>

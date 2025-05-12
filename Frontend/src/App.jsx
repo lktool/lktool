@@ -18,6 +18,7 @@ import NavBar from "./NavBar/NavBar";
 import UserSubmissions from "./UserSubmissions/UserSubmissions";
 import PublicOnlyRoute from "./components/PublicOnlyRoute";
 import ResetPassword from "./ResetPassword/ResetPassword";
+import ReviewedSubmissions from "./admin/ReviewedSubmissions";
 
 function App() {
   useEffect(() => {
@@ -88,6 +89,7 @@ function App() {
             </PublicOnlyRoute>
           } />
           <Route path="/admin/dashboard" element={<AdminRoute><FormData /></AdminRoute>} />
+          <Route path="/admin/reviewed" element={<AdminRoute><ReviewedSubmissions /></AdminRoute>} />
           
           {/* Not Found Route */}
           <Route path="/not-found" element={<NotFound />} />

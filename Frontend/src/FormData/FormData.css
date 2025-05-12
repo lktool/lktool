@@ -346,3 +346,24 @@ select {
   background-color: #f8d7da;
   color: #721c24;
 }
+
+/* Submissions Header */
+.submissions-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.view-processed-button {
+  background-color: #328E6E;
+  color: white;
+  text-decoration: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.view-processed-button:hover {
+  background-color: #287058;
+}

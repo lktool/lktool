@@ -7,7 +7,7 @@ from django.views.generic import TemplateView
 from django.conf import settings
 from django.conf.urls.static import static
 from users.views import GoogleAuthView  # Import the view directly
-from contact.admin_views import AdminSubmissionsView, AdminSubmissionDetailView
+from contact.admin_views import AdminSubmissionsView, AdminSubmissionDetailView, AdminProcessedSubmissionsView
 
 urlpatterns = [
     # Django admin site
@@ -21,6 +21,8 @@ urlpatterns = [
     path('api/admin/', include('admin_panel.urls')),
     path('api/admin/submissions/', AdminSubmissionsView.as_view(), name='admin_submissions'),
     path('api/admin/submissions/<int:submission_id>/', AdminSubmissionDetailView.as_view(), name='admin_submission_detail'),
+    path('api/admin/processed/', AdminProcessedSubmissionsView.as_view(), name='admin_processed_submissions'),
+    path('api/admin/processed/<int:submission_id>/', AdminProcessedSubmissionsView.as_view(), name='admin_delete_submission'),
     
     # Consolidated Google auth routes - ensure all variations are available
     path('auth/google/', GoogleAuthView.as_view(), name='direct_google_auth'),

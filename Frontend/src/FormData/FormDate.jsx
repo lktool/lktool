@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import "./FormData.css";
 import { adminService } from '../api';
 import LoadingSpinner from '../components/LoadingSpinner';
@@ -285,7 +286,12 @@ const FormData = () => {
     <div className="admin-dashboard">
       {currentView === 'submissions' && (
         <div className="submissions-container">
-          <h2>Pending LinkedIn Profile Submissions</h2>
+          <div className="submissions-header">
+            <h2>Pending LinkedIn Profile Submissions</h2>
+            <Link to="/admin/reviewed" className="view-processed-button">
+              View Processed Submissions
+            </Link>
+          </div>
           {loading ? (
             <LoadingSpinner />
           ) : submissions.length === 0 ? (

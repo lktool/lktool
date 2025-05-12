@@ -38,6 +38,8 @@ export const ENDPOINTS = {
   ADMIN: {
     // Fix: Make sure all admin endpoints use the full URL with /api prefix
     SUBMISSIONS: `${BASE_URL}/api/admin/submissions/`,
+    PROCESSED_SUBMISSIONS: `${BASE_URL}/api/admin/processed/`,
+    SUBMISSION_DETAIL: (id) => `${BASE_URL}/api/admin/submissions/${id}/`,
     SUBMIT_REPLY: (id) => `${BASE_URL}/api/contact/submissions/${id}/reply/`,
     PROFILE_ANALYSIS: `${BASE_URL}/api/admin/analyses/`,
     ANALYSIS_DETAIL: (id) => `${BASE_URL}/api/admin/analyses/${id}/`,

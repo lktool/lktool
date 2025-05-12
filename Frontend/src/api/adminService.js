@@ -198,5 +198,56 @@ export const adminService = {
         error: error.response?.data?.error || 'Failed to fetch dashboard statistics'
       };
     }
+  },
+
+  /**
+   * Get processed submissions
+   * @param {Object} filters - Filter parameters like page and page_size
+   * @returns {Promise<Object>} List of processed submissions
+   */
+  async getProcessedSubmissions(filters = {}) {
+    try {
+      console.log(`Fetching processed submissions`);
+      
+      const response = await apiClient.get(ENDPOINTS.ADMIN.PROCESSED_SUBMISSIONS, {
+        params: filters
+      });
+      
+      return { 
+        success: true,
+        data: Array.isArray(response.data.submissions) ? response.data.submissions : [],
+        totalCount: response.data.total_count || 0,
+        totalPages: response.data.total_pages || 1,
+        currentPage: response.data.current_page || 1
+      };
+    } catch (error) {
+      console.error('Error fetching processed submissions:', error);
+      return {
+        success: false,
+        error: error.response?.data?.error || 'Failed to fetch processed submissions',
+        data: []
+      };
+    }
+  },
+
+  /**
+   * Delete a processed submission
+   * @param {number} id - Submission ID to delete
+   * @returns {Promise<Object>} Delete result
+   */
+  async deleteSubmission(id) {
+    try {
+      const response = await apiClient.delete(`${ENDPOINTS.ADMIN.PROCESSED_SUBMISSIONS}${id}/`);
+      return {
+        success: true,
+        message: response.data?.message || 'Submission deleted'
+      };
+    } catch (error) {
+      console.error('Error deleting submission:', error);
+      return {
+        success: false,
+        error: error.response?.data?.error || 'Failed to delete submission'
+      };
+    }
   }
 };

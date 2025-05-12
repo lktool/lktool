@@ -172,3 +172,46 @@ class AdminReplyView(APIView):
         except Exception as e:
             print(f"Error in AdminReplyView: {str(e)}")
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+class AdminProcessedSubmissionsView(APIView):
+    """
+    API endpoint for admin to view already processed submissions
+    """
+    permission_classes = [IsAdminUser]
+    authentication_classes = [AdminJWTAuthentication]
+    
+    def get(self, request):
+        # Debug info
+        print(f"AdminProcessedSubmissionsView - user: {request.user}, is_staff: {request.user.is_staff}")
+        
+        # Get filter parameters
+        page = int(request.query_params.get('page', 1))
+        page_size = int(request.query_params.get('page_size', 10))
+        
+        # Get only processed submissions
+        submissions = ContactSubmission.objects.filter(is_processed=True).order_by('-admin_reply_date')
+            
+        # Paginate results
+        paginator = Paginator(submissions, page_size)
+        page_obj = paginator.get_page(page)
+        
+        # Serialize data
+        serializer = ContactSubmissionSerializer(page_obj, many=True)
+        
+        return Response({
+            'submissions': serializer.data,
+            'total_count': paginator.count,
+            'total_pages': paginator.num_pages,
+            'current_page': page
+        })
+    
+    def delete(self, request, submission_id):
+        """Delete a processed submission"""
+        try:
+            submission = ContactSubmission.objects.get(id=submission_id, is_processed=True)
+            submission.delete()
+            return Response({"message": "Submission deleted successfully"}, status=status.HTTP_200_OK)
+        except ContactSubmission.DoesNotExist:
+            return Response({"error": "Submission not found"}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
