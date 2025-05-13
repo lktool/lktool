@@ -48,6 +48,7 @@ function NavBar() {
         authService.logout();
         setIsAuthenticated(false);
         setIsAdmin(false);
+        // Always navigate to the login page regardless of user role
         navigate('/login');
     };
 

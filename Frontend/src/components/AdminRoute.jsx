@@ -61,7 +61,8 @@ function AdminRoute({ children }) {
   }
 
   if (!isAdmin) {
-    return <Navigate to="/admin" replace />;
+    // Change the redirect from "/admin" to "/login" for consistency
+    return <Navigate to="/login" replace />;
   }
 
   return children;
