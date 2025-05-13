@@ -4,7 +4,7 @@
  */
 
 // Base URL for API requests
-const BASE_URL = 'https://lktool.onrender.com';
+export const BASE_URL = 'https://lktool.onrender.com';
 
 // API endpoints
 export const ENDPOINTS = {
