@@ -9,26 +9,81 @@ const UserSubmissions = () => {
     const [submissions, setSubmissions] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [retryCount, setRetryCount] = useState(0);
+    const maxRetries = 2;
 
-    useEffect(() => {
-        // Fetch user's submissions when component mounts
-        const fetchSubmissions = async () => {
-            try {
-                setLoading(true);
-                // This fetches from the /api/contact/user-submissions/ endpoint
-                const data = await submissionService.getUserSubmissions();
+    // Function to fetch submissions with proper authentication handling
+    const fetchSubmissions = async (retry = 0) => {
+        try {
+            setLoading(true);
+            
+            // Check if we're authenticated before making request
+            const isAuth = localStorage.getItem('token');
+            if (!isAuth) {
+                setError('Authentication required. Please log in again.');
+                setLoading(false);
+                return;
+            }
+            
+            // Add cache-busting parameter to prevent browser caching
+            const timestamp = new Date().getTime();
+            const data = await submissionService.getUserSubmissions(`?t=${timestamp}`);
+            
+            if (Array.isArray(data)) {
                 setSubmissions(data);
                 setError(null);
-            } catch (err) {
-                console.error('Error fetching submissions:', err);
-                setError('Failed to load your submissions. Please try again later.');
-            } finally {
+            } else {
+                throw new Error('Invalid response format');
+            }
+        } catch (err) {
+            console.error('Error fetching submissions:', err);
+            
+            // Handle 401 errors by forcing re-authentication
+            if (err.response && err.response.status === 401) {
+                localStorage.removeItem('token');
+                setError('Your session has expired. Please log in again.');
+                setLoading(false);
+                return;
+            }
+            
+            // Implement retry logic for transient errors
+            if (retry < maxRetries) {
+                console.log(`Retrying fetch (${retry + 1}/${maxRetries})...`);
+                // Wait a bit before retrying (exponential backoff)
+                setTimeout(() => {
+                    fetchSubmissions(retry + 1);
+                }, 1000 * Math.pow(2, retry));
+                return;
+            }
+            
+            setError('Failed to load your submissions. Please try again later.');
+        } finally {
+            if (retry === 0 || retry >= maxRetries) {
                 setLoading(false);
             }
-        };
+        }
+    };
 
+    useEffect(() => {
+        // On component mount or token change, fetch submissions
         fetchSubmissions();
+        
+        // Set up event listener for auth changes
+        const handleAuthChange = () => {
+            fetchSubmissions();
+        };
+        window.addEventListener('authChange', handleAuthChange);
+        
+        return () => {
+            window.removeEventListener('authChange', handleAuthChange);
+        };
     }, []);
+
+    // Add manual refresh functionality
+    const handleRefresh = () => {
+        setRetryCount(prev => prev + 1);
+        fetchSubmissions();
+    };
 
     if (loading) {
         return <LoadingSpinner message="Loading your submissions..." />;
@@ -52,7 +107,16 @@ const UserSubmissions = () => {
 
     return (
         <div className="submissions-container">
-            <h1>Your LinkedIn Profile Submissions</h1>
+            <div className="submissions-header">
+                <h1>Your LinkedIn Profile Submissions</h1>
+                <button 
+                    onClick={handleRefresh} 
+                    className="refresh-button" 
+                    disabled={loading}
+                >
+                    {loading ? 'Loading...' : 'Refresh'}
+                </button>
+            </div>
             <div className="submissions-list">
                 {submissions.map((submission) => (
                     <div key={submission.id} className="submission-card">

@@ -244,14 +244,14 @@ class UserSubmissionsView(APIView):
     permission_classes = [IsAuthenticated]
     
     def get(self, request):
-        # Get the authenticated user's email
+        # Get the authenticated user's email - prevent any potential spoofing
         user_email = request.user.email
         
         # Debug the user email and query
         print(f"Fetching submissions for authenticated user: {user_email}")
         
         try:
-            # Remove the defer('analysis') call since the field doesn't exist
+            # Filter strictly by the authenticated user's email
             submissions = ContactSubmission.objects.filter(
                 email__iexact=user_email
             ).order_by('-created_at')
@@ -280,11 +280,16 @@ class UserSubmissionsView(APIView):
             # Debug the query results
             print(f"Found {len(submissions_list)} submissions for {user_email}")
             
-            # Add cache control header to prevent browser caching
+            # Add strong cache control headers to prevent browser/CDN caching
             response = Response(submissions_list)
-            response["Cache-Control"] = "no-cache, no-store, must-revalidate"
+            response["Cache-Control"] = "no-cache, no-store, must-revalidate, private"
             response["Pragma"] = "no-cache"
             response["Expires"] = "0"
+            
+            # Add a unique ETag based on user email to prevent other users' data being served
+            import hashlib
+            user_hash = hashlib.md5(user_email.encode()).hexdigest()[:10]
+            response["ETag"] = f"\"user-{user_hash}-{len(submissions_list)}\""
             
             return response
             

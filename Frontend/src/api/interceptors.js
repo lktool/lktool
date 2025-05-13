@@ -64,34 +64,42 @@ apiClient.interceptors.request.use(
  * Handle token refresh, unauthorized errors, and other common errors
  */
 apiClient.interceptors.response.use(
-  (response) => {
-    return response;
-  },
+  (response) => response,
   async (error) => {
-    // Handle 401 by attempting token refresh
-    if (error.response && error.response.status === 401) {
-      // Try to refresh token
-      const refreshToken = localStorage.getItem(AUTH_CONFIG.REFRESH_TOKEN_KEY);
-      if (refreshToken) {
-        try {
-          const response = await axios.post(`${BASE_URL}/api/auth/refresh/`, {
-            refresh: refreshToken
-          });
-          
-          if (response.data.access) {
-            // Update token in localStorage
-            localStorage.setItem(AUTH_CONFIG.TOKEN_KEY, response.data.access);
-            
-            // Update the failed request with new token and retry
-            const config = error.config;
-            config.headers['Authorization'] = `Bearer ${response.data.access}`;
-            return axios(config);
-          }
-        } catch (refreshError) {
-          console.error('Token refresh failed:', refreshError);
+    const originalRequest = error.config;
+    
+    // If error is 401 and we haven't tried to refresh the token yet
+    if (error.response && error.response.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+      
+      try {
+        // Try to refresh the token
+        const refreshToken = localStorage.getItem('refreshToken');
+        if (!refreshToken) {
+          // No refresh token, just propagate the error
+          throw error;
         }
+        
+        const response = await axios.post('/api/auth/refresh/', {
+          refresh: refreshToken
+        });
+        
+        if (response.data && response.data.access) {
+          // Update the access token
+          localStorage.setItem('token', response.data.access);
+          
+          // Update Authorization header and retry
+          originalRequest.headers['Authorization'] = `Bearer ${response.data.access}`;
+          return axios(originalRequest);
+        }
+      } catch (refreshError) {
+        // Token refresh failed, clear auth and notify
+        localStorage.removeItem('token');
+        localStorage.removeItem('refreshToken');
+        window.dispatchEvent(new Event('authChange'));
       }
     }
+    
     return Promise.reject(error);
   }
 );

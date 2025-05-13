@@ -28,4 +28,44 @@ export const api = {
   admin: adminService
 };
 
+export const submissionService = {
+    /**
+     * Get submissions for the current authenticated user
+     * @param {string} queryParams - Optional query string parameters
+     * @returns {Promise<Array>} Array of user submissions
+     */
+    async getUserSubmissions(queryParams = '') {
+        try {
+            console.log('Fetching user submissions...');
+            
+            // Ensure token is attached to request
+            const token = localStorage.getItem('token');
+            if (!token) {
+                console.error('No auth token available');
+                throw new Error('Authentication required');
+            }
+            
+            const response = await apiClient.get(`${API_ENDPOINTS.USER_SUBMISSIONS}${queryParams}`);
+            
+            // Validate response format
+            if (!Array.isArray(response.data)) {
+                console.error('Invalid response format:', response.data);
+                return [];
+            }
+            
+            console.log(`Got ${response.data.length} submissions`);
+            return response.data;
+        } catch (error) {
+            console.error('Failed to fetch user submissions:', error);
+            
+            // If we get a 401, clear the token to force re-login
+            if (error.response && error.response.status === 401) {
+                localStorage.removeItem('token');
+                window.dispatchEvent(new Event('authChange'));
+            }
+            
+            throw error;
+        }
+    },
+};
 export default api;
