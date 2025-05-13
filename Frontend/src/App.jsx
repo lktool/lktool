@@ -3,7 +3,7 @@ import { useEffect } from "react";
 // Update import to use the new API structure
 import { authService } from './api';
 import Landing from "./Landing/Landing";
-import Admin from "./Admin/Admin";
+/* import Admin from "./Admin/Admin"; */
 import Login from './Login/Login';
 import Signup from "./SignUp/Signup";
 import InputMain from "./InputMain.jsx/InputMain";
@@ -83,11 +83,11 @@ function App() {
           <Route path="/my-submissions" element={<ProtectedRoute><UserSubmissions /></ProtectedRoute>} />
           
           {/* Admin Routes */}
-          <Route path="/admin" element={
+{/*           <Route path="/admin" element={
             <PublicOnlyRoute adminRedirect="/admin/dashboard" userRedirect="/inputMain">
               <Admin />
             </PublicOnlyRoute>
-          } />
+          } /> */}
           <Route path="/admin/dashboard" element={<AdminRoute><FormData /></AdminRoute>} />
           <Route path="/admin/reviewed" element={<AdminRoute><ReviewedSubmissions /></AdminRoute>} />
           
