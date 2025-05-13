@@ -362,8 +362,10 @@ select {
   padding: 8px 16px;
   border-radius: 4px;
   font-size: 14px;
+  display: inline-block;
 }
 
 .view-processed-button:hover {
   background-color: #287058;
+  text-decoration: none;
 }
