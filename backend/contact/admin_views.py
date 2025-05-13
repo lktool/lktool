@@ -89,6 +89,11 @@ class AdminReplyView(APIView):
             # Format the email with professional styling
             email_subject = f"Your LinkedIn Profile Analysis Is Ready"
             
+            # Check if this is an update to an existing reply
+            is_update = hasattr(submission, 'admin_reply_date') and submission.admin_reply_date is not None
+            if is_update:
+                email_subject = "Updated: LinkedIn Profile Analysis"
+            
             # Create HTML email with better formatting
             email_html = f"""
             <html>
@@ -104,6 +109,7 @@ class AdminReplyView(APIView):
                     .recommendations {{ background-color: #e6f3ff; padding: 15px; border-left: 5px solid #0077B5; }}
                     .positive {{ color: #2e7d32; }}
                     .negative {{ color: #c62828; }}
+                    .update-notice {{ background-color: #fff3cd; padding: 15px; border-left: 5px solid #ffc107; margin-bottom: 20px; }}
                 </style>
             </head>
             <body>
@@ -113,7 +119,10 @@ class AdminReplyView(APIView):
                     </div>
                     <div class="content">
                         <p>Hello,</p>
-                        <p>We've completed the analysis of your LinkedIn profile. Here's what we found:</p>
+                        
+                        {f'<div class="update-notice"><strong>Note:</strong> This is an updated analysis of your LinkedIn profile.</div>' if is_update else ''}
+                        
+                        <p>{'We have updated our analysis of' if is_update else "We've completed the analysis of"} your LinkedIn profile. Here's what we found:</p>
                         
                         <div class="section">
                             {submission.admin_reply}
@@ -136,12 +145,13 @@ class AdminReplyView(APIView):
             """
             
             # Plain text version for email clients that don't support HTML
+            update_notice = "Note: This is an updated analysis of your LinkedIn profile.\n\n" if is_update else ""
             email_text = f"""
             LinkedIn Profile Analysis
             
             Hello,
             
-            We've completed the analysis of your LinkedIn profile. Here's what we found:
+            {update_notice}{'We have updated our analysis of' if is_update else "We've completed the analysis of"} your LinkedIn profile. Here's what we found:
             
             {submission.admin_reply}
             
@@ -157,13 +167,13 @@ class AdminReplyView(APIView):
                     recipient_list=[submission.email]
                 )
                 
-                print(f"Analysis and reply sent to {submission.email}")
+                print(f"Analysis and reply {'updated and re-sent' if is_update else 'sent'} to {submission.email}")
             except Exception as e:
                 print(f"Failed to send reply notification: {e}")
                 # Continue even if email fails
             
             return Response({
-                "message": "Reply and analysis sent successfully",
+                "message": f"Reply {'updated and resent' if is_update else 'sent'} successfully",
                 "submission_id": submission_id
             }, status=status.HTTP_200_OK)
             

@@ -11,6 +11,10 @@ const ReviewedSubmissions = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [deleteInProgress, setDeleteInProgress] = useState({});
+  const [editingSubmission, setEditingSubmission] = useState(null);
+  const [editedReply, setEditedReply] = useState('');
+  const [isSubmittingEdit, setIsSubmittingEdit] = useState(false);
+  const [editStatus, setEditStatus] = useState('');
   const navigate = useNavigate();
 
   // Fetch submissions when component mounts or page changes
@@ -55,6 +59,60 @@ const ReviewedSubmissions = () => {
       } finally {
         setDeleteInProgress(prev => ({ ...prev, [id]: false }));
       }
+    }
+  };
+
+  const handleEdit = (submission) => {
+    setEditingSubmission(submission);
+    setEditedReply(submission.admin_reply || '');
+    setEditStatus('');
+  };
+
+  const closeEditModal = () => {
+    setEditingSubmission(null);
+    setEditedReply('');
+    setEditStatus('');
+  };
+
+  const handleReplyChange = (e) => {
+    setEditedReply(e.target.value);
+    if (editStatus) setEditStatus('');
+  };
+
+  const handleResendAnalysis = async (e) => {
+    e.preventDefault();
+    if (!editingSubmission || !editedReply.trim()) {
+      setEditStatus('Please enter a reply before submitting');
+      return;
+    }
+
+    setIsSubmittingEdit(true);
+    setEditStatus('');
+
+    try {
+      const result = await adminService.submitReply(editingSubmission.id, editedReply);
+      
+      if (result.success) {
+        // Update the submission in the local state
+        const updatedSubmissions = submissions.map(sub => 
+          sub.id === editingSubmission.id 
+            ? { ...sub, admin_reply: editedReply, admin_reply_date: new Date().toISOString() }
+            : sub
+        );
+        setSubmissions(updatedSubmissions);
+        
+        setEditStatus('Analysis updated and resent successfully!');
+        setTimeout(() => {
+          closeEditModal();
+        }, 2000);
+      } else {
+        setEditStatus(result.error || 'Failed to update and resend analysis');
+      }
+    } catch (error) {
+      console.error('Error updating analysis:', error);
+      setEditStatus('An error occurred while updating the analysis');
+    } finally {
+      setIsSubmittingEdit(false);
     }
   };
 
@@ -122,6 +180,12 @@ const ReviewedSubmissions = () => {
                         View
                       </button>
                       <button
+                        className="edit-button"
+                        onClick={() => handleEdit(submission)}
+                      >
+                        Edit & Resend
+                      </button>
+                      <button
                         className="delete-button"
                         onClick={() => handleDelete(submission.id)}
                         disabled={deleteInProgress[submission.id]}
@@ -152,6 +216,64 @@ const ReviewedSubmissions = () => {
             </button>
           </div>
         </>
+      )}
+
+      {/* Edit Modal */}
+      {editingSubmission && (
+        <div className="modal-backdrop">
+          <div className="edit-modal">
+            <div className="modal-header">
+              <h2>Edit & Resend Analysis</h2>
+              <button className="close-button" onClick={closeEditModal}>×</button>
+            </div>
+            
+            <div className="modal-content">
+              <div className="submission-info">
+                <p><strong>Email:</strong> {editingSubmission.email}</p>
+                <p><strong>LinkedIn:</strong> <a href={editingSubmission.linkedin_url} target="_blank" rel="noopener noreferrer">{editingSubmission.linkedin_url}</a></p>
+                <p><strong>Originally Sent:</strong> {new Date(editingSubmission.admin_reply_date).toLocaleString()}</p>
+              </div>
+              
+              <form onSubmit={handleResendAnalysis}>
+                <div className="form-group">
+                  <label htmlFor="editedReply">Update Analysis:</label>
+                  <textarea
+                    id="editedReply"
+                    value={editedReply}
+                    onChange={handleReplyChange}
+                    rows="10"
+                    className="edit-textarea"
+                    disabled={isSubmittingEdit}
+                  />
+                </div>
+                
+                {editStatus && (
+                  <div className={`status-message ${editStatus.includes('success') ? 'success' : 'error'}`}>
+                    {editStatus}
+                  </div>
+                )}
+                
+                <div className="modal-actions">
+                  <button 
+                    type="button" 
+                    className="cancel-button"
+                    onClick={closeEditModal}
+                    disabled={isSubmittingEdit}
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    type="submit" 
+                    className="submit-button"
+                    disabled={isSubmittingEdit}
+                  >
+                    {isSubmittingEdit ? 'Sending...' : 'Update & Resend'}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
