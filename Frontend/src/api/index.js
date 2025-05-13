@@ -3,32 +3,33 @@
  * Central export point for all API services
  */
 
-// Export all API services
-export { authService } from './authService';
-export { submissionService } from './submissionService';
-export { adminService } from './adminService';
-
-// Export config and interceptors for direct access if needed
-export * from './config';
-export * from './interceptors';
-
-// Export all services
-export { contactService } from './contactService';
-
-// Re-export as a combined API object
+import { apiClient } from './interceptors';
+import { ENDPOINTS } from './config';
 import { authService } from './authService';
-import { submissionService } from './submissionService';
-import { contactService } from './contactService';
-import { adminService } from './adminService';
 
-export const api = {
-  auth: authService,
-  submissions: submissionService,
-  contact: contactService,
-  admin: adminService
-};
+// Define the submission service
+const submissionService = {
+    /**
+     * Submit a LinkedIn profile for analysis
+     * @param {Object} data - Profile submission data
+     * @returns {Promise<Object>} Submission result
+     */
+    async submitProfile(data) {
+        try {
+            const response = await apiClient.post(ENDPOINTS.SUBMIT_PROFILE, data);
+            return {
+                success: true,
+                data: response.data
+            };
+        } catch (error) {
+            console.error('Error submitting profile:', error);
+            return {
+                success: false,
+                error: error.response?.data?.message || 'Failed to submit profile'
+            };
+        }
+    },
 
-export const submissionService = {
     /**
      * Get submissions for the current authenticated user
      * @param {string} queryParams - Optional query string parameters
@@ -45,7 +46,7 @@ export const submissionService = {
                 throw new Error('Authentication required');
             }
             
-            const response = await apiClient.get(`${API_ENDPOINTS.USER_SUBMISSIONS}${queryParams}`);
+            const response = await apiClient.get(`${ENDPOINTS.USER_SUBMISSIONS}${queryParams}`);
             
             // Validate response format
             if (!Array.isArray(response.data)) {
@@ -66,6 +67,117 @@ export const submissionService = {
             
             throw error;
         }
-    },
+    }
 };
-export default api;
+
+// Define the admin service
+const adminService = {
+    /**
+     * Get submissions for admin dashboard
+     * @param {Object} filters - Filter parameters
+     * @returns {Promise<Object>} List of submissions
+     */
+    async getSubmissions(filters = {}) {
+        try {
+            const response = await apiClient.get(ENDPOINTS.ADMIN.SUBMISSIONS, {
+                params: filters
+            });
+            return {
+                success: true,
+                data: response.data.submissions,
+                totalCount: response.data.total_count,
+                totalPages: response.data.total_pages,
+                currentPage: response.data.current_page
+            };
+        } catch (error) {
+            console.error('Error fetching submissions:', error);
+            return {
+                success: false,
+                error: error.response?.data?.error || 'Failed to fetch submissions',
+                data: []
+            };
+        }
+    },
+
+    /**
+     * Submit a reply to a user's profile submission
+     * @param {number} id - Submission ID
+     * @param {string} reply - Admin's reply text
+     * @returns {Promise<Object>} Result of submission
+     */
+    async submitReply(id, reply) {
+        try {
+            const response = await apiClient.post(`${ENDPOINTS.ADMIN.SUBMIT_REPLY(id)}`, {
+                reply
+            });
+            return {
+                success: true,
+                message: response.data.message
+            };
+        } catch (error) {
+            console.error('Error submitting reply:', error);
+            return {
+                success: false,
+                error: error.response?.data?.error || 'Failed to submit reply'
+            };
+        }
+    },
+
+    /**
+     * Get processed submissions
+     * @param {Object} filters - Filter parameters like page and page_size
+     * @returns {Promise<Object>} List of processed submissions
+     */
+    async getProcessedSubmissions(filters = {}) {
+        try {
+            console.log(`Fetching processed submissions`);
+            
+            const response = await apiClient.get(ENDPOINTS.ADMIN.PROCESSED_SUBMISSIONS, {
+                params: filters
+            });
+            
+            return { 
+                success: true,
+                data: Array.isArray(response.data.submissions) ? response.data.submissions : [],
+                totalCount: response.data.total_count || 0,
+                totalPages: response.data.total_pages || 1,
+                currentPage: response.data.current_page || 1
+            };
+        } catch (error) {
+            console.error('Error fetching processed submissions:', error);
+            return {
+                success: false,
+                error: error.response?.data?.error || 'Failed to fetch processed submissions',
+                data: []
+            };
+        }
+    },
+
+    /**
+     * Delete a processed submission
+     * @param {number} id - Submission ID to delete
+     * @returns {Promise<Object>} Delete result
+     */
+    async deleteSubmission(id) {
+        try {
+            const response = await apiClient.delete(`${ENDPOINTS.ADMIN.PROCESSED_SUBMISSIONS}${id}/`);
+            return {
+                success: true,
+                message: response.data?.message || 'Submission deleted'
+            };
+        } catch (error) {
+            console.error('Error deleting submission:', error);
+            return {
+                success: false,
+                error: error.response?.data?.error || 'Failed to delete submission'
+            };
+        }
+    }
+};
+
+// Export all services
+export {
+    authService,
+    submissionService,
+    adminService
+};
