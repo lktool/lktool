@@ -59,8 +59,6 @@ const ReviewedSubmissions = () => {
   };
 
   const handleViewDetails = (submission) => {
-    // Navigate to a detail view or open a modal
-    // For now, let's just alert the details
     alert(`Submission details:\n${JSON.stringify(submission, null, 2)}`);
   };
 
