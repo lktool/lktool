@@ -164,8 +164,8 @@
   background-color: white;
   border-radius: 8px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
-  width: 90%;
-  max-width: 800px;
+  width: 95%;
+  max-width: 900px;
   max-height: 90vh;
   overflow-y: auto;
   display: flex;
@@ -222,7 +222,7 @@
   resize: vertical;
   font-family: monospace;
   font-size: 14px;
-  min-height: 200px;
+  min-height: 300px;
 }
 
 .modal-actions {
@@ -274,4 +274,99 @@
 .status-message.error {
   background-color: #f8d7da;
   color: #721c24;
+}
+
+/* Enhanced styles for edit modal with form fields */
+.form-tabs {
+  display: flex;
+  border-bottom: 1px solid #ddd;
+  margin-bottom: 20px;
+}
+
+.tab-button {
+  padding: 10px 20px;
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.tab-button.active {
+  border-bottom-color: #328E6E;
+  color: #328E6E;
+}
+
+.edit-fieldset {
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 15px;
+  margin-bottom: 20px;
+}
+
+.edit-fieldset legend {
+  padding: 0 10px;
+  font-weight: bold;
+}
+
+.form-group {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.form-group label {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.form-group input[type="checkbox"] {
+  margin-right: 8px;
+}
+
+.form-group input[type="number"],
+.form-group input[type="date"],
+.form-group select {
+  width: 120px;
+  padding: 5px;
+  margin-left: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.update-preview-button {
+  background-color: #4a90e2;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 16px;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+.update-preview-button:hover {
+  background-color: #3a80d2;
+}
+
+.risk-signals {
+  background-color: #fff8f8;
+  border-color: #ffcccb;
+}
+
+.risk-signals legend {
+  color: #d32f2f;
+}
+
+.analysis-preview {
+  background-color: #f5f7fa;
+  padding: 15px;
+  border-radius: 6px;
+  white-space: pre-wrap;
+  font-family: monospace;
+  margin-bottom: 20px;
+  max-height: 300px;
+  overflow-y: auto;
 }
