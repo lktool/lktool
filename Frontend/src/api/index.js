@@ -204,17 +204,49 @@ const adminService = {
    */
   async getSubmissionDetails(id) {
     try {
-      const response = await apiClient.get(`${ENDPOINTS.ADMIN.SUBMISSION_DETAIL(id)}`);
+      console.log(`Fetching details for submission ID: ${id}`);
+      
+      const response = await apiClient.get(`${ENDPOINTS.ADMIN.SUBMISSION_DETAIL(id)}`, {
+        timeout: 15000 // Add timeout
+      });
+      
+      // Check if we have valid data
+      if (!response.data || typeof response.data !== 'object') {
+        console.error('Invalid response data:', response.data);
+        return {
+          success: false,
+          error: 'Invalid response format from server',
+          data: null
+        };
+      }
+      
+      // Ensure form_data exists even if not returned by the backend
+      if (!response.data.form_data) {
+        response.data.form_data = {};
+      }
+      
       return {
         success: true,
         data: response.data
       };
     } catch (error) {
       console.error('Error fetching submission details:', error);
+      console.error('Error details:', error.response?.data);
+      
+      // Provide a fallback if the request fails
+      const fallbackData = {
+        id: parseInt(id),
+        email: "Unable to load email",
+        linkedin_url: "Unable to load URL",
+        admin_reply: "",
+        form_data: {}
+      };
+      
+      // Return a failure with fallback data
       return {
         success: false,
-        error: error.response?.data?.error || 'Failed to fetch submission details',
-        data: null
+        error: error.response?.data?.error || error.response?.data?.detail || 'Failed to fetch submission details',
+        data: fallbackData
       };
     }
   },
