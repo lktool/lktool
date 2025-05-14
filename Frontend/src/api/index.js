@@ -115,13 +115,22 @@ const adminService = {
    * Submit a reply to a user's profile submission
    * @param {number} id - Submission ID
    * @param {string} reply - Admin's reply text
+   * @param {Object|null} formData - Additional form data
    * @returns {Promise<Object>} Result of submission
    */
-  async submitReply(id, reply) {
+  async submitReply(id, reply, formData = null) {
     try {
-      const response = await apiClient.post(`${ENDPOINTS.ADMIN.SUBMIT_REPLY(id)}`, {
-        reply
-      });
+      console.log(`Submitting reply for ID ${id} with formData:`, formData);
+      
+      const payload = { reply };
+      if (formData) {
+        payload.form_data = formData;
+      }
+      
+      const response = await apiClient.post(`${ENDPOINTS.ADMIN.SUBMIT_REPLY(id)}`, payload);
+      
+      console.log('Submit reply response:', response.data);
+      
       return {
         success: true,
         message: response.data.message
@@ -207,22 +216,27 @@ const adminService = {
       console.log(`Fetching details for submission ID: ${id}`);
       
       const response = await apiClient.get(`${ENDPOINTS.ADMIN.SUBMISSION_DETAIL(id)}`, {
-        timeout: 15000 // Add timeout
+        timeout: 15000
       });
       
+      console.log('Raw submission details response:', response.data);
+      
       // Check if we have valid data
-      if (!response.data || typeof response.data !== 'object') {
-        console.error('Invalid response data:', response.data);
+      if (!response.data) {
+        console.error('Empty response received');
         return {
           success: false,
-          error: 'Invalid response format from server',
+          error: 'Empty response from server',
           data: null
         };
       }
       
-      // Ensure form_data exists even if not returned by the backend
+      // Ensure form_data exists and is properly formatted
       if (!response.data.form_data) {
+        console.log('No form_data in response, adding empty object');
         response.data.form_data = {};
+      } else {
+        console.log('Form data found in response:', response.data.form_data);
       }
       
       return {
@@ -231,39 +245,12 @@ const adminService = {
       };
     } catch (error) {
       console.error('Error fetching submission details:', error);
-      console.error('Error details:', error.response?.data);
+      console.error('Error response:', error.response?.data);
       
-      // Return error with message
       return {
         success: false,
         error: error.response?.data?.error || error.message || 'Failed to fetch submission details',
         data: null
-      };
-    }
-  },
-
-  /**
-   * Submit a reply to a user's profile submission with form data
-   * @param {number} id - Submission ID
-   * @param {string} reply - Admin's reply text
-   * @param {Object|null} formData - Additional form data
-   * @returns {Promise<Object>} Result of submission
-   */
-  async submitReply(id, reply, formData = null) {
-    try {
-      const response = await apiClient.post(`${ENDPOINTS.ADMIN.SUBMIT_REPLY(id)}`, {
-        reply,
-        form_data: formData
-      });
-      return {
-        success: true,
-        message: response.data.message
-      };
-    } catch (error) {
-      console.error('Error submitting reply:', error);
-      return {
-        success: false,
-        error: error.response?.data?.error || 'Failed to submit reply'
       };
     }
   }
