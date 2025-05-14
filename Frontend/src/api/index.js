@@ -173,6 +173,25 @@ const adminService = {
   }
 };
 
+// Update the submitReply method in adminService to handle updated analyses
+adminService.submitReply = async (id, reply) => {
+  try {
+    const response = await apiClient.post(`${ENDPOINTS.ADMIN.SUBMIT_REPLY(id)}`, {
+      reply
+    });
+    return {
+      success: true,
+      message: response.data.message
+    };
+  } catch (error) {
+    console.error('Error submitting reply:', error);
+    return {
+      success: false,
+      error: error.response?.data?.error || 'Failed to submit reply'
+    };
+  }
+};
+
 // Export all services
 export {
   authService,
