@@ -49,8 +49,13 @@ const ReviewedSubmissions = () => {
   };
 
   const handleEdit = (submission) => {
-    // Navigate to the FormData page with edit parameter
-    navigate(`/admin/dashboard?edit=${submission.id}`);
+    try {
+      // Navigate to FormData component with the submission ID to load form data
+      navigate(`/admin/dashboard?edit=${submission.id}`);
+    } catch (error) {
+      console.error("Error navigating to edit mode:", error);
+      alert("There was an error entering edit mode. Please try again.");
+    }
   };
 
   const handleDelete = async (id) => {

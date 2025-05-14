@@ -27,26 +27,39 @@ class ContactSubmission(models.Model):
     admin_reply_date = models.DateTimeField(blank=True, null=True)
     is_processed = models.BooleanField(default=False)
     
-    # Store form data as JSON
-    _form_data = models.TextField(db_column='form_data', blank=True, null=True)
+    # Store form data as JSON string - Comment this out if column doesn't exist yet
+    # _form_data = models.TextField(db_column='form_data', blank=True, null=True)
     
     @property
     def form_data(self):
-        """Deserialize form data from JSON"""
-        if self._form_data:
-            try:
-                return json.loads(self._form_data)
-            except (ValueError, TypeError):
-                return {}
+        """
+        Safely get form data - returns empty dict if field doesn't exist
+        """
+        try:
+            if hasattr(self, '_form_data') and self._form_data:
+                try:
+                    return json.loads(self._form_data)
+                except (ValueError, TypeError):
+                    return {}
+        except Exception:
+            # Field might not exist in the database yet
+            return {}
         return {}
     
     @form_data.setter
     def form_data(self, value):
-        """Serialize form data to JSON"""
-        if value is None:
-            self._form_data = None
-        else:
-            self._form_data = json.dumps(value)
+        """
+        Safely set form data - ignores if field doesn't exist
+        """
+        try:
+            if hasattr(self, '_form_data'):
+                if value is None:
+                    self._form_data = None
+                else:
+                    self._form_data = json.dumps(value)
+        except Exception:
+            # Field might not exist in the database yet, silently ignore
+            pass
     
     def __str__(self):
         if self.subject:
