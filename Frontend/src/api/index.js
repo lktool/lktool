@@ -77,21 +77,35 @@ const adminService = {
    */
   async getSubmissions(filters = {}) {
     try {
+      console.log(`Fetching submissions with filters:`, filters);
+      
       const response = await apiClient.get(ENDPOINTS.ADMIN.SUBMISSIONS, {
-        params: filters
+        params: filters,
+        timeout: 15000 // Add timeout to prevent hanging requests
       });
+      
+      console.log(`Submissions response:`, response.data);
+      
       return {
         success: true,
-        data: response.data.submissions,
-        totalCount: response.data.total_count,
-        totalPages: response.data.total_pages,
-        currentPage: response.data.current_page
+        data: Array.isArray(response.data.submissions) ? response.data.submissions : [],
+        totalCount: response.data.total_count || 0,
+        totalPages: response.data.total_pages || 1,
+        currentPage: response.data.current_page || 1
       };
     } catch (error) {
       console.error('Error fetching submissions:', error);
+      console.error('Error details:', error.response?.data);
+      
+      // Handle auth errors specifically
+      if (error.response?.status === 401) {
+        console.log('Authentication error - logging out');
+        authService.logout();
+      }
+      
       return {
         success: false,
-        error: error.response?.data?.error || 'Failed to fetch submissions',
+        error: error.response?.data?.error || error.response?.data?.detail || 'Failed to fetch submissions',
         data: []
       };
     }
@@ -131,8 +145,11 @@ const adminService = {
       console.log(`Fetching processed submissions`);
       
       const response = await apiClient.get(ENDPOINTS.ADMIN.PROCESSED_SUBMISSIONS, {
-        params: filters
+        params: filters,
+        timeout: 15000 // Add timeout to prevent hanging requests  
       });
+      
+      console.log(`Processed submissions response:`, response.data);
       
       return { 
         success: true,
@@ -143,9 +160,17 @@ const adminService = {
       };
     } catch (error) {
       console.error('Error fetching processed submissions:', error);
+      console.error('Error details:', error.response?.data);
+      
+      // Handle auth errors specifically
+      if (error.response?.status === 401) {
+        console.log('Authentication error - logging out');
+        authService.logout();
+      }
+      
       return {
         success: false,
-        error: error.response?.data?.error || 'Failed to fetch processed submissions',
+        error: error.response?.data?.error || error.response?.data?.detail || 'Failed to fetch processed submissions',
         data: []
       };
     }

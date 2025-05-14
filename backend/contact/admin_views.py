@@ -8,6 +8,7 @@ from .models import ContactSubmission
 from .serializers import ContactSubmissionSerializer, AdminAnalysisSerializer
 from users.authentication import AdminJWTAuthentication
 from .email_service import send_notification_email
+import traceback
 
 class AdminSubmissionsView(APIView):
     """
@@ -20,33 +21,41 @@ class AdminSubmissionsView(APIView):
         # Debug info
         print(f"AdminSubmissionsView - user: {request.user}, is_staff: {request.user.is_staff}, role: {getattr(request.user, 'role', 'unknown')}")
         
-        # Get filter parameters
-        status_filter = request.query_params.get('status')
-        page = int(request.query_params.get('page', 1))
-        page_size = int(request.query_params.get('page_size', 10))
-        
-        # Build query
-        submissions = ContactSubmission.objects.all().order_by('-created_at')
-        
-        # Apply filters
-        if status_filter == 'pending':
-            submissions = submissions.filter(is_processed=False)
-        elif status_filter == 'processed':
-            submissions = submissions.filter(is_processed=True)
+        try:
+            # Get filter parameters
+            status_filter = request.query_params.get('status')
+            page = int(request.query_params.get('page', 1))
+            page_size = int(request.query_params.get('page_size', 10))
             
-        # Paginate results
-        paginator = Paginator(submissions, page_size)
-        page_obj = paginator.get_page(page)
-        
-        # Serialize data
-        serializer = ContactSubmissionSerializer(page_obj, many=True)
-        
-        return Response({
-            'submissions': serializer.data,
-            'total_count': paginator.count,
-            'total_pages': paginator.num_pages,
-            'current_page': page
-        })
+            # Build query
+            submissions = ContactSubmission.objects.all().order_by('-created_at')
+            
+            # Apply filters
+            if status_filter == 'pending':
+                submissions = submissions.filter(is_processed=False)
+            elif status_filter == 'processed':
+                submissions = submissions.filter(is_processed=True)
+                
+            # Paginate results
+            paginator = Paginator(submissions, page_size)
+            page_obj = paginator.get_page(page)
+            
+            # Serialize data
+            serializer = ContactSubmissionSerializer(page_obj, many=True)
+            
+            return Response({
+                'submissions': serializer.data,
+                'total_count': paginator.count,
+                'total_pages': paginator.num_pages,
+                'current_page': page
+            })
+        except Exception as e:
+            print(f"Error in AdminSubmissionsView.get: {str(e)}")
+            print(traceback.format_exc())
+            return Response({
+                'error': 'An error occurred while fetching submissions',
+                'detail': str(e)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class AdminSubmissionDetailView(APIView):
     """
@@ -201,26 +210,34 @@ class AdminProcessedSubmissionsView(APIView):
         # Debug info
         print(f"AdminProcessedSubmissionsView - user: {request.user}, is_staff: {request.user.is_staff}")
         
-        # Get filter parameters
-        page = int(request.query_params.get('page', 1))
-        page_size = int(request.query_params.get('page_size', 10))
-        
-        # Get only processed submissions
-        submissions = ContactSubmission.objects.filter(is_processed=True).order_by('-admin_reply_date')
+        try:
+            # Get filter parameters
+            page = int(request.query_params.get('page', 1))
+            page_size = int(request.query_params.get('page_size', 10))
             
-        # Paginate results
-        paginator = Paginator(submissions, page_size)
-        page_obj = paginator.get_page(page)
-        
-        # Serialize data
-        serializer = ContactSubmissionSerializer(page_obj, many=True)
-        
-        return Response({
-            'submissions': serializer.data,
-            'total_count': paginator.count,
-            'total_pages': paginator.num_pages,
-            'current_page': page
-        })
+            # Get only processed submissions
+            submissions = ContactSubmission.objects.filter(is_processed=True).order_by('-admin_reply_date')
+                
+            # Paginate results
+            paginator = Paginator(submissions, page_size)
+            page_obj = paginator.get_page(page)
+            
+            # Serialize data
+            serializer = ContactSubmissionSerializer(page_obj, many=True)
+            
+            return Response({
+                'submissions': serializer.data,
+                'total_count': paginator.count,
+                'total_pages': paginator.num_pages,
+                'current_page': page
+            })
+        except Exception as e:
+            print(f"Error in AdminProcessedSubmissionsView.get: {str(e)}")
+            print(traceback.format_exc())
+            return Response({
+                'error': 'An error occurred while fetching processed submissions',
+                'detail': str(e)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
     def delete(self, request, submission_id):
         """Delete a processed submission"""
@@ -231,4 +248,6 @@ class AdminProcessedSubmissionsView(APIView):
         except ContactSubmission.DoesNotExist:
             return Response({"error": "Submission not found"}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
+            print(f"Error in AdminProcessedSubmissionsView.delete: {str(e)}")
+            print(traceback.format_exc())
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
