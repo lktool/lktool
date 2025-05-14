@@ -71,40 +71,14 @@ class AdminSubmissionDetailView(APIView):
             submission = ContactSubmission.objects.get(id=submission_id)
             serializer = ContactSubmissionSerializer(submission)
             
-            # Start with the serialized data
+            # Include form_data if it exists
             data = serializer.data
-            
-            # Safely handle form_data access
-            try:
-                # Check if form_data property/method exists and has a value
-                if hasattr(submission, 'form_data'):
-                    form_data = submission.form_data
-                    if form_data:
-                        data['form_data'] = form_data
-                elif hasattr(submission, '_form_data') and submission._form_data:
-                    # Try to access the raw field if property doesn't exist
-                    import json
-                    try:
-                        data['form_data'] = json.loads(submission._form_data)
-                    except (json.JSONDecodeError, TypeError):
-                        data['form_data'] = {}
-                else:
-                    # No form data found
-                    data['form_data'] = {}
-            except Exception as e:
-                print(f"Error accessing form_data: {e}")
-                print(traceback.format_exc())
-                # Provide empty default if access fails
-                data['form_data'] = {}
+            if submission.form_data:
+                data['form_data'] = submission.form_data
             
             return Response(data)
-            
         except ContactSubmission.DoesNotExist:
             return Response({"error": "Submission not found"}, status=status.HTTP_404_NOT_FOUND)
-        except Exception as e:
-            print(f"Error in AdminSubmissionDetailView: {e}")
-            print(traceback.format_exc())
-            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class AdminReplyView(APIView):
     """

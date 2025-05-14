@@ -25,29 +25,6 @@ class ContactSubmission(models.Model):
         related_name='submissions'
     )
     
-    # Store form data as JSON - make sure this field exists
-    _form_data = models.TextField(db_column='form_data', blank=True, null=True)
-    
-    @property
-    def form_data(self):
-        """Deserialize form data from JSON"""
-        if self._form_data:
-            try:
-                import json
-                return json.loads(self._form_data)
-            except (ValueError, TypeError):
-                return {}
-        return {}
-    
-    @form_data.setter
-    def form_data(self, value):
-        """Serialize form data to JSON"""
-        if value is None:
-            self._form_data = None
-        else:
-            import json
-            self._form_data = json.dumps(value)
-    
     class Meta:
         ordering = ['-created_at']
         
