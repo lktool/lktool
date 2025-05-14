@@ -61,7 +61,13 @@ class AdminSubmissionDetailView(APIView):
         try:
             submission = ContactSubmission.objects.get(id=submission_id)
             serializer = ContactSubmissionSerializer(submission)
-            return Response(serializer.data)
+            
+            # Include form_data if it exists
+            data = serializer.data
+            if submission.form_data:
+                data['form_data'] = submission.form_data
+            
+            return Response(data)
         except ContactSubmission.DoesNotExist:
             return Response({"error": "Submission not found"}, status=status.HTTP_404_NOT_FOUND)
 
@@ -78,21 +84,22 @@ class AdminReplyView(APIView):
             
             # Get data from request
             reply_text = request.data.get('reply')
-            analysis_data = request.data.get('analysis', {})
+            form_data = request.data.get('form_data')
             
-            # Update submission with admin reply
+            # Update submission with admin reply and form data
             submission.admin_reply = reply_text
+            if form_data:
+                submission.form_data = form_data
+            
             submission.admin_reply_date = timezone.now()
             submission.is_processed = True
             submission.save()
             
-            # Format the email with professional styling
-            email_subject = f"Your LinkedIn Profile Analysis Is Ready"
-            
             # Check if this is an update to an existing reply
-            is_update = hasattr(submission, 'admin_reply_date') and submission.admin_reply_date is not None
-            if is_update:
-                email_subject = "Updated: LinkedIn Profile Analysis"
+            is_update = submission.admin_reply_date is not None
+            
+            # Format the email with professional styling
+            email_subject = "Updated: LinkedIn Profile Analysis" if is_update else "Your LinkedIn Profile Analysis Is Ready"
             
             # Create HTML email with better formatting
             email_html = f"""

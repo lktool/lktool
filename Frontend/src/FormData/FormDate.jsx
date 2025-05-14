@@ -48,24 +48,72 @@ const FormData = () => {
   const [showPreview, setShowPreview] = useState(false);
   const [currentView, setCurrentView] = useState('submissions'); // 'submissions', 'analysis', 'preview'
 
+  // State for tracking if we're editing an existing submission
+  const [editMode, setEditMode] = useState(false);
+  const [editId, setEditId] = useState(null);
+
   useEffect(() => {
-    const fetchSubmissions = async () => {
-      setLoading(true);
-      try {
-        const result = await adminService.getSubmissions({ status: 'pending' });
-        if (result.success && Array.isArray(result.data)) {
-          setSubmissions(result.data);
-        } else {
-          setSubmissions([]);
-        }
-      } catch (error) {
-        setSubmissions([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchSubmissions();
+    // Check if we're in edit mode from URL params
+    const queryParams = new URLSearchParams(window.location.search);
+    const editParam = queryParams.get('edit');
+    
+    if (editParam) {
+      setEditMode(true);
+      setEditId(parseInt(editParam, 10));
+      loadSubmissionForEdit(editParam);
+    } else {
+      // Regular mode - fetch pending submissions
+      fetchPendingSubmissions();
+    }
   }, []);
+
+  const fetchPendingSubmissions = async () => {
+    setLoading(true);
+    try {
+      const result = await adminService.getSubmissions({ status: 'pending' });
+      if (result.success && Array.isArray(result.data)) {
+        setSubmissions(result.data);
+      } else {
+        setSubmissions([]);
+      }
+    } catch (error) {
+      setSubmissions([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadSubmissionForEdit = async (submissionId) => {
+    setLoading(true);
+    try {
+      // Fetch the submission details including form data
+      const result = await adminService.getSubmissionDetails(submissionId);
+      
+      if (result.success) {
+        setSelectedSubmission(result.data);
+        
+        // If submission has form data, populate the form
+        if (result.data.form_data) {
+          setForm(result.data.form_data);
+        }
+        
+        // Set reply text from admin_reply
+        setReplyText(result.data.admin_reply || '');
+        
+        setCurrentView('analysis');
+      } else {
+        alert('Failed to load submission data for editing');
+        // Redirect back to reviewed submissions
+        window.location.href = '/admin/reviewed';
+      }
+    } catch (error) {
+      console.error('Error loading submission for edit:', error);
+      alert('An error occurred while loading the submission');
+      window.location.href = '/admin/reviewed';
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (selectedSubmission) {
@@ -212,18 +260,35 @@ const FormData = () => {
         return;
       }
 
-      const result = await adminService.submitReply(selectedSubmission.id, replyText);
+      const result = await adminService.submitReply(
+        selectedSubmission.id, 
+        replyText,
+        form // Send the form data along with the reply
+      );
 
       if (result.success) {
-        setReplyStatus('Analysis and reply sent successfully!');
+        setReplyStatus(`Analysis ${editMode ? 'updated' : 'sent'} successfully!`);
 
-        const updatedSubmissions = submissions.filter(sub =>
-          sub.id !== selectedSubmission.id
-        );
-        setSubmissions(updatedSubmissions);
+        if (!editMode) {
+          // Remove from pending list in regular mode
+          const updatedSubmissions = submissions.filter(sub =>
+            sub.id !== selectedSubmission.id
+          );
+          setSubmissions(updatedSubmissions);
+        }
+        
         setShowPreview(false);
-        setCurrentView('submissions');
-        setSelectedSubmission(null);
+        
+        // After successful update, allow time to see success message
+        setTimeout(() => {
+          if (editMode) {
+            // Redirect to reviewed submissions page
+            window.location.href = '/admin/reviewed';
+          } else {
+            setCurrentView('submissions');
+            setSelectedSubmission(null);
+          }
+        }, 2000);
       } else {
         setReplyStatus(result.error || 'Failed to send reply');
       }
@@ -278,13 +343,19 @@ const FormData = () => {
   };
 
   const handleCancel = () => {
-    setCurrentView('submissions');
-    setSelectedSubmission(null);
+    if (editMode) {
+      // In edit mode, go back to the reviewed submissions page
+      window.location.href = '/admin/reviewed';
+    } else {
+      // In regular mode, go back to submissions list
+      setCurrentView('submissions');
+      setSelectedSubmission(null);
+    }
   };
 
   return (
     <div className="admin-dashboard">
-      {currentView === 'submissions' && (
+      {currentView === 'submissions' && !editMode && (
         <div className="submissions-container">
           <div className="submissions-header">
             <h2>Pending LinkedIn Profile Submissions</h2>
@@ -340,7 +411,7 @@ const FormData = () => {
       {currentView === 'analysis' && selectedSubmission && (
         <div className="analysis-container">
           <div className="analysis-header">
-            <h2>Analyzing LinkedIn Profile</h2>
+            <h2>{editMode ? 'Edit LinkedIn Profile Analysis' : 'Analyzing LinkedIn Profile'}</h2>
             <div className="submission-details">
               <p><strong>Email:</strong> {selectedSubmission.email}</p>
               <p><strong>LinkedIn URL:</strong> <a href={selectedSubmission.linkedin_url} target="_blank" rel="noopener noreferrer">{selectedSubmission.linkedin_url}</a></p>
@@ -349,7 +420,7 @@ const FormData = () => {
               )}
             </div>
             <button className="back-button" onClick={handleCancel}>
-              ← Back to Submissions
+              {editMode ? '← Back to Reviewed Submissions' : '← Back to Submissions'}
             </button>
           </div>
           
@@ -510,14 +581,19 @@ const FormData = () => {
       {/* Preview container */}
       {currentView === 'preview' && showPreview && (
         <div className="preview-container">
-          <h2>Analysis Preview</h2>
+          <h2>{editMode ? 'Updated Analysis Preview' : 'Analysis Preview'}</h2>
           <pre>{analysisPreview}</pre>
           <div className="form-actions">
             <button type="button" className="cancel-button" onClick={handleCancel}>
               Cancel
             </button>
-            <button type="button" className="classroom-submit-button" onClick={handleSendAnalysis} disabled={isReplying}>
-              {isReplying ? 'Sending...' : 'Send Analysis'}
+            <button 
+              type="button" 
+              className="classroom-submit-button" 
+              onClick={handleSendAnalysis} 
+              disabled={isReplying}
+            >
+              {isReplying ? 'Sending...' : editMode ? 'Update & Resend Analysis' : 'Send Analysis'}
             </button>
           </div>
           {replyStatus && <p className="reply-status">{replyStatus}</p>}

@@ -170,25 +170,54 @@ const adminService = {
         error: error.response?.data?.error || 'Failed to delete submission'
       };
     }
-  }
-};
+  },
 
-// Update the submitReply method in adminService to handle updated analyses
-adminService.submitReply = async (id, reply) => {
-  try {
-    const response = await apiClient.post(`${ENDPOINTS.ADMIN.SUBMIT_REPLY(id)}`, {
-      reply
-    });
-    return {
-      success: true,
-      message: response.data.message
-    };
-  } catch (error) {
-    console.error('Error submitting reply:', error);
-    return {
-      success: false,
-      error: error.response?.data?.error || 'Failed to submit reply'
-    };
+  /**
+   * Get submission details
+   * @param {number} id - Submission ID
+   * @returns {Promise<Object>} Submission details
+   */
+  async getSubmissionDetails(id) {
+    try {
+      const response = await apiClient.get(`${ENDPOINTS.ADMIN.SUBMISSION_DETAIL(id)}`);
+      return {
+        success: true,
+        data: response.data
+      };
+    } catch (error) {
+      console.error('Error fetching submission details:', error);
+      return {
+        success: false,
+        error: error.response?.data?.error || 'Failed to fetch submission details',
+        data: null
+      };
+    }
+  },
+
+  /**
+   * Submit a reply to a user's profile submission with form data
+   * @param {number} id - Submission ID
+   * @param {string} reply - Admin's reply text
+   * @param {Object|null} formData - Additional form data
+   * @returns {Promise<Object>} Result of submission
+   */
+  async submitReply(id, reply, formData = null) {
+    try {
+      const response = await apiClient.post(`${ENDPOINTS.ADMIN.SUBMIT_REPLY(id)}`, {
+        reply,
+        form_data: formData
+      });
+      return {
+        success: true,
+        message: response.data.message
+      };
+    } catch (error) {
+      console.error('Error submitting reply:', error);
+      return {
+        success: false,
+        error: error.response?.data?.error || 'Failed to submit reply'
+      };
+    }
   }
 };
 

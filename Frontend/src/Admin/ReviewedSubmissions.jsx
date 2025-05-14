@@ -10,16 +10,17 @@ const ReviewedSubmissions = () => {
   const [error, setError] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [deleteInProgress, setDeleteInProgress] = useState({});
+  const [viewingSubmission, setViewingSubmission] = useState(null);
   const [editingSubmission, setEditingSubmission] = useState(null);
   const [editedReply, setEditedReply] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [updateStatus, setUpdateStatus] = useState('');
-  const [deleteInProgress, setDeleteInProgress] = useState({});
+  const [isSubmittingEdit, setIsSubmittingEdit] = useState(false);
+  const [editStatus, setEditStatus] = useState('');
   const navigate = useNavigate();
 
-  // Fetch processed submissions
+  // Fetch submissions when component mounts or page changes
   useEffect(() => {
-    const fetchSubmissions = async () => {
+    const fetchProcessedSubmissions = async () => {
       setLoading(true);
       try {
         const result = await adminService.getProcessedSubmissions({ page: currentPage });
@@ -29,95 +30,32 @@ const ReviewedSubmissions = () => {
           setError(null);
         } else {
           setError(result.error || 'Failed to load submissions');
+          setSubmissions([]);
         }
-      } catch (error) {
-        setError('An error occurred while fetching submissions');
-        console.error(error);
+      } catch (err) {
+        console.error('Error fetching processed submissions:', err);
+        setError('Failed to load submissions. Please try again.');
+        setSubmissions([]);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchSubmissions();
+    fetchProcessedSubmissions();
   }, [currentPage]);
 
-  const handlePageChange = (newPage) => {
-    if (newPage >= 1 && newPage <= totalPages) {
-      setCurrentPage(newPage);
-    }
-  };
-
-  const handleEditSubmission = (submission) => {
-    setEditingSubmission(submission);
-    setEditedReply(submission.admin_reply || '');
-    setUpdateStatus('');
-  };
-
-  const handleCancelEdit = () => {
-    if (!isSubmitting) {
-      setEditingSubmission(null);
-      setEditedReply('');
-    }
-  };
-
-  const handleUpdateReply = async (e) => {
-    e.preventDefault();
-    
-    if (!editedReply.trim()) {
-      setUpdateStatus('Please enter an analysis before submitting');
-      return;
-    }
-
-    setIsSubmitting(true);
-    setUpdateStatus('Sending update...');
-
-    try {
-      const result = await adminService.submitReply(editingSubmission.id, editedReply);
-      
-      if (result.success) {
-        // Update the local state with the new reply
-        const updatedSubmissions = submissions.map(sub => 
-          sub.id === editingSubmission.id 
-            ? { ...sub, admin_reply: editedReply, admin_reply_date: new Date().toISOString() }
-            : sub
-        );
-        
-        setSubmissions(updatedSubmissions);
-        setUpdateStatus('Analysis updated and resent successfully!');
-        
-        // Close the edit form after a brief delay to show the success message
-        setTimeout(() => {
-          setEditingSubmission(null);
-        }, 1500);
-      } else {
-        setUpdateStatus(`Failed to update analysis: ${result.error}`);
-      }
-    } catch (error) {
-      console.error('Error updating submission:', error);
-      setUpdateStatus('An error occurred while updating the analysis');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleReplyChange = (e) => {
-    setEditedReply(e.target.value);
-  };
-
-  const handleDeleteSubmission = async (id) => {
+  const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this submission? This action cannot be undone.')) {
       setDeleteInProgress(prev => ({ ...prev, [id]: true }));
-      
       try {
         const result = await adminService.deleteSubmission(id);
         if (result.success) {
-          // Remove the deleted submission from the state
           setSubmissions(submissions.filter(sub => sub.id !== id));
         } else {
           alert(result.error || 'Failed to delete submission');
         }
-      } catch (error) {
-        console.error('Error deleting submission:', error);
+      } catch (err) {
+        console.error('Error deleting submission:', err);
         alert('An error occurred while deleting the submission');
       } finally {
         setDeleteInProgress(prev => ({ ...prev, [id]: false }));
@@ -125,7 +63,76 @@ const ReviewedSubmissions = () => {
     }
   };
 
+  const handleViewSubmission = (submission) => {
+    setViewingSubmission(submission);
+  };
+
+  const closeViewModal = () => {
+    setViewingSubmission(null);
+  };
+
+  const handleEdit = (submission) => {
+    // Navigate to FormData component with the submission ID to load form data
+    navigate(`/admin/dashboard?edit=${submission.id}`);
+  };
+
+  const closeEditModal = () => {
+    setEditingSubmission(null);
+    setEditedReply('');
+    setEditStatus('');
+  };
+
+  const handleReplyChange = (e) => {
+    setEditedReply(e.target.value);
+    if (editStatus) setEditStatus('');
+  };
+
+  const handleResendAnalysis = async (e) => {
+    e.preventDefault();
+    if (!editingSubmission || !editedReply.trim()) {
+      setEditStatus('Please enter a reply before submitting');
+      return;
+    }
+
+    setIsSubmittingEdit(true);
+    setEditStatus('');
+
+    try {
+      const result = await adminService.submitReply(editingSubmission.id, editedReply);
+      
+      if (result.success) {
+        // Update the submission in the local state
+        const updatedSubmissions = submissions.map(sub => 
+          sub.id === editingSubmission.id 
+            ? { ...sub, admin_reply: editedReply, admin_reply_date: new Date().toISOString() }
+            : sub
+        );
+        setSubmissions(updatedSubmissions);
+        
+        setEditStatus('Analysis updated and resent successfully!');
+        setTimeout(() => {
+          closeEditModal();
+        }, 2000);
+      } else {
+        setEditStatus(result.error || 'Failed to update and resend analysis');
+      }
+    } catch (error) {
+      console.error('Error updating analysis:', error);
+      setEditStatus('An error occurred while updating the analysis');
+    } finally {
+      setIsSubmittingEdit(false);
+    }
+  };
+
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setCurrentPage(newPage);
+    }
+  };
+
   const formatDate = (dateString) => {
+    if (!dateString) return 'N/A';
+    
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
@@ -135,16 +142,16 @@ const ReviewedSubmissions = () => {
     });
   };
 
-  if (loading && !submissions.length) {
+  if (loading && submissions.length === 0) {
     return <LoadingSpinner />;
   }
-  
+
   return (
     <div className="reviewed-submissions-container">
-      <div className="submissions-header">
-        <h1>Reviewed LinkedIn Profile Submissions</h1>
+      <div className="reviewed-submissions-header">
+        <h1>Reviewed Submissions</h1>
         <button 
-          className="back-button"
+          className="back-to-pending-button"
           onClick={() => navigate('/admin/dashboard')}
         >
           Back to Pending Submissions
@@ -166,7 +173,7 @@ const ReviewedSubmissions = () => {
                   <th>Email</th>
                   <th>LinkedIn URL</th>
                   <th>Submitted</th>
-                  <th>Analysis Sent</th>
+                  <th>Replied</th>
                   <th>Actions</th>
                 </tr>
               </thead>
@@ -181,28 +188,26 @@ const ReviewedSubmissions = () => {
                     </td>
                     <td>{formatDate(submission.created_at)}</td>
                     <td>{formatDate(submission.admin_reply_date)}</td>
-                    <td>
-                      <div className="action-buttons">
-                        <button 
-                          className="view-button" 
-                          onClick={() => window.alert(submission.admin_reply)}
-                        >
-                          View
-                        </button>
-                        <button 
-                          className="edit-button" 
-                          onClick={() => handleEditSubmission(submission)}
-                        >
-                          Edit & Resend
-                        </button>
-                        <button 
-                          className="delete-button"
-                          onClick={() => handleDeleteSubmission(submission.id)}
-                          disabled={deleteInProgress[submission.id]}
-                        >
-                          {deleteInProgress[submission.id] ? 'Deleting...' : 'Delete'}
-                        </button>
-                      </div>
+                    <td className="action-buttons">
+                      <button 
+                        className="view-button" 
+                        onClick={() => handleViewSubmission(submission)}
+                      >
+                        View
+                      </button>
+                      <button 
+                        className="edit-button" 
+                        onClick={() => handleEdit(submission)}
+                      >
+                        Edit & Resend
+                      </button>
+                      <button 
+                        className="delete-button"
+                        onClick={() => handleDelete(submission.id)}
+                        disabled={deleteInProgress[submission.id]}
+                      >
+                        {deleteInProgress[submission.id] ? 'Deleting...' : 'Delete'}
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -210,18 +215,18 @@ const ReviewedSubmissions = () => {
             </table>
           </div>
 
-          {/* Pagination controls */}
+          {/* Pagination Controls */}
           {totalPages > 1 && (
-            <div className="pagination">
+            <div className="pagination-controls">
               <button 
-                onClick={() => handlePageChange(currentPage - 1)} 
+                onClick={() => handlePageChange(currentPage - 1)}
                 disabled={currentPage === 1}
               >
                 Previous
               </button>
-              <span>Page {currentPage} of {totalPages}</span>
+              <span>{currentPage} of {totalPages}</span>
               <button 
-                onClick={() => handlePageChange(currentPage + 1)} 
+                onClick={() => handlePageChange(currentPage + 1)}
                 disabled={currentPage === totalPages}
               >
                 Next
@@ -231,79 +236,45 @@ const ReviewedSubmissions = () => {
         </>
       )}
 
-      {/* Edit & Resend Modal */}
-      {editingSubmission && (
-        <div className="edit-modal-overlay">
-          <div className="edit-modal">
-            <div className="edit-modal-header">
-              <h2>Edit & Resend Analysis</h2>
-              <button 
-                className="close-button"
-                onClick={handleCancelEdit}
-                disabled={isSubmitting}
-              >
-                ×
-              </button>
+      {/* View Modal - Similar to Edit but read-only */}
+      {viewingSubmission && (
+        <div className="modal-backdrop">
+          <div className="edit-modal view-modal">
+            <div className="modal-header">
+              <h2>View Analysis</h2>
+              <button className="close-button" onClick={closeViewModal}>×</button>
             </div>
             
-            <div className="edit-modal-content">
-              <div className="submission-details">
-                <div className="detail-row">
-                  <span className="detail-label">Email:</span>
-                  <span className="detail-value">{editingSubmission.email}</span>
-                </div>
-                <div className="detail-row">
-                  <span className="detail-label">LinkedIn URL:</span>
-                  <span className="detail-value">
-                    <a href={editingSubmission.linkedin_url} target="_blank" rel="noopener noreferrer">
-                      {editingSubmission.linkedin_url}
-                    </a>
-                  </span>
-                </div>
-                <div className="detail-row">
-                  <span className="detail-label">Originally Sent:</span>
-                  <span className="detail-value">{formatDate(editingSubmission.admin_reply_date)}</span>
-                </div>
+            <div className="modal-content">
+              <div className="submission-info">
+                <p><strong>Email:</strong> {viewingSubmission.email}</p>
+                <p><strong>LinkedIn:</strong> <a href={viewingSubmission.linkedin_url} target="_blank" rel="noopener noreferrer">{viewingSubmission.linkedin_url}</a></p>
+                <p><strong>Submitted:</strong> {formatDate(viewingSubmission.created_at)}</p>
+                <p><strong>Analysis Sent:</strong> {formatDate(viewingSubmission.admin_reply_date)}</p>
               </div>
               
-              <form onSubmit={handleUpdateReply}>
-                <div className="form-group">
-                  <label htmlFor="editedReply">Update Analysis:</label>
-                  <textarea
-                    id="editedReply"
-                    value={editedReply}
-                    onChange={handleReplyChange}
-                    disabled={isSubmitting}
-                    className="analysis-textarea"
-                    placeholder="Enter your updated analysis here..."
-                    rows={12}
-                  />
-                </div>
-                
-                {updateStatus && (
-                  <div className={`status-message ${updateStatus.includes('success') ? 'success' : 'error'}`}>
-                    {updateStatus}
-                  </div>
-                )}
-                
-                <div className="form-actions">
-                  <button
-                    type="button"
-                    className="cancel-button"
-                    onClick={handleCancelEdit}
-                    disabled={isSubmitting}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="submit-button"
-                    disabled={isSubmitting || !editedReply.trim()}
-                  >
-                    {isSubmitting ? 'Sending...' : 'Update & Resend Analysis'}
-                  </button>
-                </div>
-              </form>
+              <div className="analysis-content">
+                <h3>Analysis Details</h3>
+                <pre className="analysis-text">{viewingSubmission.admin_reply}</pre>
+              </div>
+              
+              <div className="modal-actions">
+                <button 
+                  className="close-view-button"
+                  onClick={closeViewModal}
+                >
+                  Close
+                </button>
+                <button 
+                  className="edit-from-view-button"
+                  onClick={() => {
+                    closeViewModal();
+                    handleEdit(viewingSubmission);
+                  }}
+                >
+                  Edit & Resend
+                </button>
+              </div>
             </div>
           </div>
         </div>
