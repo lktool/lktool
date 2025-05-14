@@ -269,44 +269,28 @@
   margin-bottom: 20px;
 }
 
-.detail-row {
-  margin-bottom: 8px;
-  display: flex;
+.submission-info p {
+  margin: 8px 0;
 }
 
-.detail-label {
-  font-weight: 600;
-  width: 120px;
-  color: #4b5563;
-}
-
-.detail-value {
-  color: #111827;
-}
-
-.detail-value a {
+.submission-info a {
   color: #3b82f6;
   text-decoration: none;
 }
 
-.detail-value a:hover {
+.submission-info a:hover {
   text-decoration: underline;
 }
 
-.analysis-content {
+/* View modal specific styles */
+.view-modal .analysis-content {
   background-color: #f9fafb;
   border-radius: 6px;
   padding: 16px;
   margin-top: 20px;
 }
 
-.analysis-content h3 {
-  margin-top: 0;
-  font-size: 16px;
-  color: #4b5563;
-}
-
-.analysis-text {
+.view-modal .analysis-text {
   white-space: pre-wrap;
   font-family: 'Courier New', monospace;
   font-size: 14px;
@@ -319,142 +303,56 @@
   overflow-x: auto;
 }
 
-.form-group {
-  margin-bottom: 20px;
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 8px;
-  font-weight: 500;
-  color: #4b5563;
-}
-
-.analysis-textarea {
-  width: 100%;
-  min-height: 200px;
-  padding: 12px;
-  border: 1px solid #d1d5db;
-  border-radius: 4px;
-  font-family: 'Courier New', monospace;
-  font-size: 14px;
-  line-height: 1.6;
-  resize: vertical;
-}
-
-.analysis-textarea:focus {
-  outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
-}
-
-.form-actions {
+.modal-actions {
   display: flex;
   justify-content: flex-end;
   gap: 12px;
   margin-top: 20px;
 }
 
-.cancel-button, .close-view-button, .edit-from-view-button {
-  padding: 10px 16px;
-  border-radius: 4px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  border: none;
-}
-
-.cancel-button, .close-view-button {
+.close-view-button {
   background-color: #f3f4f6;
   color: #4b5563;
   border: 1px solid #d1d5db;
-}
-
-.cancel-button:hover, .close-view-button:hover {
-  background-color: #e5e7eb;
-  color: #111827;
+  padding: 10px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
 }
 
 .edit-from-view-button {
   background-color: #f59e0b;
   color: white;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.close-view-button:hover {
+  background-color: #e5e7eb;
 }
 
 .edit-from-view-button:hover {
   background-color: #d97706;
 }
 
-.submit-button {
-  background-color: #3b82f6;
-  color: white;
-  padding: 10px 16px;
-  border-radius: 4px;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  border: none;
-  transition: all 0.2s ease;
-}
-
-.submit-button:hover:not(:disabled) {
-  background-color: #2563eb;
-}
-
-.submit-button:disabled,
-.cancel-button:disabled {
-  opacity: 0.65;
-  cursor: not-allowed;
-}
-
-.status-message {
-  margin: 16px 0;
-  padding: 12px;
-  border-radius: 4px;
-  font-size: 14px;
-}
-
-.status-message.success {
-  background-color: #d1fae5;
-  color: #065f46;
-  border-left: 4px solid #10b981;
-}
-
-.status-message.error {
-  background-color: #fee2e2;
-  color: #b91c1c;
-  border-left: 4px solid #ef4444;
-}
-
 @media (max-width: 768px) {
+  .action-buttons {
+    flex-direction: column;
+    gap: 6px;
+  }
+  
   .reviewed-submissions-header {
     flex-direction: column;
     align-items: flex-start;
     gap: 12px;
   }
   
-  .action-buttons {
+  .modal-actions {
     flex-direction: column;
-    gap: 6px;
-  }
-  
-  .detail-row {
-    flex-direction: column;
-  }
-  
-  .detail-label {
-    width: 100%;
-    margin-bottom: 4px;
-  }
-  
-  .form-actions {
-    flex-direction: column;
-  }
-  
-  .cancel-button,
-  .submit-button,
-  .close-view-button,
-  .edit-from-view-button {
-    width: 100%;
   }
 }

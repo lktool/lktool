@@ -10,12 +10,8 @@ const ReviewedSubmissions = () => {
   const [error, setError] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [deleteInProgress, setDeleteInProgress] = useState({});
   const [viewingSubmission, setViewingSubmission] = useState(null);
-  const [editingSubmission, setEditingSubmission] = useState(null);
-  const [editedReply, setEditedReply] = useState('');
-  const [isSubmittingEdit, setIsSubmittingEdit] = useState(false);
-  const [editStatus, setEditStatus] = useState('');
+  const [deleteInProgress, setDeleteInProgress] = useState({});
   const navigate = useNavigate();
 
   // Fetch submissions when component mounts or page changes
@@ -44,6 +40,19 @@ const ReviewedSubmissions = () => {
     fetchProcessedSubmissions();
   }, [currentPage]);
 
+  const handleViewSubmission = (submission) => {
+    setViewingSubmission(submission);
+  };
+
+  const closeViewModal = () => {
+    setViewingSubmission(null);
+  };
+
+  const handleEdit = (submission) => {
+    // Navigate to the FormData page with edit parameter
+    navigate(`/admin/dashboard?edit=${submission.id}`);
+  };
+
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this submission? This action cannot be undone.')) {
       setDeleteInProgress(prev => ({ ...prev, [id]: true }));
@@ -63,67 +72,6 @@ const ReviewedSubmissions = () => {
     }
   };
 
-  const handleViewSubmission = (submission) => {
-    setViewingSubmission(submission);
-  };
-
-  const closeViewModal = () => {
-    setViewingSubmission(null);
-  };
-
-  const handleEdit = (submission) => {
-    // Navigate to FormData component with the submission ID to load form data
-    navigate(`/admin/dashboard?edit=${submission.id}`);
-  };
-
-  const closeEditModal = () => {
-    setEditingSubmission(null);
-    setEditedReply('');
-    setEditStatus('');
-  };
-
-  const handleReplyChange = (e) => {
-    setEditedReply(e.target.value);
-    if (editStatus) setEditStatus('');
-  };
-
-  const handleResendAnalysis = async (e) => {
-    e.preventDefault();
-    if (!editingSubmission || !editedReply.trim()) {
-      setEditStatus('Please enter a reply before submitting');
-      return;
-    }
-
-    setIsSubmittingEdit(true);
-    setEditStatus('');
-
-    try {
-      const result = await adminService.submitReply(editingSubmission.id, editedReply);
-      
-      if (result.success) {
-        // Update the submission in the local state
-        const updatedSubmissions = submissions.map(sub => 
-          sub.id === editingSubmission.id 
-            ? { ...sub, admin_reply: editedReply, admin_reply_date: new Date().toISOString() }
-            : sub
-        );
-        setSubmissions(updatedSubmissions);
-        
-        setEditStatus('Analysis updated and resent successfully!');
-        setTimeout(() => {
-          closeEditModal();
-        }, 2000);
-      } else {
-        setEditStatus(result.error || 'Failed to update and resend analysis');
-      }
-    } catch (error) {
-      console.error('Error updating analysis:', error);
-      setEditStatus('An error occurred while updating the analysis');
-    } finally {
-      setIsSubmittingEdit(false);
-    }
-  };
-
   const handlePageChange = (newPage) => {
     if (newPage >= 1 && newPage <= totalPages) {
       setCurrentPage(newPage);
@@ -132,7 +80,6 @@ const ReviewedSubmissions = () => {
 
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
-    
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
@@ -236,7 +183,7 @@ const ReviewedSubmissions = () => {
         </>
       )}
 
-      {/* View Modal - Similar to Edit but read-only */}
+      {/* View Modal - Read-only display of analysis */}
       {viewingSubmission && (
         <div className="modal-backdrop">
           <div className="edit-modal view-modal">
