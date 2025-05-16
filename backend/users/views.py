@@ -71,6 +71,43 @@ class RegisterView(APIView):
     
     def post(self, request):
         serializer = RegisterSerializer(data=request.data)
+        
+        # Check if email already exists but is unverified
+        email = request.data.get('email', '').lower().strip()
+        if email:
+            try:
+                existing_user = User.objects.get(email=email)
+                # If user exists but is unverified, send new verification email
+                if hasattr(existing_user, 'email_verified') and not existing_user.email_verified:
+                    # Generate new verification token
+                    uid = urlsafe_base64_encode(force_str(existing_user.pk).encode())
+                    token = default_token_generator.make_token(existing_user)
+                    
+                    # Build verification URL
+                    verification_url = f"{settings.FRONTEND_URL}/verify-email/{uid}-{token}"
+                    
+                    # Send verification email
+                    try:
+                        send_mail(
+                            'Verify Your Email',
+                            f'Please click the link to verify your email: {verification_url}',
+                            settings.DEFAULT_FROM_EMAIL,
+                            [existing_user.email],
+                            fail_silently=False,
+                        )
+                        return Response({
+                            "message": "This email is already registered but not verified. A new verification email has been sent."
+                        }, status=200)
+                    except Exception as e:
+                        logger.error(f"Failed to send verification email: {str(e)}")
+                        return Response({
+                            "error": "Failed to send verification email. Please try again later."
+                        }, status=500)
+            except User.DoesNotExist:
+                # User doesn't exist, continue with normal registration
+                pass
+        
+        # Normal registration flow
         if serializer.is_valid():
             user = serializer.save()
             

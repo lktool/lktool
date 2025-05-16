@@ -66,6 +66,18 @@ export const authService = {
       
       console.log('Registration response:', response.data);
       
+      // Check for the case of an unverified email that's been resent verification
+      if (response.status === 200 && 
+          response.data.message && 
+          response.data.message.includes('already registered but not verified')) {
+        return {
+          success: true,
+          message: response.data.message,
+          requiresVerification: true,
+          resendVerification: true  // Add flag to indicate verification was resent
+        };
+      }
+      
       return {
         success: true,
         message: response.data.message || 'Registration successful!',

@@ -107,6 +107,11 @@ function Signup() {
         
         if (response.success) {
           setSuccess(true); // Show verification needed message
+          
+          // If verification was resent to an existing account, show confirmation
+          if (response.resendVerification) {
+            setResendSuccess(true);
+          }
         } else {
           setError(response.error || "Registration failed. Please try again.");
         }
@@ -173,7 +178,14 @@ function Signup() {
           <h1>Verify Your Email</h1>
           <p>We've sent a verification link to:</p>
           <p><span className="email-highlight">{email}</span></p>
-          <p><strong>Check your inbox</strong> and click the link to complete your registration.</p>
+          {resendSuccess ? (
+            <div className="resent-notice">
+              <p>This email was already registered but not verified.</p>
+              <p>We've sent a new verification link to your email address.</p>
+            </div>
+          ) : (
+            <p><strong>Check your inbox</strong> and click the link to complete your registration.</p>
+          )}
           <p>Don't see it? Check your spam folder or request a new link.</p>
           <div className="verification-actions">
             <button 
