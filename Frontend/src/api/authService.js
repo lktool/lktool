@@ -54,13 +54,13 @@ export const authService = {
     try {
       console.log(`Attempting registration with email: ${email}`);
       
-      // Construct the full URL for debugging
-      const fullUrl = `${ENDPOINTS.AUTH.BASE}${ENDPOINTS.AUTH.SIGNUP}`;
-      console.log(`Using endpoint: ${fullUrl}`);
+      // Construct the full URL with the /api prefix
+      const endpoint = `${ENDPOINTS.AUTH.BASE}${ENDPOINTS.AUTH.SIGNUP}`;
+      console.log(`Using endpoint: ${endpoint}`);
       
-      // Make request with full URL to avoid any path manipulation
+      // Make request with explicit endpoint
       const response = await apiClient.post(
-        fullUrl,
+        endpoint,
         { email, password, password2 }
       );
       
@@ -77,41 +77,36 @@ export const authService = {
       // Show detailed error response for debugging
       if (error.response?.data) {
         console.error('Error response:', error.response.data);
+        
+        // Provide more detailed error information to the user
+        if (typeof error.response.data === 'object') {
+          // Handle field-specific validation errors
+          const fieldErrors = Object.entries(error.response.data)
+            .map(([field, errors]) => {
+              if (Array.isArray(errors)) {
+                return `${field}: ${errors[0]}`;
+              }
+              return `${field}: ${errors}`;
+            })
+            .join('; ');
+            
+          return { 
+            success: false, 
+            error: fieldErrors || 'Registration failed due to validation errors'
+          };
+        }
+        
+        // Handle string error
+        if (typeof error.response.data === 'string') {
+          return { success: false, error: error.response.data };
+        }
       }
       
-      if (error.response?.data) {
-        const errorData = error.response.data;
-        
-        // Field-specific errors with improved output
-        if (errorData.email && Array.isArray(errorData.email)) {
-          return { success: false, error: `Email error: ${errorData.email[0]}` };
-        }
-        if (errorData.password && Array.isArray(errorData.password)) {
-          return { success: false, error: `Password error: ${errorData.password[0]}` };
-        }
-        if (errorData.password2 && Array.isArray(errorData.password2)) {
-          return { success: false, error: `Confirm password error: ${errorData.password2[0]}` };
-        }
-        // Handle non-array error formats
-        if (errorData.email) {
-          return { success: false, error: typeof errorData.email === 'string' ? errorData.email : `Email error: ${JSON.stringify(errorData.email)}` };
-        }
-        if (errorData.password) {
-          return { success: false, error: typeof errorData.password === 'string' ? errorData.password : `Password error: ${JSON.stringify(errorData.password)}` };
-        }
-        if (errorData.password2) {
-          return { success: false, error: typeof errorData.password2 === 'string' ? errorData.password2 : `Confirm password error: ${JSON.stringify(errorData.password2)}` };
-        }
-        
-        if (errorData.message) return { success: false, error: errorData.message };
-        if (errorData.error) return { success: false, error: errorData.error };
-        if (errorData.detail) return { success: false, error: errorData.detail };
-        
-        // Return the raw error data if none of the above matched
-        return { success: false, error: `Registration failed: ${JSON.stringify(errorData)}` };
-      }
-      
-      return { success: false, error: 'Registration failed. Please try again.' };
+      // Generic error fallback
+      return { 
+        success: false, 
+        error: 'Registration failed. Please try again or contact support.'
+      };
     }
   },
   

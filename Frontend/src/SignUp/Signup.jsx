@@ -90,6 +90,7 @@ function Signup() {
 
     // Reset errors
     setError("");
+    setFormErrors([]);
 
     // Client-side validation
     if (!validateForm()) {
@@ -101,23 +102,36 @@ function Signup() {
     // Debounce signup attempts
     signupAttemptRef.current = setTimeout(async () => {
       try {
-        // Use authService instead of unifiedAuthService
-        await authService.register(email, password, confirmPassword);
-        setSuccess(true); // Show verification needed message
+        // Use authService for registration
+        const response = await authService.register(email, password, confirmPassword);
+        
+        if (response.success) {
+          setSuccess(true); // Show verification needed message
+        } else {
+          setError(response.error || "Registration failed. Please try again.");
+        }
       } catch (err) {
         console.error("Registration error:", err);
         if (err.message === 'Request timeout') {
           setError("Signup request timed out. Please try again.");
-        } else if (err.response?.data?.email) {
-          setError(`Email error: ${err.response.data.email[0]}`);
-        } else if (err.response?.data?.password) {
-          setError(`Password error: ${err.response.data.password[0]}`);
-        } else if (err.response?.data?.password2) {
-          setError(`Confirm password error: ${err.response.data.password2[0]}`);
-        } else if (err.response?.data?.message) {
-          setError(err.response.data.message);
-        } else if (err.response?.data?.error) {
-          setError(err.response.data.error);
+        } else if (err.response?.data) {
+          // Create a readable error message from the response data
+          let errorMessage = "";
+          
+          if (typeof err.response.data === 'object') {
+            // Handle field-specific errors
+            Object.entries(err.response.data).forEach(([field, messages]) => {
+              if (Array.isArray(messages)) {
+                errorMessage += `${field}: ${messages[0]} `;
+              } else if (typeof messages === 'string') {
+                errorMessage += `${field}: ${messages} `;
+              }
+            });
+          } else if (typeof err.response.data === 'string') {
+            errorMessage = err.response.data;
+          }
+          
+          setError(errorMessage || "Registration failed with validation errors");
         } else {
           setError("Unexpected error occurred. Please try again");
         }

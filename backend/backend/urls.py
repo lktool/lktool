@@ -13,21 +13,22 @@ urlpatterns = [
     # Django admin site
     path("django-admin/", admin.site.urls),
     
-    # API endpoints
+    # API endpoints with /api prefix
     path('api/auth/', include('users.urls')),
     path('api/contact/', include('contact.urls')),
     
-    # Admin API endpoints - Include admin_panel URLs
+    # Admin API endpoints
     path('api/admin/', include('admin_panel.urls')),
     path('api/admin/submissions/', AdminSubmissionsView.as_view(), name='admin_submissions'),
     path('api/admin/submissions/<int:submission_id>/', AdminSubmissionDetailView.as_view(), name='admin_submission_detail'),
     path('api/admin/processed/', AdminProcessedSubmissionsView.as_view(), name='admin_processed_submissions'),
     path('api/admin/processed/<int:submission_id>/', AdminProcessedSubmissionsView.as_view(), name='admin_delete_submission'),
     
-    # Consolidated Google auth routes - ensure all variations are available
-    path('auth/google/', GoogleAuthView.as_view(), name='direct_google_auth'),
+    # IMPORTANT: Add legacy auth routes for compatibility with frontend
+    path('auth/', include('users.urls')),  # This will handle /auth/signup/ as well
+    
+    # Consolidated Google auth routes
     path('google/', GoogleAuthView.as_view(), name='root_google_auth'),
-    path('api/auth/google/', GoogleAuthView.as_view(), name='api_google_auth'),
     
     # SPA fallback - handle all other routes with React app
     re_path(

@@ -10,11 +10,11 @@ export const BASE_URL = 'https://lktool.onrender.com';
 export const ENDPOINTS = {
   // Auth endpoints
   AUTH: {
-    BASE: `${BASE_URL}/api/auth/`,
+    BASE: '/api/auth/',
     LOGIN: 'login/',
     SIGNUP: 'signup/',
     GOOGLE: 'google/',
-    GOOGLE_ALT: `${BASE_URL}/api/auth/google/`,  // Alternative Google endpoint
+    GOOGLE_ALT: '/api/auth/google/',  // Ensure this has the /api prefix
     PROFILE: 'profile/',
     VERIFY_EMAIL: 'verify-email/',
     RESEND_VERIFICATION: 'resend-verification/',
