@@ -19,6 +19,7 @@ import UserSubmissions from "./UserSubmissions/UserSubmissions";
 import PublicOnlyRoute from "./components/PublicOnlyRoute";
 import ResetPassword from "./ResetPassword/ResetPassword";
 import ReviewedSubmissions from "./Admin/ReviewedSubmissions";
+import Pricing from "./Pricing/Pricing";  // Add this import at the top with the other imports
 
 function App() {
   useEffect(() => {
@@ -67,6 +68,9 @@ function App() {
             </PublicOnlyRoute>
           } />
           <Route path="/forgot-password" element={<ForgotPassword />} />
+          
+          {/* Add the pricing route - accessible to all */}
+          <Route path="/pricing" element={<Pricing />} />
           
           {/* Add the password reset route */}
           <Route path="/reset-password/:uid/:token" element={<ResetPassword />} />

@@ -8,6 +8,7 @@ function NavBar() {
     const location = useLocation();
     const [isAuthenticated, setIsAuthenticated] = useState(false);
     const [isAdmin, setIsAdmin] = useState(false);
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     // Function to update auth state
     const updateAuthState = () => {
@@ -52,6 +53,10 @@ function NavBar() {
         navigate('/login');
     };
 
+    const toggleMobileMenu = () => {
+        setIsMobileMenuOpen(!isMobileMenuOpen);
+    };
+
     // Hide navbar on specific pages
     const hideNavbarPaths = ['/forgot-password'];
     if (hideNavbarPaths.includes(location.pathname)) {
@@ -72,29 +77,34 @@ function NavBar() {
                 <div className="navbar-title" onClick={() => navigate(getHomeDestination())}>
                     <h2>LK Tool Box</h2>
                 </div>
-                <div className="navbar-profiles-controls">
-                    {/* <Link to={getHomeDestination()}>Home</Link> */}
-
+                
+                <button className="mobile-menu-button" onClick={toggleMobileMenu}>
+                    {isMobileMenuOpen ? '✕' : '☰'}
+                </button>
+                
+                <div className={`navbar-profiles-controls ${isMobileMenuOpen ? 'mobile-open' : ''}`}>
+                    {/* Add Pricing link - visible to all users */}
+                    <Link to="/pricing" onClick={() => setIsMobileMenuOpen(false)}>Pricing</Link>
+                    
                     {isAuthenticated && !isAdmin && (
                         <>
-                            <Link to="/inputMain">Submit Profile</Link>
-                            <Link to="/my-submissions">My Submissions</Link>
+                            <Link to="/inputMain" onClick={() => setIsMobileMenuOpen(false)}>Submit Profile</Link>
+                            <Link to="/my-submissions" onClick={() => setIsMobileMenuOpen(false)}>My Submissions</Link>
                         </>
                     )}
 
                     {isAuthenticated && isAdmin && (
-                        <Link to="/admin/dashboard">Admin Dashboard</Link>
+                        <Link to="/admin/dashboard" onClick={() => setIsMobileMenuOpen(false)}>Admin Dashboard</Link>
                     )}
 
                     {!isAuthenticated ? (
                         <>
-                            <Link to="/login">Login</Link>
-                            <Link to="/signup">Sign Up</Link>
+                            <Link to="/login" onClick={() => setIsMobileMenuOpen(false)}>Login</Link>
+                            <Link to="/signup" onClick={() => setIsMobileMenuOpen(false)}>Sign Up</Link>
                         </>
                     ) : (
                         <button onClick={handleLogout}>Logout</button>
                     )}
-    
                 </div>
             </div>
         </nav>
