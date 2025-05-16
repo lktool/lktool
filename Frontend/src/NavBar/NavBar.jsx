@@ -78,10 +78,6 @@ function NavBar() {
                     <h2>LK Tool Box</h2>
                 </div>
                 
-                <button className="mobile-menu-button" onClick={toggleMobileMenu}>
-                    {isMobileMenuOpen ? '✕' : '☰'}
-                </button>
-                
                 <div className={`navbar-profiles-controls ${isMobileMenuOpen ? 'mobile-open' : ''}`}>
                     {/* Add Pricing link - visible to all users */}
                     <Link to="/pricing" onClick={() => setIsMobileMenuOpen(false)}>Pricing</Link>
