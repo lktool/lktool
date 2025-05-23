@@ -1,50 +1,54 @@
 .reviewed-submissions-container {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 20px;
+  padding: 2rem;
 }
 
 .reviewed-header {
-  margin-bottom: 20px;
+  margin-bottom: 2rem;
 }
 
 .reviewed-header h1 {
-  font-size: 1.8rem;
-  margin-bottom: 15px;
-  color: #3a3a3a;
+  font-size: 2rem;
+  margin-bottom: 1.5rem;
+  color: #2d3748;
+  font-weight: 700;
 }
 
-/* Dashboard controls - same as in FormData.css */
+/* Dashboard controls styling */
 .dashboard-controls {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  margin-bottom: 15px;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
 }
 
 .refresh-info {
   display: flex;
   align-items: center;
-  gap: 15px;
-  font-size: 0.9rem;
+  gap: 1.2rem;
+  font-size: 0.95rem;
 }
 
 .last-refresh {
-  color: #666;
+  color: #4a5568;
+  font-weight: 500;
 }
 
 .button-container {
   display: flex;
-  gap: 10px;
+  gap: 0.8rem;
 }
 
 .auto-refresh-toggle {
-  background-color: #e2e8f0;
+  background-color: #edf2f7;
   border: none;
-  padding: 5px 10px;
-  border-radius: 4px;
+  padding: 0.6rem 1rem;
+  border-radius: 6px;
   cursor: pointer;
-  font-size: 0.85rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.2s;
 }
 
 .auto-refresh-toggle.active {
@@ -56,8 +60,8 @@
   background-color: #4a5568;
   color: white;
   border: none;
-  padding: 8px 16px;
-  border-radius: 4px;
+  padding: 0.6rem 1.2rem;
+  border-radius: 6px;
   cursor: pointer;
   font-weight: 500;
   transition: background-color 0.2s;
@@ -77,8 +81,8 @@
   background-color: #2c5282;
   color: white;
   text-decoration: none;
-  padding: 8px 16px;
-  border-radius: 4px;
+  padding: 0.6rem 1.2rem;
+  border-radius: 6px;
   font-weight: 500;
   transition: background-color 0.2s;
 }
@@ -90,30 +94,37 @@
 /* Processed submissions list */
 .processed-submissions-list {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
 }
 
 .processed-submission-card {
   background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
-  padding: 16px;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  padding: 1.5rem;
   display: flex;
   flex-direction: column;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.processed-submission-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
 }
 
 .submission-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 15px;
-  padding-bottom: 10px;
+  margin-bottom: 1.2rem;
+  padding-bottom: 1rem;
   border-bottom: 1px solid #edf2f7;
 }
 
 .submission-header h3 {
-  font-size: 1rem;
+  font-size: 1.1rem;
   font-weight: 600;
   margin: 0;
   color: #2d3748;
@@ -121,28 +132,38 @@
 
 .submission-actions {
   display: flex;
-  gap: 8px;
+  gap: 0.6rem;
 }
 
 .edit-button {
   background-color: #4299e1;
   color: white;
   border: none;
-  border-radius: 4px;
-  padding: 5px 10px;
-  font-size: 0.8rem;
+  border-radius: 6px;
+  padding: 0.5rem 0.8rem;
+  font-size: 0.85rem;
   text-decoration: none;
   cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.edit-button:hover {
+  background-color: #3182ce;
 }
 
 .delete-button {
   background-color: #e53e3e;
   color: white;
   border: none;
-  border-radius: 4px;
-  padding: 5px 10px;
-  font-size: 0.8rem;
+  border-radius: 6px;
+  padding: 0.5rem 0.8rem;
+  font-size: 0.85rem;
   cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.delete-button:hover {
+  background-color: #c53030;
 }
 
 .submission-body {
@@ -150,28 +171,40 @@
 }
 
 .submission-body p {
-  margin: 8px 0;
-  font-size: 0.9rem;
+  margin: 0.8rem 0;
+  font-size: 0.95rem;
+  color: #4a5568;
+}
+
+.submission-body a {
+  color: #4299e1;
+  text-decoration: none;
+  word-break: break-all;
+}
+
+.submission-body a:hover {
+  text-decoration: underline;
 }
 
 .analysis-preview {
-  margin-top: 15px;
+  margin-top: 1.2rem;
   background-color: #f7fafc;
-  padding: 10px;
-  border-radius: 6px;
+  padding: 1.2rem;
+  border-radius: 8px;
 }
 
 .analysis-preview h4 {
   margin-top: 0;
-  margin-bottom: 8px;
-  font-size: 0.95rem;
+  margin-bottom: 0.8rem;
+  font-size: 1rem;
   color: #2d3748;
 }
 
 .analysis-content {
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   color: #4a5568;
   white-space: pre-line;
+  line-height: 1.5;
 }
 
 /* Pagination styles */
@@ -179,18 +212,23 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-top: 20px;
-  gap: 15px;
+  margin-top: 2rem;
+  gap: 1.5rem;
 }
 
 .page-button {
   background-color: #4a5568;
   color: white;
   border: none;
-  padding: 8px 16px;
-  border-radius: 4px;
+  padding: 0.6rem 1.2rem;
+  border-radius: 6px;
   cursor: pointer;
   font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.page-button:hover {
+  background-color: #2d3748;
 }
 
 .page-button:disabled {
@@ -199,23 +237,29 @@
 }
 
 .page-info {
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   color: #4a5568;
+  font-weight: 500;
 }
 
 /* Error & empty state */
 .error-message {
   background-color: #fed7d7;
   color: #c53030;
-  padding: 12px;
-  border-radius: 6px;
-  margin-bottom: 20px;
+  padding: 1.2rem;
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+  font-weight: 500;
 }
 
 .no-submissions {
   text-align: center;
-  padding: 40px 0;
+  padding: 3rem 1rem;
   color: #4a5568;
+  background-color: white;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  font-size: 1.1rem;
 }
 
 /* Responsive adjustments */
@@ -226,11 +270,32 @@
   
   .submission-header {
     flex-direction: column;
-    gap: 10px;
+    gap: 1rem;
   }
   
   .submission-actions {
     width: 100%;
     justify-content: flex-end;
+  }
+  
+  .reviewed-header h1 {
+    font-size: 1.6rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .reviewed-submissions-container {
+    padding: 1.2rem;
+  }
+  
+  .button-container {
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+  
+  .back-button, 
+  .refresh-button {
+    width: 100%;
+    text-align: center;
   }
 }

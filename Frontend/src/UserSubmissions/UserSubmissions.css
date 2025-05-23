@@ -1,7 +1,7 @@
 .submissions-container {
-    max-width: 900px;
-    margin: 2rem auto;
-    padding: 0 1rem;
+  max-width: 1000px;
+  margin: 2.5rem auto;
+  padding: 0 1.5rem;
 }
 
 .submissions-container h1 {
@@ -25,14 +25,74 @@
     color: #6c757d;
 }
 
+.no-submissions h2 {
+  color: #2d3748;
+  margin-bottom: 1rem;
+  font-size: 1.5rem;
+}
+
 .no-submissions p {
-  margin-bottom: 0.5rem;
+  color: #718096;
+  margin-bottom: 2rem;
+}
+
+.no-submissions .cta-button {
+  background-color: #4299e1;
+  color: white;
+  border: none;
+  padding: 0.8rem 1.5rem;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.no-submissions .cta-button:hover {
+  background-color: #3182ce;
+}
+
+.submissions-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #edf2f7;
+}
+
+.submissions-header h2 {
+  font-size: 1.8rem;
+  color: #2d3748;
+  margin: 0;
+  font-weight: 600;
+}
+
+.refresh-button {
+  background-color: #4299e1;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 0.6rem 1.2rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.refresh-button:hover {
+  background-color: #3182ce;
+}
+
+.refresh-button:disabled {
+  background-color: #a0aec0;
+  cursor: not-allowed;
 }
 
 .submissions-list {
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
 }
 
 @media (min-width: 768px) {
@@ -42,70 +102,82 @@
 }
 
 .submission-card {
-    background-color: #ffffff;
-    border-radius: 8px;
-    padding: 1.5rem;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    transition: transform 0.2s ease;
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  transition: transform 0.2s;
 }
 
 .submission-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transform: translateY(-4px);
 }
 
 .submission-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1rem;
-    padding-bottom: 0.75rem;
-    border-bottom: 1px solid #eee;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  background-color: #f7fafc;
+  border-bottom: 1px solid #edf2f7;
 }
 
 .submission-header h3 {
-  font-size: 1.2rem;
   margin: 0;
-  color: #0077b5; /* LinkedIn blue */
+  font-size: 1.2rem;
+  color: #2d3748;
   font-weight: 600;
 }
 
 .status {
-    padding: 0.25rem 0.75rem;
-    border-radius: 50px;
-    font-size: 0.9rem;
-    font-weight: 500;
-}
-
-.status.pending {
-    background-color: #fff8e1;
-    color: #f57c00;
+  display: inline-block;
+  padding: 0.4rem 0.8rem;
+  border-radius: 1rem;
+  font-size: 0.8rem;
+  font-weight: 500;
 }
 
 .status.processed {
-    background-color: #e8f5e9;
-    color: #2e7d32;
+  background-color: #c6f6d5;
+  color: #22543d;
+}
+
+.status.pending {
+  background-color: #fed7d7;
+  color: #822727;
 }
 
 .submission-details {
-    margin-bottom: 1rem;
+  padding: 1.5rem;
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+.submission-details p {
+  margin: 0.7rem 0;
 }
 
 .submission-details a {
-    color: #1976d2;
-    word-break: break-all;
+  color: #4299e1;
+  text-decoration: none;
+  word-break: break-all;
+}
+
+.submission-details a:hover {
+  text-decoration: underline;
 }
 
 .submission-message {
-    background-color: #f9f9f9;
-    padding: 1rem;
-    border-radius: 6px;
-    margin-top: 1rem;
+  margin-top: 1.2rem;
+  padding: 1rem;
+  background-color: #f7fafc;
+  border-radius: 8px;
 }
 
-.submission-message p {
-    margin: 0.5rem 0 0;
-    white-space: pre-line;
+.submission-message strong {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: #2d3748;
 }
 
 .error-message {
@@ -118,30 +190,32 @@
 }
 
 .admin-reply {
-    margin-top: 1.5rem;
-    padding: 1.25rem;
-    border-radius: 6px;
-    background-color: #f1f8ff;
-    border-left: 4px solid #2196f3;
+  margin-top: 1.2rem;
+  padding: 1.5rem;
+  background-color: #ebf8ff;
+  border-radius: 8px;
+  border-left: 4px solid #4299e1;
 }
 
 .admin-reply h4 {
-    color: #0d47a1;
-    margin-top: 0;
-    margin-bottom: 0.75rem;
+  margin-top: 0;
+  margin-bottom: 1rem;
+  color: #2c5282;
+  font-size: 1.1rem;
 }
 
 .reply-content {
-    white-space: pre-line;
-    line-height: 1.5;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  white-space: pre-line;
+  color: #2d3748;
 }
 
 .reply-date {
-    margin-top: 1rem;
-    font-size: 0.85rem;
-    color: #666;
-    text-align: right;
-    font-style: italic;
+  margin-top: 1rem;
+  font-size: 0.85rem;
+  color: #718096;
+  text-align: right;
 }
 
 .cta-button {
@@ -170,30 +244,20 @@
     max-width: 500px;
 }
 
-.submissions-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-    font-size: medium;
-}
-
-.refresh-button {
-    background-color: #4a90e2;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    padding: 8px 16px;
-    cursor: pointer;
-    font-size: 14px;
-    transition: background-color 0.2s;
-}
-
-.refresh-button:hover {
-    background-color: #3a7bc8;
-}
-
-.refresh-button:disabled {
-    background-color: #cccccc;
-    cursor: not-allowed;
+@media (max-width: 640px) {
+  .submissions-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  .submission-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  .status {
+    align-self: flex-start;
+  }
 }

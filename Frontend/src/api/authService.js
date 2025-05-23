@@ -2,7 +2,7 @@
  * Authentication Service
  * Handles login, registration, token validation, and user management
  */
-import { apiClient, createAuthClient } from './interceptors';
+import { apiClient } from './interceptors';
 import { ENDPOINTS, AUTH_CONFIG, OAUTH_CONFIG } from './config';
 
 export const authService = {

@@ -470,8 +470,8 @@ const FormData = () => {
       {currentView === 'submissions' && !editMode && (
         <div className="submissions-container">
           <div className="submissions-header">
-            <h2>Pending LinkedIn Profile Submissions</h2>
-            <div className="dashboard-controls">
+            <h3 style={{ marginRight: '2.5rem' }}>Profile Submissions</h3>
+            <div className="dashboard-controls" style={{ marginTop: '1.5rem' }}>
               <div className="refresh-info">
                 {lastRefreshTime && (
                   <span className="last-refresh">
@@ -486,6 +486,7 @@ const FormData = () => {
                   {autoRefreshEnabled ? "Auto-refresh ON" : "Auto-refresh OFF"}
                 </button>
               </div>
+              
               <div className="button-container">
                 <button 
                   onClick={handleRefresh} 
@@ -500,6 +501,7 @@ const FormData = () => {
               </div>
             </div>
           </div>
+          
           {loading ? (
             <LoadingSpinner />
           ) : submissions.length === 0 ? (

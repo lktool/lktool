@@ -134,7 +134,7 @@ const ReviewedSubmissions = () => {
     return (
         <div className="reviewed-submissions-container">
             <div className="reviewed-header">
-                <h1>Processed LinkedIn Profile Submissions</h1>
+                <h2>Processed LinkedIn Profile Submissions</h2>
                 <div className="dashboard-controls">
                     <div className="refresh-info">
                         {lastRefreshTime && (
@@ -177,13 +177,13 @@ const ReviewedSubmissions = () => {
                         {submissions.map(submission => (
                             <div key={submission.id} className="processed-submission-card">
                                 <div className="submission-header">
-                                    <h3>Processed on {formatDate(submission.admin_reply_date)}</h3>
+                                    <h2>Processed on {formatDate(submission.admin_reply_date)}</h2>
                                     <div className="submission-actions">
                                         <Link 
                                             to={`/admin/dashboard?edit=${submission.id}`}
                                             className="edit-button"
                                         >
-                                            Edit Analysis
+                                            Edit
                                         </Link>
                                         <button 
                                             onClick={() => handleDelete(submission.id)}

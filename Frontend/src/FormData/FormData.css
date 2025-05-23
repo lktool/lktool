@@ -1,10 +1,10 @@
 .classroom-form-data {
-  max-width: 800px;
-  margin: 0 auto;
+  max-width: 900px;
+  margin: 2rem auto;
   background-color: white;
-  padding: 30px;
-  border-radius: 10px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  padding: 2.5rem;
+  border-radius: 12px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
 }
 
 /* Headings */
@@ -16,26 +16,41 @@
 
 /* .classroom-fieldset and Legends */
 .classroom-fieldset {
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  padding: 20px;
-  margin-bottom: 25px;
-  background-color: #fafafa;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 1.8rem;
+  margin-bottom: 2rem;
+  background-color: #f8fafc;
+  transition: box-shadow 0.2s;
+}
+
+.classroom-fieldset:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
 .classroom-legend {
-  font-weight: bold;
-  font-size: 18px;
-  color: #328E6E;
-  padding: 0 10px;
+  font-weight: 600;
+  font-size: 1.2rem;
+  color: #3182ce;
+  padding: 0 0.8rem;
 }
 
 /* Labels & Inputs */
 label {
   display: block;
-  margin-bottom: 12px;
-  color: #333;
-  font-size: 15px;
+  margin-bottom: 1rem;
+  color: #2d3748;
+  font-size: 1rem;
+  position: relative;
+  padding-left: 2rem;
+}
+
+.classroom-form-data input[type="checkbox"] {
+  position: absolute;
+  left: 0;
+  top: 0.25rem;
+  width: 1.2rem;
+  height: 1.2rem;
 }
 
 .input-value[type="text"],
@@ -44,38 +59,59 @@ label {
 select {
   display: block;
   width: 100%;
-  padding: 10px 12px;
-  margin-top: 4px;
-  margin-bottom: 12px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  font-size: 14px;
-  box-sizing: border-box;
+  padding: 0.8rem 1rem;
+  margin-top: 0.4rem;
+  margin-bottom: 1rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: all 0.2s;
 }
 
-.input-value[type="checkbox"] {
-  margin-right: 10px;
+.classroom-form-data input:focus,
+.classroom-form-data select:focus {
+  border-color: #4299e1;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.15);
 }
 
 /* Red Legend (Warning Section) */
 .classroom-legend.classroom-danger {
-  color: #b91c1c;
+  color: #e53e3e;
 }
 
 /* Submit Button */
 .classroom-submit-button {
-  background-color: #328E6E;
+  background-color: #3182ce;
   color: white;
-  padding: 12px 24px;
-  font-size: 16px;
+  padding: 0.9rem 1.8rem;
+  font-size: 1.05rem;
   border: none;
-  border-radius: 6px;
+  border-radius: 8px;
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  transition: background-color 0.2s;
+  font-weight: 500;
 }
 
 .classroom-submit-button:hover {
-  background-color: #28795b;
+  background-color: #2c5282;
+}
+
+.cancel-button {
+  background-color: #f7fafc;
+  color: #4a5568;
+  border: 1px solid #e2e8f0;
+  padding: 0.9rem 1.8rem;
+  font-size: 1.05rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.cancel-button:hover {
+  background-color: #edf2f7;
+  color: #2d3748;
 }
 
 /* Analysis Preview */
@@ -148,12 +184,110 @@ select {
   padding: 20px;
 }
 
+/* Submissions Header */
+.submissions-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 2.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid #eaeaea;
+}
+
+.submissions-header h2,
+.submissions-header h3 {
+  font-size: 1.8rem;
+  color: #2d3748;
+/* Increased bottom margin from 1.2rem to 2rem */
+  font-weight: 700;
+}
+
+/* Dashboard controls and refresh styling */
+.dashboard-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem; /* Increased from 8px */
+  margin-bottom: 1.5rem;
+}
+
+.refresh-info {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem; /* Increased from 15px */
+  font-size: 0.9rem;
+  margin-bottom: 0.8rem; /* Added margin bottom */
+}
+
+.last-refresh {
+  color: #666;
+  padding: 0.3rem 0;
+}
+
+.button-container {
+  display: flex;
+  gap: 1.2rem; /* Increased from 10px */
+  /* Added margin top */
+}
+
+.auto-refresh-toggle {
+  background-color: #e2e8f0;
+  border: none;
+  padding: 8px 16px; /* Increased padding */
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.2s ease;
+}
+
+.auto-refresh-toggle.active {
+  background-color: #4299e1;
+  color: white;
+}
+
+.refresh-button {
+  background-color: #4a5568;
+  color: white;
+  border: none;
+ /* Increased padding */
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s;
+  margin-bottom: 0.8rem; /* Added margin bottom */
+}
+
+.refresh-button:hover {
+  background-color: #2d3748;
+}
+
+.refresh-button:disabled {
+  background-color: #a0aec0;
+  cursor: not-allowed;
+}
+
+.view-processed-button {
+  background-color: #328E6E;
+  color: white;
+  text-decoration: none;
+  padding: 10px 18px; /* Increased padding */
+  border-radius: 4px;
+  font-size: 14px;
+  display: inline-block;
+  margin-top: 0.5rem; /* Added margin top */
+  transition: background-color 0.2s;
+}
+
+.view-processed-button:hover {
+  background-color: #287058;
+  text-decoration: none;
+}
+
 /* Submissions Grid Layout */
 .submission-cards-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 20px;
-  margin-top: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1.5rem;
+  margin-top: 2rem;
 }
 
 .submission-card {
@@ -212,219 +346,145 @@ select {
 /* Analysis Container */
 .analysis-container {
   background-color: white;
-  border-radius: 10px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  padding: 20px;
-  margin-top: 20px;
+  border-radius: 12px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+  padding: 2.5rem;
+  margin: 2rem auto;
+  max-width: 900px;
 }
 
 .analysis-header {
-  margin-bottom: 20px;
-  border-bottom: 1px solid #eee;
-  padding-bottom: 15px;
+  margin-bottom: 2rem;
+  border-bottom: 2px solid #edf2f7;
+  padding-bottom: 1.5rem;
+}
+
+.analysis-header h2 {
+  font-size: 1.8rem;
+  color: #2d3748;
+  margin-bottom: 1.2rem;
+  font-weight: 700;
 }
 
 .submission-details {
-  background-color: #f5f7fa;
-  padding: 15px;
-  border-radius: 8px;
-  margin: 15px 0;
+  background-color: #f8fafc;
+  padding: 1.5rem;
+  border-radius: 10px;
+  margin: 1.5rem 0;
+}
+
+.submission-details p {
+  margin: 0.8rem 0;
+  font-size: 1rem;
+  line-height: 1.6;
 }
 
 .back-button {
-  background-color: #f0f0f0;
+  background-color: #edf2f7;
   border: none;
-  border-radius: 4px;
-  padding: 8px 16px;
+  border-radius: 8px;
+  padding: 0.8rem 1.5rem;
   cursor: pointer;
-  margin-top: 10px;
+  margin-top: 1rem;
+  font-size: 1rem;
+  color: #4a5568;
+  font-weight: 500;
+  transition: all 0.2s;
 }
 
-.form-actions {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 20px;
-}
-
-.cancel-button {
-  background-color: #f0f0f0;
-  color: #333;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  padding: 10px 20px;
-  cursor: pointer;
+.back-button:hover {
+  background-color: #e2e8f0;
+  color: #7a96c7;
 }
 
 /* Preview Container */
 .preview-container {
   background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+  padding: 2.5rem;
+  margin: 2rem auto;
+  max-width: 900px;
+}
+
+.preview-container h2 {
+  font-size: 1.8rem;
+  color: #2d3748;
+  margin-bottom: 1.5rem;
+  font-weight: 700;
+}
+
+.preview-container pre {
+  background-color: #f8fafc;
+  padding: 1.5rem;
   border-radius: 10px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  padding: 20px;
-  margin-top: 20px;
-}
-
-.analysis-preview,
-.email-preview {
-  margin: 20px 0;
-}
-
-.preview-content {
-  background-color: #f5f7fa;
-  padding: 15px;
-  border-radius: 8px;
   white-space: pre-wrap;
-  font-family: monospace;
-  max-height: 300px;
-  overflow-y: auto;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: #4a5568;
+  margin-bottom: 2rem;
+  border: 1px solid #e2e8f0;
+  overflow-x: auto;
 }
 
-.email-frame {
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-.email-header {
-  background-color: #f0f7f4;
-  padding: 12px;
-  border-bottom: 1px solid #e0e0e0;
-  font-size: 14px;
-}
-
-.email-body {
-  padding: 15px;
-  background-color: white;
-}
-
-.email-analysis {
-  background-color: #f5f7fa;
-  padding: 15px;
-  border-radius: 8px;
-  margin: 15px 0;
-  white-space: pre-wrap;
-  font-family: monospace;
-}
-
-.preview-actions {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 20px;
-}
-
-.edit-button {
-  background-color: #f0f0f0;
-  color: #333;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  padding: 10px 20px;
-  cursor: pointer;
-}
-
-.send-button {
-  background-color: #328E6E;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  padding: 10px 20px;
-  cursor: pointer;
-}
-
-.status-message {
-  margin-top: 15px;
-  padding: 10px;
-  border-radius: 4px;
+.reply-status {
   text-align: center;
+  margin-top: 1.5rem;
+  padding: 1rem;
+  border-radius: 8px;
+  font-weight: 500;
 }
 
-.status-message.success {
-  background-color: #d4edda;
-  color: #155724;
+/* Submission cards */
+.submission-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1.5rem;
+  margin-top: 2rem;
 }
 
-.status-message.error {
-  background-color: #f8d7da;
-  color: #721c24;
-}
-
-/* Submissions Header */
 .submissions-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
+  align-items: flex-start;
+  margin-bottom: 2.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid #eaeaea;
+}
+
+.submissions-header h2,
+.submissions-header h3 {
+  font-size: 1.8rem;
+  color: #2d3748;
+  margin: 0 0 2rem 0; /* Increased bottom margin from 1.2rem to 2rem */
+  font-weight: 700;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .classroom-form-data,
+  .analysis-container,
+  .preview-container {
+    padding: 1.5rem;
+  }
   
-}
-
-.view-processed-button {
-  background-color: #328E6E;
-  color: white;
-  text-decoration: none;
-  padding: 8px 16px;
-  border-radius: 4px;
-  font-size: 14px;
-  display: inline-block;
-}
-
-.view-processed-button:hover {
-  background-color: #287058;
-  text-decoration: none;
-}
-
-/* Dashboard controls and refresh styling */
-.dashboard-controls {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-bottom: 15px;
-}
-
-.refresh-info {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  font-size: 0.9rem;
-}
-
-.last-refresh {
-  color: #666;
-}
-
-.button-container {
-  display: flex;
-  gap: 10px;
-}
-
-.auto-refresh-toggle {
-  background-color: #e2e8f0;
-  border: none;
-  padding: 5px 10px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 0.85rem;
-}
-
-.auto-refresh-toggle.active {
-  background-color: #4299e1;
-  color: white;
-}
-
-.refresh-button {
-  background-color: #4a5568;
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 4px;
-  cursor: pointer;
-  font-weight: 500;
-  transition: background-color 0.2s;
-}
-
-.refresh-button:hover {
-  background-color: #2d3748;
-}
-
-.refresh-button:disabled {
-  background-color: #a0aec0;
-  cursor: not-allowed;
+  .form-actions {
+    flex-direction: column;
+  }
+  
+  .cancel-button,
+  .classroom-submit-button {
+    width: 100%;
+  }
+  
+  .submission-cards-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .submissions-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
 }

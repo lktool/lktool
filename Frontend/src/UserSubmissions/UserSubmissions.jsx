@@ -127,7 +127,7 @@ const UserSubmissions = () => {
     return (
         <div className="submissions-container">
             <div className="submissions-header">
-                <h1>Your LinkedIn Profile Submissions</h1>
+                <h2>Your LinkedIn Profile Submissions</h2>
                 <button 
                     onClick={handleRefresh} 
                     className="refresh-button" 
