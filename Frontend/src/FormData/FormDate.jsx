@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom'; // Add useNavigate
 import "./FormData.css";
 import { adminService } from '../api';
 import LoadingSpinner from '../components/LoadingSpinner';
@@ -56,6 +56,7 @@ const FormData = () => {
   const [autoRefreshEnabled, setAutoRefreshEnabled] = useState(true);
   const [lastRefreshTime, setLastRefreshTime] = useState(null);
   const refreshTimerRef = useRef(null);
+  const navigate = useNavigate(); // Add this hook
 
   useEffect(() => {
     // Check if we're in edit mode from URL params
@@ -258,6 +259,7 @@ const FormData = () => {
   };
 
   const handleSubmit = (e) => {
+    // This line is critical - we need to prevent default form submission
     e.preventDefault();
 
     if (!selectedSubmission) {
@@ -265,7 +267,14 @@ const FormData = () => {
       return;
     }
 
-    handleGeneratePreview();
+    // Don't directly call handleGeneratePreview which changes the view
+    // Instead generate the analysis first
+    const analysisData = generateAnalysisPreview();
+    
+    if (analysisData) {
+      // Only change the view if we have valid data
+      setCurrentView('preview');
+    }
   };
 
   const handleGeneratePreview = () => {
@@ -285,13 +294,11 @@ const FormData = () => {
     setReplyStatus('');
 
     try {
-      const analysisData = generateAnalysisPreview();
-
-      if (!analysisData) {
-        setIsReplying(false);
-        return;
-      }
-
+      // Don't regenerate the analysis - this can cause unexpected behavior
+      // Just use the current form state and reply text
+      
+      console.log(`Submitting analysis for ${editMode ? 'editing' : 'new'} submission ${selectedSubmission.id}`);
+      
       const result = await adminService.submitReply(
         selectedSubmission.id, 
         replyText,
@@ -314,8 +321,8 @@ const FormData = () => {
         // After successful update, allow time to see success message
         setTimeout(() => {
           if (editMode) {
-            // Redirect to reviewed submissions page
-            window.location.href = '/admin/reviewed';
+            // Use navigate instead of direct window.location to prevent full page reload
+            navigate('/admin/reviewed');
           } else {
             setCurrentView('submissions');
             setSelectedSubmission(null);
@@ -595,89 +602,90 @@ const FormData = () => {
                 <input name="lastPostDate" type="date" value={form.lastPostDate} onChange={handleChange} />
               </label>
             </fieldset>
-
-            {/* Outreach Suitability section */}
-            <fieldset className="classroom-fieldset">
-              <legend className="classroom-legend">4. Outreach Suitability</legend>
-              <label>
-                <input type="checkbox" name="profileUpdates" checked={form.profileUpdates} onChange={handleChange} />
-                Recently Updated Headline or Info
-              </label>
+ch Suitability section */}
+              </label> className="classroom-fieldset">
               <label>
                 <input type="checkbox" name="sharedInterests" checked={form.sharedInterests} onChange={handleChange} />
-                Shared Interests or Mutual Connections
-              </label>
+                Shared Interests or Mutual Connections type="checkbox" name="profileUpdates" checked={form.profileUpdates} onChange={handleChange} />
+              </label>tly Updated Headline or Info
               <label>
                 <input type="checkbox" name="openToNetworking" checked={form.openToNetworking} onChange={handleChange} />
-                Open to Connect or Recruit
-              </label>
+                Open to Connect or Recruit type="checkbox" name="sharedInterests" checked={form.sharedInterests} onChange={handleChange} />
+              </label>d Interests or Mutual Connections
               <label>
                 <input type="checkbox" name="industryRelevance" checked={form.industryRelevance} onChange={handleChange} />
-                In a Relevant Industry
-              </label>
+                In a Relevant Industry type="checkbox" name="openToNetworking" checked={form.openToNetworking} onChange={handleChange} />
+              </label>to Connect or Recruit
               <label>
                 <input type="checkbox" name="activeJobTitles" checked={form.activeJobTitles} onChange={handleChange} />
-                Has Active, Relevant Job Titles
-              </label>
-            </fieldset>
+                Has Active, Relevant Job Titles type="checkbox" name="industryRelevance" checked={form.industryRelevance} onChange={handleChange} />
+              </label>levant Industry
+            </fieldset>              </label>
 
-            {/* Risk Signals section */}
+            {/* Risk Signals section */}bTitles" checked={form.activeJobTitles} onChange={handleChange} />
             <fieldset className="classroom-fieldset">
-              <legend className="classroom-legend classroom-danger">5. Low Score / Risk Signals</legend>
+              <legend className="classroom-legend classroom-danger">5. Low Score / Risk Signals</legend>>
               <label>
                 <input type="checkbox" name="newlyCreated" checked={form.newlyCreated} onChange={handleChange} />
-                Newly Created Account
-              </label>
+                Newly Created Accountignals section */}
+              </label> className="classroom-fieldset">
               <label>
                 <input type="checkbox" name="sparseJobHistory" checked={form.sparseJobHistory} onChange={handleChange} />
-                Sparse or Recently Added Job History
-              </label>
+                Sparse or Recently Added Job History type="checkbox" name="newlyCreated" checked={form.newlyCreated} onChange={handleChange} />
+              </label> Created Account
               <label>
                 <input type="checkbox" name="defaultProfilePicture" checked={form.defaultProfilePicture} onChange={handleChange} />
-                Default/Stock Profile Picture
-              </label>
+                Default/Stock Profile Picture type="checkbox" name="sparseJobHistory" checked={form.sparseJobHistory} onChange={handleChange} />
+              </label>e or Recently Added Job History
               <label>
                 <input type="checkbox" name="lowConnections" checked={form.lowConnections} onChange={handleChange} />
-                Very Low (100) Connections
-              </label>
+                Very Low (100) Connections type="checkbox" name="defaultProfilePicture" checked={form.defaultProfilePicture} onChange={handleChange} />
+              </label>lt/Stock Profile Picture
               <label>
                 <input type="checkbox" name="noEngagementOnPosts" checked={form.noEngagementOnPosts} onChange={handleChange} />
-                No Meaningful Engagement on Content
-              </label>
-            </fieldset>
+                No Meaningful Engagement on Content type="checkbox" name="lowConnections" checked={form.lowConnections} onChange={handleChange} />
+              </label>w (100) Connections
+            </fieldset>              </label>
 
-            <div className="form-actions">
-              <button type="button" className="cancel-button" onClick={handleCancel}>
+            <div className="form-actions">agementOnPosts} onChange={handleChange} />
+              <button type="button" className="cancel-button" onClick={handleCancel}>ningful Engagement on Content
                 Cancel
               </button>
               <button type="submit" className="classroom-submit-button">
-                Generate Analysis Preview
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
-
+                Generate Analysis Previewame="form-actions">
+              </button>ton type="button" className="cancel-button" onClick={handleCancel}>
+            </div>ancel
+          </form></button>
+        </div>      {/* Use type="submit" so it triggers the form's onSubmit handler */}
+      )}              <button type="submit" className="classroom-submit-button">
+date Analysis Preview' : 'Generate Analysis Preview'}
       {/* Preview container */}
       {currentView === 'preview' && showPreview && (
         <div className="preview-container">
           <h2>{editMode ? 'Updated Analysis Preview' : 'Analysis Preview'}</h2>
           <pre>{analysisPreview}</pre>
           <div className="form-actions">
-            <button type="button" className="cancel-button" onClick={handleCancel}>
-              Cancel
-            </button>
-            <button 
+            <button type="button" className="cancel-button" onClick={handleCancel}>ntainer */}
+              Cancel= 'preview' && showPreview && (
+            </button>me="preview-container">
+            <button pdated Analysis Preview' : 'Analysis Preview'}</h2>
               type="button" 
               className="classroom-submit-button" 
-              onClick={handleSendAnalysis} 
-              disabled={isReplying}
+              onClick={handleSendAnalysis} lassName="cancel-button" onClick={handleCancel}>
+              disabled={isReplying} Cancel
             >
               {isReplying ? 'Sending...' : editMode ? 'Update & Resend Analysis' : 'Send Analysis'}
-            </button>
+            </button>pe="button" 
           </div>
-          {replyStatus && <p className="reply-status">{replyStatus}</p>}
-        </div>
+          {replyStatus && <p className="reply-status">{replyStatus}</p>}onClick={handleSendAnalysis} 
+        </div>      disabled={isReplying}
+      )}  >
+    </div>          {isReplying ? 'Sending...' : editMode ? 'Update & Resend Analysis' : 'Send Analysis'}
+  );          </button>
+};          </div>
+& <p className="reply-status">{replyStatus}</p>}
+export default FormData;        </div>
+
       )}
     </div>
   );

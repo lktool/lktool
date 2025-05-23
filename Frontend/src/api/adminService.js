@@ -74,13 +74,29 @@ export const adminService = {
    */
   async getSubmissionDetails(id) {
     try {
-      const response = await apiClient.get(`${ENDPOINTS.ADMIN.SUBMISSIONS}/${id}/`);
+      console.log(`Fetching details for submission ID: ${id}`);
+      
+      // Fix the URL construction to avoid domain duplication
+      // Use a path that starts with / rather than a full URL
+      const response = await apiClient.get(`/api/admin/submissions/${id}/`, {
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache'
+        }
+      });
+      
+      console.log("Raw submission details response:", response.data);
+      
+      if (response.data?.form_data) {
+        console.log("Form data found in response:", response.data.form_data);
+      }
+      
       return {
         success: true,
         data: response.data
       };
     } catch (error) {
-      console.error(`Error fetching submission ${id}:`, error);
+      console.error('Error fetching submission details:', error);
       return {
         success: false,
         error: error.response?.data?.error || 'Failed to fetch submission details'
@@ -97,23 +113,17 @@ export const adminService = {
    */
   async submitReply(submissionId, reply, analysisData = null) {
     try {
-      const payload = {
+      console.log(`Submitting reply for submission ${submissionId}`);
+      
+      // Fix the URL construction - use a relative path
+      const response = await apiClient.post(`/api/admin/submissions/${submissionId}/reply/`, {
         reply,
-      };
-      
-      // If analysis data is provided, include it in the payload
-      if (analysisData) {
-        payload.analysis = analysisData;
-      }
-      
-      const response = await apiClient.post(
-        `${ENDPOINTS.ADMIN.SUBMIT_REPLY(submissionId)}`, 
-        payload
-      );
+        form_data: analysisData
+      });
       
       return {
         success: true,
-        data: response.data
+        message: response.data?.message || 'Reply sent successfully'
       };
     } catch (error) {
       console.error('Error submitting reply:', error);
