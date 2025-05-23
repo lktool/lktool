@@ -66,7 +66,11 @@ const FormData = () => {
     if (editParam) {
       setEditMode(true);
       setEditId(parseInt(editParam, 10));
-      loadSubmissionForEdit(editParam);
+      
+      // Only load the submission once when the component mounts
+      if (!selectedSubmission) {
+        loadSubmissionForEdit(editParam);
+      }
     } else {
       // Regular mode - fetch pending submissions
       fetchPendingSubmissions();
@@ -78,14 +82,15 @@ const FormData = () => {
           fetchPendingSubmissions(true); // Silent refresh
         }, 15000); // Refresh every 15 seconds
       }
-      
-      return () => {
-        if (refreshTimerRef.current) {
-          clearInterval(refreshTimerRef.current);
-        }
-      };
     }
-  }, [autoRefreshEnabled, currentView]);
+    
+    return () => {
+      if (refreshTimerRef.current) {
+        clearInterval(refreshTimerRef.current);
+        refreshTimerRef.current = null;
+      }
+    };
+  }, [autoRefreshEnabled, currentView]);  // Remove selectedSubmission from deps to prevent loops
 
   const fetchPendingSubmissions = async (silent = false) => {
     if (!silent) setLoading(true);
@@ -123,11 +128,48 @@ const FormData = () => {
       const result = await adminService.getSubmissionDetails(submissionId);
       
       if (result.success) {
+        console.log("Successfully loaded submission for edit:", result.data);
         setSelectedSubmission(result.data);
         
         // If submission has form data, populate the form
-        if (result.data.form_data) {
+        if (result.data.form_data && Object.keys(result.data.form_data).length > 0) {
+          console.log("Setting form with data:", result.data.form_data);
           setForm(result.data.form_data);
+        } else {
+          console.log("No form data available, using defaults");
+          // Set defaults if no form data exists
+          setForm({
+            connections: '',
+            hasVerificationShield: false,
+            accountType: 'normal',
+            accountAgeYears: '',
+            lastUpdated: '',
+            hasCustomURL: false,
+            hasProfileSummary: false,
+            hasProfessionalPhoto: true,
+            hasOldPhoto: false,
+            outdatedJobInfo: false,
+            missingAboutOrEducation: false,
+            profileCompleteness: false,
+            skillsEndorsementsCount: '',
+            hasRecommendations: false,
+            personalizedProfile: false,
+            recentActivity: true,
+            lastPostDate: '',
+            engagementWithContent: false,
+            engagementHistory: false,
+            postHistoryOlderThanYear: false,
+            profileUpdates: false,
+            sharedInterests: false,
+            openToNetworking: false,
+            industryRelevance: false,
+            activeJobTitles: false,
+            newlyCreated: false,
+            sparseJobHistory: false,
+            defaultProfilePicture: false,
+            lowConnections: false,
+            noEngagementOnPosts: false,
+          });
         }
         
         // Set reply text from admin_reply
@@ -135,14 +177,14 @@ const FormData = () => {
         
         setCurrentView('analysis');
       } else {
-        alert('Failed to load submission data for editing');
+        alert('Failed to load submission data for editing: ' + result.error);
         // Redirect back to reviewed submissions
-        window.location.href = '/admin/reviewed';
+        navigate('/admin/reviewed');
       }
     } catch (error) {
       console.error('Error loading submission for edit:', error);
       alert('An error occurred while loading the submission');
-      window.location.href = '/admin/reviewed';
+      navigate('/admin/reviewed');
     } finally {
       setLoading(false);
     }
@@ -268,12 +310,20 @@ const FormData = () => {
     }
 
     // Don't directly call handleGeneratePreview which changes the view
-    // Instead generate the analysis first
-    const analysisData = generateAnalysisPreview();
-    
-    if (analysisData) {
-      // Only change the view if we have valid data
-      setCurrentView('preview');
+    // Instead generate the analysis first and make sure it works
+    try {
+      const analysisData = generateAnalysisPreview();
+      console.log("Generated analysis data:", analysisData);
+      
+      if (analysisData) {
+        // Only change the view if we have valid data
+        setCurrentView('preview');
+      } else {
+        setReplyStatus('Failed to generate analysis preview');
+      }
+    } catch (error) {
+      console.error("Error in handleSubmit:", error);
+      setReplyStatus('An error occurred while generating the preview');
     }
   };
 
@@ -294,10 +344,10 @@ const FormData = () => {
     setReplyStatus('');
 
     try {
-      // Don't regenerate the analysis - this can cause unexpected behavior
-      // Just use the current form state and reply text
-      
+      // Log what we're about to submit for debugging
       console.log(`Submitting analysis for ${editMode ? 'editing' : 'new'} submission ${selectedSubmission.id}`);
+      console.log("Form data being sent:", form);
+      console.log("Reply text:", replyText);
       
       const result = await adminService.submitReply(
         selectedSubmission.id, 
@@ -333,7 +383,7 @@ const FormData = () => {
       }
     } catch (error) {
       console.error('Error sending analysis:', error);
-      setReplyStatus('Failed to send analysis');
+      setReplyStatus('Failed to send analysis: ' + (error.message || 'Unknown error'));
     } finally {
       setIsReplying(false);
     }
@@ -602,90 +652,89 @@ const FormData = () => {
                 <input name="lastPostDate" type="date" value={form.lastPostDate} onChange={handleChange} />
               </label>
             </fieldset>
-ch Suitability section */}
-              </label> className="classroom-fieldset">
+
+            {/* Suitability section */}
+            <fieldset className="classroom-fieldset">
+              <legend className="classroom-legend">4. Profile Suitability</legend>
               <label>
                 <input type="checkbox" name="sharedInterests" checked={form.sharedInterests} onChange={handleChange} />
-                Shared Interests or Mutual Connections type="checkbox" name="profileUpdates" checked={form.profileUpdates} onChange={handleChange} />
-              </label>tly Updated Headline or Info
+                Shared Interests or Mutual Connections
+              </label>
+              <label>
+                <input type="checkbox" name="profileUpdates" checked={form.profileUpdates} onChange={handleChange} />
+                Recently Updated Headline or Info
+              </label>
               <label>
                 <input type="checkbox" name="openToNetworking" checked={form.openToNetworking} onChange={handleChange} />
-                Open to Connect or Recruit type="checkbox" name="sharedInterests" checked={form.sharedInterests} onChange={handleChange} />
-              </label>d Interests or Mutual Connections
+                Open to Connect or Recruit
+              </label>
               <label>
                 <input type="checkbox" name="industryRelevance" checked={form.industryRelevance} onChange={handleChange} />
-                In a Relevant Industry type="checkbox" name="openToNetworking" checked={form.openToNetworking} onChange={handleChange} />
-              </label>to Connect or Recruit
+                In a Relevant Industry
+              </label>
               <label>
                 <input type="checkbox" name="activeJobTitles" checked={form.activeJobTitles} onChange={handleChange} />
-                Has Active, Relevant Job Titles type="checkbox" name="industryRelevance" checked={form.industryRelevance} onChange={handleChange} />
-              </label>levant Industry
-            </fieldset>              </label>
+                Has Active, Relevant Job Titles
+              </label>
+            </fieldset>
 
-            {/* Risk Signals section */}bTitles" checked={form.activeJobTitles} onChange={handleChange} />
+            {/* Risk Signals section */}
             <fieldset className="classroom-fieldset">
-              <legend className="classroom-legend classroom-danger">5. Low Score / Risk Signals</legend>>
+              <legend className="classroom-legend classroom-danger">5. Low Score / Risk Signals</legend>
               <label>
                 <input type="checkbox" name="newlyCreated" checked={form.newlyCreated} onChange={handleChange} />
-                Newly Created Accountignals section */}
-              </label> className="classroom-fieldset">
+                Newly Created Account
+              </label>
               <label>
                 <input type="checkbox" name="sparseJobHistory" checked={form.sparseJobHistory} onChange={handleChange} />
-                Sparse or Recently Added Job History type="checkbox" name="newlyCreated" checked={form.newlyCreated} onChange={handleChange} />
-              </label> Created Account
+                Sparse or Recently Added Job History
+              </label>
               <label>
                 <input type="checkbox" name="defaultProfilePicture" checked={form.defaultProfilePicture} onChange={handleChange} />
-                Default/Stock Profile Picture type="checkbox" name="sparseJobHistory" checked={form.sparseJobHistory} onChange={handleChange} />
-              </label>e or Recently Added Job History
+                Default/Stock Profile Picture
+              </label>
               <label>
                 <input type="checkbox" name="lowConnections" checked={form.lowConnections} onChange={handleChange} />
-                Very Low (100) Connections type="checkbox" name="defaultProfilePicture" checked={form.defaultProfilePicture} onChange={handleChange} />
-              </label>lt/Stock Profile Picture
+                Very Low (100) Connections
+              </label>
               <label>
                 <input type="checkbox" name="noEngagementOnPosts" checked={form.noEngagementOnPosts} onChange={handleChange} />
-                No Meaningful Engagement on Content type="checkbox" name="lowConnections" checked={form.lowConnections} onChange={handleChange} />
-              </label>w (100) Connections
-            </fieldset>              </label>
+                No Meaningful Engagement on Content
+              </label>
+            </fieldset>
 
-            <div className="form-actions">agementOnPosts} onChange={handleChange} />
-              <button type="button" className="cancel-button" onClick={handleCancel}>ningful Engagement on Content
+            <div className="form-actions">
+              <button type="button" className="cancel-button" onClick={handleCancel}>
                 Cancel
               </button>
               <button type="submit" className="classroom-submit-button">
-                Generate Analysis Previewame="form-actions">
-              </button>ton type="button" className="cancel-button" onClick={handleCancel}>
-            </div>ancel
-          </form></button>
-        </div>      {/* Use type="submit" so it triggers the form's onSubmit handler */}
-      )}              <button type="submit" className="classroom-submit-button">
-date Analysis Preview' : 'Generate Analysis Preview'}
+                {editMode ? 'Update Analysis Preview' : 'Generate Analysis Preview'}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
       {/* Preview container */}
       {currentView === 'preview' && showPreview && (
         <div className="preview-container">
           <h2>{editMode ? 'Updated Analysis Preview' : 'Analysis Preview'}</h2>
           <pre>{analysisPreview}</pre>
           <div className="form-actions">
-            <button type="button" className="cancel-button" onClick={handleCancel}>ntainer */}
-              Cancel= 'preview' && showPreview && (
-            </button>me="preview-container">
-            <button pdated Analysis Preview' : 'Analysis Preview'}</h2>
+            <button type="button" className="cancel-button" onClick={handleCancel}>
+              Cancel
+            </button>
+            <button 
               type="button" 
               className="classroom-submit-button" 
-              onClick={handleSendAnalysis} lassName="cancel-button" onClick={handleCancel}>
-              disabled={isReplying} Cancel
+              onClick={handleSendAnalysis}
+              disabled={isReplying}
             >
               {isReplying ? 'Sending...' : editMode ? 'Update & Resend Analysis' : 'Send Analysis'}
-            </button>pe="button" 
+            </button>
           </div>
-          {replyStatus && <p className="reply-status">{replyStatus}</p>}onClick={handleSendAnalysis} 
-        </div>      disabled={isReplying}
-      )}  >
-    </div>          {isReplying ? 'Sending...' : editMode ? 'Update & Resend Analysis' : 'Send Analysis'}
-  );          </button>
-};          </div>
-& <p className="reply-status">{replyStatus}</p>}
-export default FormData;        </div>
-
+          {replyStatus && <p className="reply-status">{replyStatus}</p>}
+        </div>
       )}
     </div>
   );

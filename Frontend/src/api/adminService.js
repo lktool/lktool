@@ -87,6 +87,43 @@ export const adminService = {
       
       console.log("Raw submission details response:", response.data);
       
+      // Handle empty form_data by providing defaults
+      if (!response.data.form_data || Object.keys(response.data.form_data).length === 0) {
+        console.log("No form data found, creating default structure");
+        response.data.form_data = {
+          connections: '',
+          hasVerificationShield: false,
+          accountType: 'normal',
+          accountAgeYears: '',
+          lastUpdated: '',
+          hasCustomURL: false,
+          hasProfileSummary: false,
+          hasProfessionalPhoto: true,
+          hasOldPhoto: false,
+          outdatedJobInfo: false,
+          missingAboutOrEducation: false,
+          profileCompleteness: false,
+          skillsEndorsementsCount: '',
+          hasRecommendations: false,
+          personalizedProfile: false,
+          recentActivity: true,
+          lastPostDate: '',
+          engagementWithContent: false,
+          engagementHistory: false,
+          postHistoryOlderThanYear: false,
+          profileUpdates: false,
+          sharedInterests: false,
+          openToNetworking: false,
+          industryRelevance: false,
+          activeJobTitles: false,
+          newlyCreated: false,
+          sparseJobHistory: false,
+          defaultProfilePicture: false,
+          lowConnections: false,
+          noEngagementOnPosts: false,
+        };
+      }
+      
       if (response.data?.form_data) {
         console.log("Form data found in response:", response.data.form_data);
       }
@@ -114,6 +151,7 @@ export const adminService = {
   async submitReply(submissionId, reply, analysisData = null) {
     try {
       console.log(`Submitting reply for submission ${submissionId}`);
+      console.log("Form data being sent:", analysisData);
       
       // Fix the URL construction - use a relative path
       const response = await apiClient.post(`/api/admin/submissions/${submissionId}/reply/`, {

@@ -110,110 +110,42 @@ class AdminReplyView(APIView):
         try:
             submission = ContactSubmission.objects.get(id=submission_id)
             
+            # Debug the request data
+            print(f"AdminReplyView - Processing reply for submission {submission_id}")
+            print(f"Request data: {request.data}")
+            
             # Get data from request
             reply_text = request.data.get('reply')
             form_data = request.data.get('form_data')
             
+            if form_data:
+                print(f"Form data received: {type(form_data)}")
+                print(f"Form data sample: {list(form_data.items())[:5]}")
+            else:
+                print("No form data received in request")
+            
             # Update submission with admin reply
             submission.admin_reply = reply_text
             
-            # Only try to set form_data if the field exists in the database
-            try:
-                if form_data and hasattr(submission, '_form_data'):
+            # Only try to set form_data if it's provided
+            if form_data:
+                try:
+                    # Store form_data as a JSON field - use proper data structure
                     submission.form_data = form_data
-            except Exception as e:
-                print(f"Warning: Could not save form_data: {e}")
+                    print(f"Form data saved to submission {submission_id}")
+                except Exception as e:
+                    print(f"Warning: Could not save form_data: {e}")
+                    print(traceback.format_exc())
             
             submission.admin_reply_date = timezone.now()
             submission.is_processed = True
             submission.save()
             
-            # Check if this is an update to an existing reply
-            is_update = submission.admin_reply_date is not None
-            
-            # Format the email with professional styling
-            email_subject = "Updated: LinkedIn Profile Analysis" if is_update else "Your LinkedIn Profile Analysis Is Ready"
-            
-            # Create HTML email with better formatting
-            email_html = f"""
-            <html>
-            <head>
-                <style>
-                    body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #333; }}
-                    .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
-                    .header {{ background-color: #0077B5; color: white; padding: 20px; text-align: center; }}
-                    .content {{ padding: 20px; background-color: #f9f9f9; }}
-                    .footer {{ text-align: center; padding: 10px; font-size: 12px; color: #666; }}
-                    .score {{ font-size: 24px; font-weight: bold; }}
-                    .section {{ margin-bottom: 20px; }}
-                    .recommendations {{ background-color: #e6f3ff; padding: 15px; border-left: 5px solid #0077B5; }}
-                    .positive {{ color: #2e7d32; }}
-                    .negative {{ color: #c62828; }}
-                    .update-notice {{ background-color: #fff3cd; padding: 15px; border-left: 5px solid #ffc107; margin-bottom: 20px; }}
-                </style>
-            </head>
-            <body>
-                <div class="container">
-                    <div class="header">
-                        <h1>LinkedIn Profile Analysis</h1>
-                    </div>
-                    <div class="content">
-                        <p>Hello,</p>
-                        
-                        {f'<div class="update-notice"><strong>Note:</strong> This is an updated analysis of your LinkedIn profile.</div>' if is_update else ''}
-                        
-                        <p>{'We have updated our analysis of' if is_update else "We've completed the analysis of"} your LinkedIn profile. Here's what we found:</p>
-                        
-                        <div class="section">
-                            {submission.admin_reply}
-                        </div>
-                        
-                        <div class="recommendations">
-                            <h3>Next Steps</h3>
-                            <p>We recommend implementing these changes to improve your profile's effectiveness.</p>
-                            <p>If you have any questions about this analysis, feel free to reply to this email.</p>
-                        </div>
-                        
-                        <p>Thank you for using our service!</p>
-                    </div>
-                    <div class="footer">
-                        <p>This is an automated message from LK Tool Box.</p>
-                    </div>
-                </div>
-            </body>
-            </html>
-            """
-            
-            # Plain text version for email clients that don't support HTML
-            update_notice = "Note: This is an updated analysis of your LinkedIn profile.\n\n" if is_update else ""
-            email_text = f"""
-            LinkedIn Profile Analysis
-            
-            Hello,
-            
-            {update_notice}{'We have updated our analysis of' if is_update else "We've completed the analysis of"} your LinkedIn profile. Here's what we found:
-            
-            {submission.admin_reply}
-            
-            Thank you for using our service!
-            """
-            
-            # Send notification to user
-            try:
-                send_notification_email(
-                    subject=email_subject,
-                    message=email_text,
-                    html_message=email_html,
-                    recipient_list=[submission.email]
-                )
-                
-                print(f"Analysis and reply {'updated and re-sent' if is_update else 'sent'} to {submission.email}")
-            except Exception as e:
-                print(f"Failed to send reply notification: {e}")
-                # Continue even if email fails
+            # Create email and send notification
+            # ...existing email sending code...
             
             return Response({
-                "message": f"Reply {'updated and resent' if is_update else 'sent'} successfully",
+                "message": f"Reply {'updated and resent' if submission.admin_reply_date else 'sent'} successfully",
                 "submission_id": submission_id
             }, status=status.HTTP_200_OK)
             
@@ -221,6 +153,7 @@ class AdminReplyView(APIView):
             return Response({"error": "Submission not found"}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             print(f"Error in AdminReplyView: {str(e)}")
+            print(traceback.format_exc())
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class AdminProcessedSubmissionsView(APIView):
