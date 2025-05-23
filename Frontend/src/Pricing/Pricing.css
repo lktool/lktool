@@ -108,3 +108,42 @@
     font-size: 0.9rem;
   }
 }
+
+.coming-soon-banner {
+  background-color: #ff6b6b;
+  color: white;
+  text-align: center;
+  padding: 10px 0;
+  font-size: 1.2rem;
+  font-weight: bold;
+  width: 100%;
+  margin-bottom: 20px;
+  border-radius: 5px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+.coming-soon-banner span {
+  position: relative;
+  z-index: 1;
+  padding: 0 10px;
+  letter-spacing: 1px;
+}
+
+.coming-soon-banner:before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -50%;
+  width: 150%;
+  height: 100%;
+  background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.3), transparent);
+  transform: skewX(-30deg);
+  animation: shimmer 3s infinite;
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%) skewX(-30deg); }
+  100% { transform: translateX(100%) skewX(-30deg); }
+}

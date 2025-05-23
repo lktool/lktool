@@ -4,6 +4,10 @@ import './Pricing.css';
 const Pricing = () => {
   return (
     <div className="pricing-container">
+      <div className="coming-soon-banner">
+        <span>Coming Soon</span>
+      </div>
+      
       <h1 className="pricing-title">LinkedIn Profile Analysis Packages</h1>
       
       <div className="pricing-plans-simple">
