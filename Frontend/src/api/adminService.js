@@ -74,66 +74,13 @@ export const adminService = {
    */
   async getSubmissionDetails(id) {
     try {
-      console.log(`Fetching details for submission ID: ${id}`);
-      
-      // Fix the URL construction to avoid domain duplication
-      // Use a path that starts with / rather than a full URL
-      const response = await apiClient.get(`/api/admin/submissions/${id}/`, {
-        headers: {
-          'Cache-Control': 'no-cache, no-store, must-revalidate',
-          'Pragma': 'no-cache'
-        }
-      });
-      
-      console.log("Raw submission details response:", response.data);
-      
-      // Handle empty form_data by providing defaults
-      if (!response.data.form_data || Object.keys(response.data.form_data).length === 0) {
-        console.log("No form data found, creating default structure");
-        response.data.form_data = {
-          connections: '',
-          hasVerificationShield: false,
-          accountType: 'normal',
-          accountAgeYears: '',
-          lastUpdated: '',
-          hasCustomURL: false,
-          hasProfileSummary: false,
-          hasProfessionalPhoto: true,
-          hasOldPhoto: false,
-          outdatedJobInfo: false,
-          missingAboutOrEducation: false,
-          profileCompleteness: false,
-          skillsEndorsementsCount: '',
-          hasRecommendations: false,
-          personalizedProfile: false,
-          recentActivity: true,
-          lastPostDate: '',
-          engagementWithContent: false,
-          engagementHistory: false,
-          postHistoryOlderThanYear: false,
-          profileUpdates: false,
-          sharedInterests: false,
-          openToNetworking: false,
-          industryRelevance: false,
-          activeJobTitles: false,
-          newlyCreated: false,
-          sparseJobHistory: false,
-          defaultProfilePicture: false,
-          lowConnections: false,
-          noEngagementOnPosts: false,
-        };
-      }
-      
-      if (response.data?.form_data) {
-        console.log("Form data found in response:", response.data.form_data);
-      }
-      
+      const response = await apiClient.get(`${ENDPOINTS.ADMIN.SUBMISSIONS}/${id}/`);
       return {
         success: true,
         data: response.data
       };
     } catch (error) {
-      console.error('Error fetching submission details:', error);
+      console.error(`Error fetching submission ${id}:`, error);
       return {
         success: false,
         error: error.response?.data?.error || 'Failed to fetch submission details'
@@ -150,18 +97,23 @@ export const adminService = {
    */
   async submitReply(submissionId, reply, analysisData = null) {
     try {
-      console.log(`Submitting reply for submission ${submissionId}`);
-      console.log("Form data being sent:", analysisData);
-      
-      // Fix the URL construction - use a relative path
-      const response = await apiClient.post(`/api/admin/submissions/${submissionId}/reply/`, {
+      const payload = {
         reply,
-        form_data: analysisData
-      });
+      };
+      
+      // If analysis data is provided, include it in the payload
+      if (analysisData) {
+        payload.analysis = analysisData;
+      }
+      
+      const response = await apiClient.post(
+        `${ENDPOINTS.ADMIN.SUBMIT_REPLY(submissionId)}`, 
+        payload
+      );
       
       return {
         success: true,
-        message: response.data?.message || 'Reply sent successfully'
+        data: response.data
       };
     } catch (error) {
       console.error('Error submitting reply:', error);
@@ -249,63 +201,46 @@ export const adminService = {
   },
 
   /**
-   * Get processed submissions with pagination
-   * @param {Object} options - Query options
-   * @returns {Promise<Object>} Processed submissions
+   * Get processed submissions
+   * @param {Object} filters - Filter parameters like page and page_size
+   * @returns {Promise<Object>} List of processed submissions
    */
-  async getProcessedSubmissions(options = {}) {
+  async getProcessedSubmissions(filters = {}) {
     try {
-      // Build query params
-      const queryParams = new URLSearchParams();
+      console.log(`Fetching processed submissions`);
       
-      if (options.page) {
-        queryParams.append('page', options.page);
-      }
+      const response = await apiClient.get(ENDPOINTS.ADMIN.PROCESSED_SUBMISSIONS, {
+        params: filters
+      });
       
-      // Always add timestamp for cache busting
-      queryParams.append('t', options.t || new Date().getTime());
-      
-      // Make request with cache control headers
-      const response = await apiClient.get(
-        `/api/admin/processed/?${queryParams.toString()}`,
-        {
-          headers: {
-            'Cache-Control': 'no-cache, no-store, must-revalidate',
-            'Pragma': 'no-cache',
-            'Expires': '0'
-          }
-        }
-      );
-      
-      return {
+      return { 
         success: true,
-        data: response.data.submissions,
-        meta: {
-          total: response.data.total_count,
-          pages: response.data.total_pages,
-          current: response.data.current_page
-        }
+        data: Array.isArray(response.data.submissions) ? response.data.submissions : [],
+        totalCount: response.data.total_count || 0,
+        totalPages: response.data.total_pages || 1,
+        currentPage: response.data.current_page || 1
       };
     } catch (error) {
       console.error('Error fetching processed submissions:', error);
       return {
         success: false,
-        error: error.response?.data?.error || 'Failed to fetch processed submissions'
+        error: error.response?.data?.error || 'Failed to fetch processed submissions',
+        data: []
       };
     }
   },
 
   /**
-   * Delete a submission
-   * @param {number} id - Submission ID
-   * @returns {Promise<Object>} Result
+   * Delete a processed submission
+   * @param {number} id - Submission ID to delete
+   * @returns {Promise<Object>} Delete result
    */
   async deleteSubmission(id) {
     try {
-      const response = await apiClient.delete(`/api/admin/processed/${id}/`);
+      const response = await apiClient.delete(`${ENDPOINTS.ADMIN.PROCESSED_SUBMISSIONS}${id}/`);
       return {
         success: true,
-        message: response.data?.message || 'Submission deleted successfully'
+        message: response.data?.message || 'Submission deleted'
       };
     } catch (error) {
       console.error('Error deleting submission:', error);

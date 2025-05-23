@@ -1,32 +1,34 @@
 import axios from 'axios';
 import { AUTH_CONFIG } from './config';
 
-// Check the axios baseURL configuration to ensure it's not duplicating domains
-// Create and export the main API client
+// Base API client with consistent configuration
 export const apiClient = axios.create({
-  baseURL: '', // Use empty string to ensure relative paths work correctly
-  timeout: 10000,
+  baseURL: 'https://lktool.onrender.com',
   headers: {
     'Content-Type': 'application/json',
+    'Accept': 'application/json'
   },
+  timeout: 30000, // 30 second timeout
+  withCredentials: true
 });
 
-// Log requests in development mode
+// Add request interceptor for debugging API calls
 apiClient.interceptors.request.use(
   config => {
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`${config.method.toUpperCase()} ${config.baseURL}${config.url}`);
-    }
-    
-    // Add token to request if available
-    const token = localStorage.getItem('token');
+    // Add token if available
+    const token = localStorage.getItem(AUTH_CONFIG.TOKEN_KEY);
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
     
+    // Log the request for debugging
+    console.log(`${config.method.toUpperCase()} ${config.baseURL}${config.url}`, 
+                config.params || config.data || '');
+    
     return config;
   },
   error => {
+    console.error('Request error:', error);
     return Promise.reject(error);
   }
 );
