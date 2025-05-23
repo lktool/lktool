@@ -69,11 +69,11 @@ const Pricing = () => {
           </div>
           <div className="plan-features">
             <ul>
-              <li>Basic LinkedIn profile analysis</li>
-              <li>1 profile submission per month</li>
-              <li>Standard response time (3-5 days)</li>
-              <li>Core recommendations</li>
-              <li>Email delivery of results</li>
+              <li>Connections Analysis</li>
+              <li>Verification Shield Detection</li>
+              <li>Account Type Assessment</li>
+              <li>Summary/About Section Check</li>
+              <li>Open to Connect/Recruit Status</li>
             </ul>
           </div>
           <div className="plan-cta">
@@ -94,12 +94,14 @@ const Pricing = () => {
           </div>
           <div className="plan-features">
             <ul>
-              <li>Comprehensive profile analysis</li>
-              <li>3 profile submissions per month</li>
-              <li>Faster response time (1-2 days)</li>
-              <li>Detailed recommendations</li>
-              <li>Email delivery of results</li>
-              <li>Profile comparison with industry leaders</li>
+              <li>Last Updated Timestamp Analysis</li>
+              <li>Custom URL Audit</li>
+              <li>Profile Picture Assessment</li>
+              <li>Recent Activity Analysis</li>
+              <li>Headline Update Check</li>
+              <li>Job History Review</li>
+              <li>Connections Quantity Analysis</li>
+              <li>Engagement Level Assessment</li>
             </ul>
           </div>
           <div className="plan-cta">
@@ -110,7 +112,7 @@ const Pricing = () => {
         {/* Pro Plan */}
         <div className="pricing-plan">
           <div className="plan-header">
-            <h2>Pro</h2>
+            <h2>Premium</h2>
             <div className="plan-price">
               <span className="price">${billingPeriod === 'monthly' ? '29' : '23.20'}</span>
               <span className="period">per month</span>
@@ -119,17 +121,26 @@ const Pricing = () => {
           </div>
           <div className="plan-features">
             <ul>
-              <li>Premium in-depth profile analysis</li>
-              <li>Unlimited profile submissions</li>
-              <li>Priority response time (24 hours)</li>
-              <li>Advanced actionable recommendations</li>
-              <li>Industry-specific insights</li>
-              <li>One-on-one consultation session</li>
-              <li>Monthly performance tracking</li>
+              <li>Account Age Evaluation</li>
+              <li>Profile Picture Age Analysis</li>
+              <li>Job Info Relevance Check</li>
+              <li>Education/Skills Completeness</li>
+              <li>Overall Profile Completeness Score</li>
+              <li>Recommendations Assessment</li>
+              <li>Profile Personalization Analysis</li>
+              <li>Skills Endorsements Count</li>
+              <li>Content Engagement Analysis</li>
+              <li>Interaction Pattern Assessment</li>
+              <li>Historical Post Activity Review</li>
+              <li>Post Recency Evaluation</li>
+              <li>Shared Interests Detection</li>
+              <li>Industry Relevance Analysis</li>
+              <li>Job Titles Activity Check</li>
+              <li>Account Creation Date Analysis</li>
             </ul>
           </div>
           <div className="plan-cta">
-            <Link to="/signup" className="cta-button pro">Choose Pro</Link>
+            <Link to="/signup" className="cta-button pro">Choose Premium</Link>
           </div>
         </div>
       </div>
@@ -143,57 +154,57 @@ const Pricing = () => {
                 <th>Feature</th>
                 <th>Free</th>
                 <th>Basic</th>
-                <th>Pro</th>
+                <th>Premium</th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <td>Profile Submissions</td>
-                <td>1 per month</td>
-                <td>3 per month</td>
-                <td>Unlimited</td>
+                <td>Basic Profile Analysis</td>
+                <td>✅</td>
+                <td>✅</td>
+                <td>✅</td>
               </tr>
               <tr>
-                <td>Analysis Depth</td>
+                <td>Profile Picture Assessment</td>
+                <td>❌</td>
+                <td>✅</td>
+                <td>✅</td>
+              </tr>
+              <tr>
+                <td>Content Engagement Metrics</td>
+                <td>❌</td>
+                <td>✅</td>
+                <td>✅</td>
+              </tr>
+              <tr>
+                <td>Profile Completeness Score</td>
+                <td>❌</td>
+                <td>❌</td>
+                <td>✅</td>
+              </tr>
+              <tr>
+                <td>Industry Relevance Analysis</td>
+                <td>❌</td>
+                <td>❌</td>
+                <td>✅</td>
+              </tr>
+              <tr>
+                <td>Personalization Assessment</td>
+                <td>❌</td>
+                <td>❌</td>
+                <td>✅</td>
+              </tr>
+              <tr>
+                <td>Recommendations Review</td>
+                <td>❌</td>
+                <td>❌</td>
+                <td>✅</td>
+              </tr>
+              <tr>
+                <td>Historical Activity Analysis</td>
+                <td>❌</td>
                 <td>Basic</td>
                 <td>Comprehensive</td>
-                <td>Premium</td>
-              </tr>
-              <tr>
-                <td>Response Time</td>
-                <td>3-5 days</td>
-                <td>1-2 days</td>
-                <td>24 hours</td>
-              </tr>
-              <tr>
-                <td>Industry Comparison</td>
-                <td>❌</td>
-                <td>✅</td>
-                <td>✅</td>
-              </tr>
-              <tr>
-                <td>Personal Consultation</td>
-                <td>❌</td>
-                <td>❌</td>
-                <td>✅</td>
-              </tr>
-              <tr>
-                <td>Performance Tracking</td>
-                <td>❌</td>
-                <td>❌</td>
-                <td>✅</td>
-              </tr>
-              <tr>
-                <td>Keyword Optimization</td>
-                <td>❌</td>
-                <td>✅</td>
-                <td>✅</td>
-              </tr>
-              <tr>
-                <td>Export to PDF</td>
-                <td>❌</td>
-                <td>✅</td>
-                <td>✅</td>
               </tr>
             </tbody>
           </table>
