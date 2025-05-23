@@ -201,46 +201,63 @@ export const adminService = {
   },
 
   /**
-   * Get processed submissions
-   * @param {Object} filters - Filter parameters like page and page_size
-   * @returns {Promise<Object>} List of processed submissions
+   * Get processed submissions with pagination
+   * @param {Object} options - Query options
+   * @returns {Promise<Object>} Processed submissions
    */
-  async getProcessedSubmissions(filters = {}) {
+  async getProcessedSubmissions(options = {}) {
     try {
-      console.log(`Fetching processed submissions`);
+      // Build query params
+      const queryParams = new URLSearchParams();
       
-      const response = await apiClient.get(ENDPOINTS.ADMIN.PROCESSED_SUBMISSIONS, {
-        params: filters
-      });
+      if (options.page) {
+        queryParams.append('page', options.page);
+      }
       
-      return { 
+      // Always add timestamp for cache busting
+      queryParams.append('t', options.t || new Date().getTime());
+      
+      // Make request with cache control headers
+      const response = await apiClient.get(
+        `/api/admin/processed/?${queryParams.toString()}`,
+        {
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+          }
+        }
+      );
+      
+      return {
         success: true,
-        data: Array.isArray(response.data.submissions) ? response.data.submissions : [],
-        totalCount: response.data.total_count || 0,
-        totalPages: response.data.total_pages || 1,
-        currentPage: response.data.current_page || 1
+        data: response.data.submissions,
+        meta: {
+          total: response.data.total_count,
+          pages: response.data.total_pages,
+          current: response.data.current_page
+        }
       };
     } catch (error) {
       console.error('Error fetching processed submissions:', error);
       return {
         success: false,
-        error: error.response?.data?.error || 'Failed to fetch processed submissions',
-        data: []
+        error: error.response?.data?.error || 'Failed to fetch processed submissions'
       };
     }
   },
 
   /**
-   * Delete a processed submission
-   * @param {number} id - Submission ID to delete
-   * @returns {Promise<Object>} Delete result
+   * Delete a submission
+   * @param {number} id - Submission ID
+   * @returns {Promise<Object>} Result
    */
   async deleteSubmission(id) {
     try {
-      const response = await apiClient.delete(`${ENDPOINTS.ADMIN.PROCESSED_SUBMISSIONS}${id}/`);
+      const response = await apiClient.delete(`/api/admin/processed/${id}/`);
       return {
         success: true,
-        message: response.data?.message || 'Submission deleted'
+        message: response.data?.message || 'Submission deleted successfully'
       };
     } catch (error) {
       console.error('Error deleting submission:', error);

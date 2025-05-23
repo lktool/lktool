@@ -1,238 +1,241 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { adminService } from '../api';
 import LoadingSpinner from '../components/LoadingSpinner';
 import './ReviewedSubmissions.css';
-import { useNavigate } from 'react-router-dom';
+import { formatDate } from '../Utils/dateUtils';
 
 const ReviewedSubmissions = () => {
-  const [submissions, setSubmissions] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [viewingSubmission, setViewingSubmission] = useState(null);
-  const [deleteInProgress, setDeleteInProgress] = useState({});
-  const navigate = useNavigate();
+    const [submissions, setSubmissions] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [lastRefreshTime, setLastRefreshTime] = useState(null);
+    const [autoRefreshEnabled, setAutoRefreshEnabled] = useState(true);
+    const refreshTimerRef = useRef(null);
+    const [page, setPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const navigate = useNavigate();
 
-  // Fetch submissions when component mounts or page changes
-  useEffect(() => {
-    const fetchProcessedSubmissions = async () => {
-      setLoading(true);
-      try {
-        const result = await adminService.getProcessedSubmissions({ page: currentPage });
-        if (result.success) {
-          setSubmissions(result.data);
-          setTotalPages(result.totalPages);
-          setError(null);
-        } else {
-          setError(result.error || 'Failed to load submissions');
-          setSubmissions([]);
+    // Function to fetch processed submissions with cache-busting
+    const fetchProcessedSubmissions = async (pageNum = 1, silent = false) => {
+        if (!silent) setLoading(true);
+        
+        try {
+            // Add timestamp parameter to prevent caching
+            const timestamp = new Date().getTime();
+            const result = await adminService.getProcessedSubmissions({
+                page: pageNum,
+                t: timestamp
+            });
+            
+            if (result.success) {
+                setSubmissions(result.data);
+                setTotalPages(result.meta?.pages || 1);
+                setPage(pageNum);
+                setLastRefreshTime(new Date());
+                setError(null);
+            } else {
+                if (!silent) {
+                    setError(result.error || 'Failed to load processed submissions');
+                    setSubmissions([]);
+                }
+            }
+        } catch (err) {
+            console.error('Error fetching processed submissions:', err);
+            if (!silent) {
+                setError('An error occurred while loading data. Please try again.');
+            }
+        } finally {
+            if (!silent) setLoading(false);
         }
-      } catch (err) {
-        console.error('Error fetching processed submissions:', err);
-        setError('Failed to load submissions. Please try again.');
-        setSubmissions([]);
-      } finally {
-        setLoading(false);
-      }
     };
 
-    fetchProcessedSubmissions();
-  }, [currentPage]);
-
-  const handleViewSubmission = (submission) => {
-    setViewingSubmission(submission);
-  };
-
-  const closeViewModal = () => {
-    setViewingSubmission(null);
-  };
-
-  const handleEdit = (submission) => {
-    try {
-      // Navigate to FormData component with the submission ID to load form data
-      navigate(`/admin/dashboard?edit=${submission.id}`);
-    } catch (error) {
-      console.error("Error navigating to edit mode:", error);
-      alert("There was an error entering edit mode. Please try again.");
-    }
-  };
-
-  const handleDelete = async (id) => {
-    if (window.confirm('Are you sure you want to delete this submission? This action cannot be undone.')) {
-      setDeleteInProgress(prev => ({ ...prev, [id]: true }));
-      try {
-        const result = await adminService.deleteSubmission(id);
-        if (result.success) {
-          setSubmissions(submissions.filter(sub => sub.id !== id));
-        } else {
-          alert(result.error || 'Failed to delete submission');
+    // Set up initial data fetch and auto-refresh timer
+    useEffect(() => {
+        // Initial fetch
+        fetchProcessedSubmissions(page);
+        
+        // Set up auto-refresh if enabled
+        if (autoRefreshEnabled) {
+            refreshTimerRef.current = setInterval(() => {
+                console.log('Auto-refreshing processed submissions...');
+                fetchProcessedSubmissions(page, true); // Silent refresh
+            }, 15000); // 15 seconds refresh interval
         }
-      } catch (err) {
-        console.error('Error deleting submission:', err);
-        alert('An error occurred while deleting the submission');
-      } finally {
-        setDeleteInProgress(prev => ({ ...prev, [id]: false }));
-      }
+        
+        // Clean up timer on unmount
+        return () => {
+            if (refreshTimerRef.current) {
+                clearInterval(refreshTimerRef.current);
+            }
+        };
+    }, [page, autoRefreshEnabled]);
+
+    // Function to toggle auto-refresh
+    const toggleAutoRefresh = () => {
+        setAutoRefreshEnabled(prev => !prev);
+        
+        // Clear existing timer
+        if (refreshTimerRef.current) {
+            clearInterval(refreshTimerRef.current);
+            refreshTimerRef.current = null;
+        }
+        
+        // Set up new timer if enabling
+        if (!autoRefreshEnabled) {
+            refreshTimerRef.current = setInterval(() => {
+                console.log('Auto-refreshing processed submissions...');
+                fetchProcessedSubmissions(page, true);
+            }, 15000);
+        }
+    };
+
+    // Manual refresh handler
+    const handleRefresh = () => {
+        fetchProcessedSubmissions(page);
+    };
+
+    // Handle page navigation
+    const handlePageChange = (newPage) => {
+        if (newPage >= 1 && newPage <= totalPages) {
+            setPage(newPage);
+            fetchProcessedSubmissions(newPage);
+        }
+    };
+
+    // Handle submission deletion
+    const handleDelete = async (id) => {
+        if (!window.confirm('Are you sure you want to delete this submission?')) {
+            return;
+        }
+        
+        try {
+            const result = await adminService.deleteSubmission(id);
+            
+            if (result.success) {
+                // Remove the deleted submission from state
+                setSubmissions(prev => prev.filter(sub => sub.id !== id));
+                // Show a temporary success message
+                alert('Submission deleted successfully');
+            } else {
+                alert(result.error || 'Failed to delete submission');
+            }
+        } catch (err) {
+            console.error('Error deleting submission:', err);
+            alert('An error occurred while deleting the submission');
+        }
+    };
+
+    // Render loading state
+    if (loading && submissions.length === 0) {
+        return <LoadingSpinner message="Loading processed submissions..." />;
     }
-  };
 
-  const handlePageChange = (newPage) => {
-    if (newPage >= 1 && newPage <= totalPages) {
-      setCurrentPage(newPage);
-    }
-  };
-
-  const formatDate = (dateString) => {
-    if (!dateString) return 'N/A';
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
-  if (loading && submissions.length === 0) {
-    return <LoadingSpinner />;
-  }
-
-  return (
-    <div className="reviewed-submissions-container">
-      <div className="reviewed-submissions-header">
-        <h1>Reviewed Submissions</h1>
-        <button 
-          className="back-to-pending-button"
-          onClick={() => navigate('/admin/dashboard')}
-        >
-          Back to Pending Submissions
-        </button>
-      </div>
-
-      {error && <div className="error-message">{error}</div>}
-
-      {submissions.length === 0 ? (
-        <div className="no-submissions">
-          <p>No reviewed submissions found</p>
-        </div>
-      ) : (
-        <>
-          <div className="submission-table-container">
-            <table className="submission-table">
-              <thead>
-                <tr>
-                  <th>Email</th>
-                  <th>LinkedIn URL</th>
-                  <th>Submitted</th>
-                  <th>Replied</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {submissions.map(submission => (
-                  <tr key={submission.id}>
-                    <td>{submission.email}</td>
-                    <td>
-                      <a href={submission.linkedin_url} target="_blank" rel="noopener noreferrer">
-                        {submission.linkedin_url.substring(0, 30)}...
-                      </a>
-                    </td>
-                    <td>{formatDate(submission.created_at)}</td>
-                    <td>{formatDate(submission.admin_reply_date)}</td>
-                    <td className="action-buttons">
-                      <button 
-                        className="view-button" 
-                        onClick={() => handleViewSubmission(submission)}
-                      >
-                        View
-                      </button>
-                      <button 
-                        className="edit-button" 
-                        onClick={() => handleEdit(submission)}
-                      >
-                        Edit & Resend
-                      </button>
-                      <button 
-                        className="delete-button"
-                        onClick={() => handleDelete(submission.id)}
-                        disabled={deleteInProgress[submission.id]}
-                      >
-                        {deleteInProgress[submission.id] ? 'Deleting...' : 'Delete'}
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Pagination Controls */}
-          {totalPages > 1 && (
-            <div className="pagination-controls">
-              <button 
-                onClick={() => handlePageChange(currentPage - 1)}
-                disabled={currentPage === 1}
-              >
-                Previous
-              </button>
-              <span>{currentPage} of {totalPages}</span>
-              <button 
-                onClick={() => handlePageChange(currentPage + 1)}
-                disabled={currentPage === totalPages}
-              >
-                Next
-              </button>
-            </div>
-          )}
-        </>
-      )}
-
-      {/* View Modal - Read-only display of analysis */}
-      {viewingSubmission && (
-        <div className="modal-backdrop">
-          <div className="edit-modal view-modal">
-            <div className="modal-header">
-              <h2>View Analysis</h2>
-              <button className="close-button" onClick={closeViewModal}>×</button>
+    return (
+        <div className="reviewed-submissions-container">
+            <div className="reviewed-header">
+                <h1>Processed LinkedIn Profile Submissions</h1>
+                <div className="dashboard-controls">
+                    <div className="refresh-info">
+                        {lastRefreshTime && (
+                            <span className="last-refresh">
+                                Last updated: {lastRefreshTime.toLocaleTimeString()}
+                            </span>
+                        )}
+                        <button 
+                            className={`auto-refresh-toggle ${autoRefreshEnabled ? 'active' : ''}`} 
+                            onClick={toggleAutoRefresh}
+                            title={autoRefreshEnabled ? "Disable auto-refresh" : "Enable auto-refresh"}
+                        >
+                            {autoRefreshEnabled ? "Auto-refresh ON" : "Auto-refresh OFF"}
+                        </button>
+                    </div>
+                    <div className="button-container">
+                        <button 
+                            onClick={handleRefresh} 
+                            className="refresh-button" 
+                            disabled={loading}
+                        >
+                            {loading ? 'Refreshing...' : 'Refresh Now'}
+                        </button>
+                        <Link to="/admin/dashboard" className="back-button">
+                            Return to Dashboard
+                        </Link>
+                    </div>
+                </div>
             </div>
             
-            <div className="modal-content">
-              <div className="submission-info">
-                <p><strong>Email:</strong> {viewingSubmission.email}</p>
-                <p><strong>LinkedIn:</strong> <a href={viewingSubmission.linkedin_url} target="_blank" rel="noopener noreferrer">{viewingSubmission.linkedin_url}</a></p>
-                <p><strong>Submitted:</strong> {formatDate(viewingSubmission.created_at)}</p>
-                <p><strong>Analysis Sent:</strong> {formatDate(viewingSubmission.admin_reply_date)}</p>
-              </div>
-              
-              <div className="analysis-content">
-                <h3>Analysis Details</h3>
-                <pre className="analysis-text">{viewingSubmission.admin_reply}</pre>
-              </div>
-              
-              <div className="modal-actions">
-                <button 
-                  className="close-view-button"
-                  onClick={closeViewModal}
-                >
-                  Close
-                </button>
-                <button 
-                  className="edit-from-view-button"
-                  onClick={() => {
-                    closeViewModal();
-                    handleEdit(viewingSubmission);
-                  }}
-                >
-                  Edit & Resend
-                </button>
-              </div>
-            </div>
-          </div>
+            {error && <div className="error-message">{error}</div>}
+            
+            {submissions.length === 0 ? (
+                <div className="no-submissions">
+                    <p>No processed submissions found</p>
+                </div>
+            ) : (
+                <>
+                    <div className="processed-submissions-list">
+                        {submissions.map(submission => (
+                            <div key={submission.id} className="processed-submission-card">
+                                <div className="submission-header">
+                                    <h3>Processed on {formatDate(submission.admin_reply_date)}</h3>
+                                    <div className="submission-actions">
+                                        <Link 
+                                            to={`/admin/dashboard?edit=${submission.id}`}
+                                            className="edit-button"
+                                        >
+                                            Edit Analysis
+                                        </Link>
+                                        <button 
+                                            onClick={() => handleDelete(submission.id)}
+                                            className="delete-button"
+                                        >
+                                            Delete
+                                        </button>
+                                    </div>
+                                </div>
+                                <div className="submission-body">
+                                    <p><strong>Email:</strong> {submission.email}</p>
+                                    <p><strong>LinkedIn:</strong> <a href={submission.linkedin_url} target="_blank" rel="noopener noreferrer">{submission.linkedin_url}</a></p>
+                                    <p><strong>Submitted:</strong> {formatDate(submission.created_at)}</p>
+                                    
+                                    <div className="analysis-preview">
+                                        <h4>Analysis:</h4>
+                                        <div className="analysis-content">
+                                            {submission.admin_reply.length > 200 
+                                                ? `${submission.admin_reply.substring(0, 200)}...` 
+                                                : submission.admin_reply
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                    
+                    {/* Pagination controls */}
+                    {totalPages > 1 && (
+                        <div className="pagination">
+                            <button 
+                                onClick={() => handlePageChange(page - 1)}
+                                disabled={page === 1 || loading}
+                                className="page-button"
+                            >
+                                Previous
+                            </button>
+                            <span className="page-info">Page {page} of {totalPages}</span>
+                            <button 
+                                onClick={() => handlePageChange(page + 1)}
+                                disabled={page === totalPages || loading}
+                                className="page-button"
+                            >
+                                Next
+                            </button>
+                        </div>
+                    )}
+                </>
+            )}
         </div>
-      )}
-    </div>
-  );
+    );
 };
 
 export default ReviewedSubmissions;
