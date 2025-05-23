@@ -27,7 +27,7 @@ class AdminSubmissionsView(APIView):
             page = int(request.query_params.get('page', 1))
             page_size = int(request.query_params.get('page_size', 10))
             
-            # Build query
+            # Build query - use proper ordering to ensure latest submissions appear first
             submissions = ContactSubmission.objects.all().order_by('-created_at')
             
             # Apply filters
@@ -43,12 +43,20 @@ class AdminSubmissionsView(APIView):
             # Serialize data
             serializer = ContactSubmissionSerializer(page_obj, many=True)
             
-            return Response({
+            # Add cache busting headers to response
+            response = Response({
                 'submissions': serializer.data,
                 'total_count': paginator.count,
                 'total_pages': paginator.num_pages,
                 'current_page': page
             })
+            
+            # Add cache control headers to prevent caching
+            response["Cache-Control"] = "no-cache, no-store, must-revalidate, private"
+            response["Pragma"] = "no-cache"
+            response["Expires"] = "0"
+            
+            return response
         except Exception as e:
             print(f"Error in AdminSubmissionsView.get: {str(e)}")
             print(traceback.format_exc())

@@ -369,3 +369,61 @@ select {
   background-color: #287058;
   text-decoration: none;
 }
+
+/* Dashboard controls and refresh styling */
+.dashboard-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 15px;
+}
+
+.refresh-info {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  font-size: 0.9rem;
+}
+
+.last-refresh {
+  color: #666;
+}
+
+.button-container {
+  display: flex;
+  gap: 10px;
+}
+
+.auto-refresh-toggle {
+  background-color: #e2e8f0;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.auto-refresh-toggle.active {
+  background-color: #4299e1;
+  color: white;
+}
+
+.refresh-button {
+  background-color: #4a5568;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.refresh-button:hover {
+  background-color: #2d3748;
+}
+
+.refresh-button:disabled {
+  background-color: #a0aec0;
+  cursor: not-allowed;
+}

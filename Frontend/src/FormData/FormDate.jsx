@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import "./FormData.css";
 import { adminService } from '../api';
@@ -52,6 +52,11 @@ const FormData = () => {
   const [editMode, setEditMode] = useState(false);
   const [editId, setEditId] = useState(null);
 
+  // State for auto-refresh feature
+  const [autoRefreshEnabled, setAutoRefreshEnabled] = useState(true);
+  const [lastRefreshTime, setLastRefreshTime] = useState(null);
+  const refreshTimerRef = useRef(null);
+
   useEffect(() => {
     // Check if we're in edit mode from URL params
     const queryParams = new URLSearchParams(window.location.search);
@@ -64,22 +69,49 @@ const FormData = () => {
     } else {
       // Regular mode - fetch pending submissions
       fetchPendingSubmissions();
+      
+      // Set up auto-refresh if enabled
+      if (autoRefreshEnabled && currentView === 'submissions') {
+        refreshTimerRef.current = setInterval(() => {
+          console.log('Auto-refreshing submissions...');
+          fetchPendingSubmissions(true); // Silent refresh
+        }, 15000); // Refresh every 15 seconds
+      }
+      
+      return () => {
+        if (refreshTimerRef.current) {
+          clearInterval(refreshTimerRef.current);
+        }
+      };
     }
-  }, []);
+  }, [autoRefreshEnabled, currentView]);
 
-  const fetchPendingSubmissions = async () => {
-    setLoading(true);
+  const fetchPendingSubmissions = async (silent = false) => {
+    if (!silent) setLoading(true);
+    
     try {
-      const result = await adminService.getSubmissions({ status: 'pending' });
+      // Add timestamp to prevent caching
+      const timestamp = new Date().getTime();
+      const result = await adminService.getSubmissions({ 
+        status: 'pending', 
+        t: timestamp 
+      });
+      
       if (result.success && Array.isArray(result.data)) {
         setSubmissions(result.data);
+        setLastRefreshTime(new Date());
       } else {
-        setSubmissions([]);
+        if (!silent) {
+          setSubmissions([]);
+        }
       }
     } catch (error) {
-      setSubmissions([]);
+      console.error('Error fetching pending submissions:', error);
+      if (!silent) {
+        setSubmissions([]);
+      }
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   };
 
@@ -353,15 +385,63 @@ const FormData = () => {
     }
   };
 
+  const handleRefresh = () => {
+    setRetryCount(prev => prev + 1);
+    fetchPendingSubmissions();
+  };
+
+  const toggleAutoRefresh = () => {
+    setAutoRefreshEnabled(prev => !prev);
+    
+    // Clear existing timer
+    if (refreshTimerRef.current) {
+      clearInterval(refreshTimerRef.current);
+      refreshTimerRef.current = null;
+    }
+    
+    // Set up new timer if enabling
+    if (!autoRefreshEnabled) {
+      refreshTimerRef.current = setInterval(() => {
+        console.log('Auto-refreshing submissions...');
+        fetchPendingSubmissions(true);
+      }, 15000);
+    }
+  };
+
   return (
     <div className="admin-dashboard">
       {currentView === 'submissions' && !editMode && (
         <div className="submissions-container">
           <div className="submissions-header">
             <h2>Pending LinkedIn Profile Submissions</h2>
-            <Link to="/admin/reviewed" className="view-processed-button">
-              View Processed Submissions
-            </Link>
+            <div className="dashboard-controls">
+              <div className="refresh-info">
+                {lastRefreshTime && (
+                  <span className="last-refresh">
+                    Last updated: {lastRefreshTime.toLocaleTimeString()}
+                  </span>
+                )}
+                <button 
+                  className={`auto-refresh-toggle ${autoRefreshEnabled ? 'active' : ''}`} 
+                  onClick={toggleAutoRefresh}
+                  title={autoRefreshEnabled ? "Disable auto-refresh" : "Enable auto-refresh"}
+                >
+                  {autoRefreshEnabled ? "Auto-refresh ON" : "Auto-refresh OFF"}
+                </button>
+              </div>
+              <div className="button-container">
+                <button 
+                  onClick={handleRefresh} 
+                  className="refresh-button" 
+                  disabled={loading}
+                >
+                  {loading ? 'Refreshing...' : 'Refresh Now'}
+                </button>
+                <Link to="/admin/reviewed" className="view-processed-button">
+                  View Processed Submissions
+                </Link>
+              </div>
+            </div>
           </div>
           {loading ? (
             <LoadingSpinner />
