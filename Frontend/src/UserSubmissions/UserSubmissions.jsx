@@ -10,6 +10,7 @@ const UserSubmissions = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [retryCount, setRetryCount] = useState(0);
+    const [submissionNumbers, setSubmissionNumbers] = useState({});
     const maxRetries = 2;
 
     // Function to fetch submissions with proper authentication handling
@@ -30,11 +31,25 @@ const UserSubmissions = () => {
             const data = await submissionService.getUserSubmissions(`?t=${timestamp}`);
             
             if (Array.isArray(data)) {
-                // Sort submissions by date, with newest first
-                const sortedSubmissions = [...data].sort((a, b) => 
+                // First sort chronologically (oldest to newest) to determine proper submission numbers
+                const chronologicalOrder = [...data].sort((a, b) => 
+                    new Date(a.created_at) - new Date(b.created_at)
+                );
+                
+                // Now create a map of id to submission number
+                const submissionNumbers = {};
+                chronologicalOrder.forEach((sub, index) => {
+                    submissionNumbers[sub.id] = index + 1;
+                });
+                
+                // Then sort for display (newest first)
+                const displayOrder = [...data].sort((a, b) => 
                     new Date(b.created_at) - new Date(a.created_at)
                 );
-                setSubmissions(sortedSubmissions);
+                
+                // Store both the display order and the numbering map
+                setSubmissions(displayOrder);
+                setSubmissionNumbers(submissionNumbers);
                 setError(null);
             } else {
                 throw new Error('Invalid response format');
@@ -122,10 +137,10 @@ const UserSubmissions = () => {
                 </button>
             </div>
             <div className="submissions-list">
-                {submissions.map((submission, index) => (
+                {submissions.map((submission) => (
                     <div key={submission.id} className="submission-card">
                         <div className="submission-header">
-                            <h3>Submission #{index + 1}</h3>
+                            <h3>Submission #{submissionNumbers[submission.id] || '?'}</h3>
                             <span className={`status ${submission.is_processed ? 'processed' : 'pending'}`}>
                                 {submission.is_processed ? 'Reviewed' : 'Pending Review'}
                             </span>
