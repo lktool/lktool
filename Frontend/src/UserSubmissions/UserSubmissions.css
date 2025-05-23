@@ -64,8 +64,10 @@
 }
 
 .submission-header h3 {
-    color: #333;
-    margin: 0;
+  font-size: 1.2rem;
+  margin: 0;
+  color: #0077b5; /* LinkedIn blue */
+  font-weight: 600;
 }
 
 .status {

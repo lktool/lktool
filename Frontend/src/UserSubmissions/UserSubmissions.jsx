@@ -30,7 +30,11 @@ const UserSubmissions = () => {
             const data = await submissionService.getUserSubmissions(`?t=${timestamp}`);
             
             if (Array.isArray(data)) {
-                setSubmissions(data);
+                // Sort submissions by date, with newest first
+                const sortedSubmissions = [...data].sort((a, b) => 
+                    new Date(b.created_at) - new Date(a.created_at)
+                );
+                setSubmissions(sortedSubmissions);
                 setError(null);
             } else {
                 throw new Error('Invalid response format');
@@ -118,10 +122,10 @@ const UserSubmissions = () => {
                 </button>
             </div>
             <div className="submissions-list">
-                {submissions.map((submission) => (
+                {submissions.map((submission, index) => (
                     <div key={submission.id} className="submission-card">
                         <div className="submission-header">
-                            <h3>Submission #{submission.id}</h3>
+                            <h3>Submission #{index + 1}</h3>
                             <span className={`status ${submission.is_processed ? 'processed' : 'pending'}`}>
                                 {submission.is_processed ? 'Reviewed' : 'Pending Review'}
                             </span>
