@@ -27,7 +27,7 @@
   transform: translateX(-50%);
   width: 80px;
   height: 4px;
-  background-color: #0b8800;
+  background-color: #328e6e; /* Changed to navbar color */
   border-radius: 2px;
 }
 
@@ -79,14 +79,14 @@
   left: 0;
   width: 25px;
   height: 2px;
-  background-color: #0b8800;
+  background-color: #328e6e; /* Changed to navbar color */
   border-radius: 1px;
   opacity: 0;
   transition: opacity 0.2s ease;
 }
 
 .form-group:hover label {
-  color: #4299e1;
+  color: #328e6e; /* Changed to navbar color */
 }
 
 .form-group:hover label::after {
@@ -107,9 +107,9 @@
 
 .form-group input:focus,
 .form-group textarea:focus {
-  border-color: #0b8800;
+  border-color: #328e6e; /* Changed to navbar color */
   outline: none;
-  box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.15);
+  box-shadow: 0 0 0 3px rgba(50, 142, 110, 0.15); /* Rgba version of #328E6E */
   background-color: white;
 }
 
@@ -120,7 +120,7 @@
 }
 
 .submit-button {
-  background: linear-gradient(to right, #11a104, #3182ce);
+  background: #328e6e; /* Changed from gradient to solid navbar color */
   color: white;
   border: none;
   border-radius: 10px;
@@ -131,15 +131,15 @@
   transition: all 0.3s ease;
   width: 100%;
   margin-top: 1.5rem;
-  box-shadow: 0 4px 6px rgba(66, 153, 225, 0.2);
+  box-shadow: 0 4px 6px rgba(50, 142, 110, 0.2); /* Updated shadow color */
   letter-spacing: 0.03em;
   position: relative;
   overflow: hidden;
 }
 
 .submit-button:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 6px 12px rgba(66, 153, 225, 0.3);
+  background: #287058; /* Darker shade for hover state */
+  box-shadow: 0 6px 12px rgba(50, 142, 110, 0.3);
 }
 
 .submit-button:active {
