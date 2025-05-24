@@ -4,43 +4,25 @@ import './Pricing.css';
 
 const Pricing = () => {
   const [billingPeriod, setBillingPeriod] = useState('monthly');
-  const [showFaq, setShowFaq] = useState(null);
+  const [showComingSoonMessage, setShowComingSoonMessage] = useState(false);
+  const [comingSoonPlan, setComingSoonPlan] = useState('');
   
-  const toggleFaq = (index) => {
-    setShowFaq(showFaq === index ? null : index);
+  const handlePaidPlanClick = (planName) => {
+    setComingSoonPlan(planName);
+    setShowComingSoonMessage(true);
+    
+    setTimeout(() => {
+      setShowComingSoonMessage(false);
+    }, 3000);
   };
   
-  // FAQ data
-  const faqs = [
-    {
-      question: "What's included in the free plan?",
-      answer: "The free plan includes basic LinkedIn profile analysis with core recommendations. You can submit one profile per month."
-    },
-    {
-      question: "How is the Pro plan different from the Basic plan?",
-      answer: "The Pro plan offers more detailed analysis, priority response time, and allows multiple profile submissions each month."
-    },
-    {
-      question: "Can I upgrade or downgrade my plan later?",
-      answer: "Yes, you can change your subscription at any time. Changes will be applied at the start of your next billing cycle."
-    },
-    {
-      question: "Do you offer refunds?",
-      answer: "We offer a 14-day money-back guarantee for all paid plans if you're not satisfied with our service."
-    },
-    {
-      question: "Is my payment information secure?",
-      answer: "Yes, we use industry-standard encryption for all payment processing. We never store your complete credit card information on our servers."
-    }
-  ];
-
   return (
     <div className="pricing-container">
       <div className="pricing-header">
         <h1>Choose the Right Plan for Your LinkedIn Success</h1>
         <p>Get professional insights to boost your LinkedIn profile and career opportunities</p>
         
-        <div className="billing-toggle">
+        {/* <div className="billing-toggle">
           <span className={billingPeriod === 'monthly' ? 'active' : ''}>Monthly</span>
           <label className="toggle-switch">
             <input 
@@ -54,12 +36,13 @@ const Pricing = () => {
             Yearly
             <div className="save-badge">Save 20%</div>
           </span>
-        </div>
+        </div> */}
       </div>
       
       <div className="pricing-plans">
         {/* Free Plan */}
         <div className="pricing-plan">
+{/*           <div className="coming-soon-badge">Coming Soon</div> */}
           <div className="plan-header">
             <h2>Free</h2>
             <div className="plan-price">
@@ -69,21 +52,24 @@ const Pricing = () => {
           </div>
           <div className="plan-features">
             <ul>
-              <li>Basic LinkedIn profile analysis</li>
+              <li>Connections analysis</li>
+              <li>Verification Shield check</li>
+              <li>Account Type identification</li>
+              <li>Profile Summary assessment</li>
+              <li>Open to Connect/Recruit evaluation</li>
+              <li>Basic recommendations</li>
               <li>1 profile submission per month</li>
-              <li>Standard response time (3-5 days)</li>
-              <li>Core recommendations</li>
-              <li>Email delivery of results</li>
             </ul>
           </div>
           <div className="plan-cta">
-            <Link to="/signup" className="cta-button free">Get Started</Link>
+            <Link to="/signup" className="cta-button free coming-soon">Get Started</Link>
           </div>
         </div>
         
         {/* Basic Plan */}
         <div className="pricing-plan popular">
           <div className="popular-badge">Most Popular</div>
+          <div className="coming-soon-badge">Coming Soon</div>
           <div className="plan-header">
             <h2>Basic</h2>
             <div className="plan-price">
@@ -94,23 +80,33 @@ const Pricing = () => {
           </div>
           <div className="plan-features">
             <ul>
-              <li>Comprehensive profile analysis</li>
+              <li>All Free features, plus:</li>
+              <li>Last update date analysis</li>
+              <li>Custom URL check</li>
+              <li>Profile picture assessment</li>
+              <li>Recent activity evaluation</li>
+              <li>Headline analysis</li>
+              <li>Job history evaluation</li>
+              <li>Connection quality assessment</li>
+              <li>Engagement analysis</li>
               <li>3 profile submissions per month</li>
-              <li>Faster response time (1-2 days)</li>
-              <li>Detailed recommendations</li>
-              <li>Email delivery of results</li>
-              <li>Profile comparison with industry leaders</li>
             </ul>
           </div>
           <div className="plan-cta">
-            <Link to="/signup" className="cta-button basic">Choose Basic</Link>
+            <button 
+              className="cta-button basic coming-soon" 
+              onClick={() => handlePaidPlanClick('Basic')}
+            >
+              Choose Basic
+            </button>
           </div>
         </div>
         
-        {/* Pro Plan */}
+        {/* Premium Plan */}
         <div className="pricing-plan">
+          <div className="coming-soon-badge">Coming Soon</div>
           <div className="plan-header">
-            <h2>Pro</h2>
+            <h2>Premium</h2>
             <div className="plan-price">
               <span className="price">${billingPeriod === 'monthly' ? '29' : '23.20'}</span>
               <span className="period">per month</span>
@@ -119,112 +115,240 @@ const Pricing = () => {
           </div>
           <div className="plan-features">
             <ul>
-              <li>Premium in-depth profile analysis</li>
+              <li>All Basic features, plus:</li>
+              <li>Account age evaluation</li>
+              <li>Photo freshness analysis</li>
+              <li>Job information accuracy check</li>
+              <li>Education/Skills completeness</li>
+              <li>Overall profile completeness score</li>
+              <li>Recommendations assessment</li>
+              <li>Profile personalization analysis</li>
+              <li>Skills endorsements evaluation</li>
+              <li>Content engagement analysis</li>
+              <li>Activity pattern assessment</li>
+              <li>Post history evaluation</li>
+              <li>Industry relevance analysis</li>
+              <li>Job title optimization</li>
               <li>Unlimited profile submissions</li>
-              <li>Priority response time (24 hours)</li>
-              <li>Advanced actionable recommendations</li>
-              <li>Industry-specific insights</li>
-              <li>One-on-one consultation session</li>
-              <li>Monthly performance tracking</li>
             </ul>
           </div>
           <div className="plan-cta">
-            <Link to="/signup" className="cta-button pro">Choose Pro</Link>
+            <button 
+              className="cta-button pro coming-soon" 
+              onClick={() => handlePaidPlanClick('Premium')}
+            >
+              Choose Premium
+            </button>
           </div>
         </div>
       </div>
       
-      <div className="pricing-features">
-        <h2>Compare Plan Features</h2>
-        <div className="features-table-container">
-          <table className="features-table">
-            <thead>
-              <tr>
-                <th>Feature</th>
-                <th>Free</th>
-                <th>Basic</th>
-                <th>Pro</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>Profile Submissions</td>
-                <td>1 per month</td>
-                <td>3 per month</td>
-                <td>Unlimited</td>
-              </tr>
-              <tr>
-                <td>Analysis Depth</td>
-                <td>Basic</td>
-                <td>Comprehensive</td>
-                <td>Premium</td>
-              </tr>
-              <tr>
-                <td>Response Time</td>
-                <td>3-5 days</td>
-                <td>1-2 days</td>
-                <td>24 hours</td>
-              </tr>
-              <tr>
-                <td>Industry Comparison</td>
-                <td>❌</td>
-                <td>✅</td>
-                <td>✅</td>
-              </tr>
-              <tr>
-                <td>Personal Consultation</td>
-                <td>❌</td>
-                <td>❌</td>
-                <td>✅</td>
-              </tr>
-              <tr>
-                <td>Performance Tracking</td>
-                <td>❌</td>
-                <td>❌</td>
-                <td>✅</td>
-              </tr>
-              <tr>
-                <td>Keyword Optimization</td>
-                <td>❌</td>
-                <td>✅</td>
-                <td>✅</td>
-              </tr>
-              <tr>
-                <td>Export to PDF</td>
-                <td>❌</td>
-                <td>✅</td>
-                <td>✅</td>
-              </tr>
-            </tbody>
-          </table>
+      {/* Coming Soon message toast */}
+      {showComingSoonMessage && (
+        <div className="coming-soon-toast">
+          {comingSoonPlan} plan is coming soon!
         </div>
-      </div>
+      )}
       
-      <div className="pricing-faq">
-        <h2>Frequently Asked Questions</h2>
-        <div className="faq-list">
-          {faqs.map((faq, index) => (
-            <div className="faq-item" key={index}>
-              <button 
-                className={`faq-question ${showFaq === index ? 'active' : ''}`}
-                onClick={() => toggleFaq(index)}
-              >
-                {faq.question}
-                <span className="faq-icon">{showFaq === index ? '−' : '+'}</span>
-              </button>
-              {showFaq === index && (
-                <div className="faq-answer">
-                  <p>{faq.answer}</p>
-                </div>
-              )}
+      {/* Replace the existing features-comparison section with this improved version */}
+      <div className="features-comparison">
+        <h2>Detailed Feature Comparison</h2>
+        
+        <div className="comparison-table">
+          <div className="comparison-header">
+            <div className="feature-column">Features</div>
+            <div className="plan-column free">Free</div>
+            <div className="plan-column basic">Basic</div>
+            <div className="plan-column premium">Premium</div>
+          </div>
+          
+          {/* Profile Basics */}
+          <div className="comparison-category">
+            <div className="category-header">Profile Basics</div>
+            
+            <div className="comparison-row">
+              <div className="feature-column">Connections Analysis</div>
+              <div className="plan-column free">✓</div>
+              <div className="plan-column basic">✓</div>
+              <div className="plan-column premium">✓</div>
             </div>
-          ))}
+            
+            <div className="comparison-row">
+              <div className="feature-column">Verification Shield Check</div>
+              <div className="plan-column free">✓</div>
+              <div className="plan-column basic">✓</div>
+              <div className="plan-column premium">✓</div>
+            </div>
+            
+            <div className="comparison-row">
+              <div className="feature-column">Account Type Identification</div>
+              <div className="plan-column free">✓</div>
+              <div className="plan-column basic">✓</div>
+              <div className="plan-column premium">✓</div>
+            </div>
+            
+            <div className="comparison-row">
+              <div className="feature-column">Account Age Analysis</div>
+              <div className="plan-column free">-</div>
+              <div className="plan-column basic">-</div>
+              <div className="plan-column premium">✓</div>
+            </div>
+            
+            <div className="comparison-row">
+              <div className="feature-column">Last Updated Date Analysis</div>
+              <div className="plan-column free">-</div>
+              <div className="plan-column basic">✓</div>
+              <div className="plan-column premium">✓</div>
+            </div>
+            
+            <div className="comparison-row">
+              <div className="feature-column">Custom URL Check</div>
+              <div className="plan-column free">-</div>
+              <div className="plan-column basic">✓</div>
+              <div className="plan-column premium">✓</div>
+            </div>
+          </div>
+          
+          {/* Profile Content */}
+          <div className="comparison-category">
+            <div className="category-header">Profile Content</div>
+            
+            <div className="comparison-row">
+              <div className="feature-column">Summary/About Section Assessment</div>
+              <div className="plan-column free">✓</div>
+              <div className="plan-column basic">✓</div>
+              <div className="plan-column premium">✓</div>
+            </div>
+            
+            <div className="comparison-row">
+              <div className="feature-column">Profile Picture Assessment</div>
+              <div className="plan-column free">-</div>
+              <div className="plan-column basic">✓</div>
+              <div className="plan-column premium">✓</div>
+            </div>
+            
+            <div className="comparison-row">
+              <div className="feature-column">Photo Freshness Analysis</div>
+              <div className="plan-column free">-</div>
+              <div className="plan-column basic">-</div>
+              <div className="plan-column premium">✓</div>
+            </div>
+            
+            <div className="comparison-row">
+              <div className="feature-column">Job Information Accuracy</div>
+              <div className="plan-column free">-</div>
+              <div className="plan-column basic">✓</div>
+              <div className="plan-column premium">✓</div>
+            </div>
+            
+            <div className="comparison-row">
+              <div className="feature-column">Education/Skills Completeness</div>
+              <div className="plan-column free">-</div>
+              <div className="plan-column basic">-</div>
+              <div className="plan-column premium">✓</div>
+            </div>
+            
+            <div className="comparison-row">
+              <div className="feature-column">Overall Profile Completeness Score</div>
+              <div className="plan-column free">-</div>
+              <div className="plan-column basic">-</div>
+              <div className="plan-column premium">✓</div>
+            </div>
+          </div>
+          
+          {/* Engagement & Activity */}
+          <div className="comparison-category">
+            <div className="category-header">Engagement & Activity</div>
+            
+            <div className="comparison-row">
+              <div className="feature-column">Recent Activity Evaluation</div>
+              <div className="plan-column free">-</div>
+              <div className="plan-column basic">✓</div>
+              <div className="plan-column premium">✓</div>
+            </div>
+            
+            <div className="comparison-row">
+              <div className="feature-column">Content Engagement Analysis</div>
+              <div className="plan-column free">-</div>
+              <div className="plan-column basic">-</div>
+              <div className="plan-column premium">✓</div>
+            </div>
+            
+            <div className="comparison-row">
+              <div className="feature-column">Activity Pattern Assessment</div>
+              <div className="plan-column free">-</div>
+              <div className="plan-column basic">-</div>
+              <div className="plan-column premium">✓</div>
+            </div>
+            
+            <div className="comparison-row">
+              <div className="feature-column">Post History Evaluation</div>
+              <div className="plan-column free">-</div>
+              <div className="plan-column basic">-</div>
+              <div className="plan-column premium">✓</div>
+            </div>
+          </div>
+          
+          {/* Network Quality */}
+          <div className="comparison-category">
+            <div className="category-header">Network Quality</div>
+            
+            <div className="comparison-row">
+              <div className="feature-column">Connection Quality Assessment</div>
+              <div className="plan-column free">-</div>
+              <div className="plan-column basic">✓</div>
+              <div className="plan-column premium">✓</div>
+            </div>
+            
+            <div className="comparison-row">
+              <div className="feature-column">Recommendations Assessment</div>
+              <div className="plan-column free">-</div>
+              <div className="plan-column basic">-</div>
+              <div className="plan-column premium">✓</div>
+            </div>
+            
+            <div className="comparison-row">
+              <div className="feature-column">Skills Endorsements Evaluation</div>
+              <div className="plan-column free">-</div>
+              <div className="plan-column basic">-</div>
+              <div className="plan-column premium">✓</div>
+            </div>
+            
+            <div className="comparison-row">
+              <div className="feature-column">Industry Relevance Analysis</div>
+              <div className="plan-column free">-</div>
+              <div className="plan-column basic">-</div>
+              <div className="plan-column premium">✓</div>
+            </div>
+          </div>
+          
+          {/* Service Limits */}
+          <div className="comparison-category">
+            <div className="category-header">Service Limits</div>
+            
+            <div className="comparison-row">
+              <div className="feature-column">Profile Submissions per Month</div>
+              <div className="plan-column free">1</div>
+              <div className="plan-column basic">3</div>
+              <div className="plan-column premium">Unlimited</div>
+            </div>
+            
+            <div className="comparison-row">
+              <div className="feature-column">Response Time</div>
+              <div className="plan-column free">3-5 days</div>
+              <div className="plan-column basic">1-2 days</div>
+              <div className="plan-column premium">24 hours</div>
+            </div>
+          </div>
         </div>
       </div>
       
       <div className="pricing-cta-section">
         <h2>Ready to Transform Your LinkedIn Profile?</h2>
         <p>Join thousands of professionals who have improved their online presence</p>
+        <div className="coming-soon-note">
+          <p>All plans coming soon! Submit your profile for a free analysis in the meantime.</p>
+        </div>
         <Link to="/signup" className="main-cta-button">Get Started Today</Link>
       </div>
     </div>

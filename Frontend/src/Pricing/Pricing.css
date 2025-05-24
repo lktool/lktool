@@ -225,31 +225,31 @@ input:checked + .toggle-slider:before {
 }
 
 .cta-button.free {
-  background-color: #f1f5f9;
-  color: #475569;
-  border: 1px solid #e2e8f0;
+  background-color: #38b2ac;  /* Teal color */
+  color: white;
+  border: 1px solid #2c9a94;
 }
 
 .cta-button.free:hover {
-  background-color: #e2e8f0;
+  background-color: #319795;
 }
 
 .cta-button.basic {
-  background-color: #3b82f6;
+  background-color: #805ad5;  /* Purple color */
   color: white;
 }
 
 .cta-button.basic:hover {
-  background-color: #2563eb;
+  background-color: #6b46c1;
 }
 
 .cta-button.pro {
-  background-color: #2c3e50;
+  background-color: #dd6b20;  /* Orange color */
   color: white;
 }
 
 .cta-button.pro:hover {
-  background-color: #1e2a37;
+  background-color: #c05621;
 }
 
 /* Features table */
@@ -394,7 +394,132 @@ input:checked + .toggle-slider:before {
   background-color: #2563eb;
 }
 
-/* Responsive adjustments */
+/* Feature comparison section */
+.features-comparison {
+  margin: 4rem 0;
+  text-align: center;
+}
+
+.features-comparison h2 {
+  font-size: 1.8rem;
+  margin-bottom: 2rem;
+  color: #2d3748;
+}
+
+.comparison-table {
+  width: 100%;
+  max-width: 1000px;
+  margin: 0 auto;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e2e8f0;
+}
+
+.comparison-header {
+  display: flex;
+  background-color: #2c3e50;
+  color: white;
+  font-weight: 600;
+}
+
+.comparison-header .feature-column {
+  background-color: #1e2a37;
+}
+
+.feature-column {
+  flex: 2;
+  padding: 1rem;
+  text-align: left;
+  border-right: 1px solid #e2e8f0;
+}
+
+.plan-column {
+  flex: 1;
+  padding: 1rem;
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.plan-column.free {
+  background-color: #f8fafc;
+}
+
+.plan-column.basic {
+  background-color: #ebf8ff;
+}
+
+.plan-column.premium {
+  background-color: #e6fffa;
+}
+
+.comparison-row {
+  display: flex;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.comparison-row:last-child {
+  border-bottom: none;
+}
+
+.comparison-category {
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.comparison-category:last-child {
+  border-bottom: none;
+}
+
+.category-header {
+  background-color: #f1f5f9;
+  padding: 0.8rem 1rem;
+  font-weight: 600;
+  text-align: left;
+  color: #334155;
+  border-bottom: 1px solid #e2e8f0;
+  grid-column: 1 / -1;
+}
+
+/* Override plan column styles in header */
+.comparison-header .plan-column.free {
+  background-color: #64748b;
+}
+
+.comparison-header .plan-column.basic {
+  background-color: #3b82f6;
+}
+
+.comparison-header .plan-column.premium {
+  background-color: #2c3e50;
+}
+
+/* Responsive styles for feature comparison */
+@media (max-width: 768px) {
+  .comparison-table {
+    font-size: 0.9rem;
+  }
+  
+  .feature-column, .plan-column {
+    padding: 0.8rem 0.5rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .comparison-table {
+    font-size: 0.8rem;
+  }
+  
+  .feature-column {
+    flex: 1.2;
+  }
+  
+  .plan-column {
+    flex: 0.8;
+  }
+}
+
 @media (max-width: 768px) {
   .pricing-header h1 {
     font-size: 1.75rem;
@@ -422,6 +547,15 @@ input:checked + .toggle-slider:before {
     padding: 0.75rem 0.5rem;
     font-size: 0.875rem;
   }
+  
+  .features-detail {
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .feature-tier {
+    max-width: 100%;
+  }
 }
 
 @media (max-width: 480px) {
@@ -445,4 +579,84 @@ input:checked + .toggle-slider:before {
     padding: 1rem;
     font-size: 0.938rem;
   }
+}
+
+/* Coming Soon elements */
+.coming-soon-badge {
+  position: absolute;
+  top: -12px;
+  right: -12px;
+  background-color: #f97316; /* Orange color */
+  color: white;
+  font-size: 0.8rem;
+  font-weight: bold;
+  padding: 0.3rem 0.8rem;
+  border-radius: 100px;
+  z-index: 1;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  transform: rotate(15deg);
+}
+
+.pricing-plan.popular .coming-soon-badge {
+  top: 20px;  /* Adjust position to avoid overlap with "Most Popular" badge */
+}
+
+.coming-soon-note {
+  margin-top: 2rem;
+  padding: 1rem;
+  background-color: #fff9c2;
+  border-radius: 8px;
+  border-left: 4px solid #f59e0b;
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.coming-soon-note p {
+  margin: 0;
+  color: #92400e;
+  font-weight: 500;
+}
+
+/* Style buttons for coming soon plans */
+.cta-button.coming-soon {
+  background-color: #718096;
+  border-color: #4a5568;
+  cursor: default;
+  opacity: 0.8;
+}
+
+.cta-button.coming-soon:hover {
+  background-color: #718096;
+  transform: none;
+  opacity: 0.9;
+}
+
+/* Coming Soon Toast */
+.coming-soon-toast {
+  position: fixed;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #4a5568;
+  color: white;
+  padding: 0.8rem 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  animation: fadeInOut 3s ease-in-out;
+  font-weight: 500;
+}
+
+@keyframes fadeInOut {
+  0% { opacity: 0; transform: translate(-50%, 20px); }
+  15% { opacity: 1; transform: translate(-50%, 0); }
+  85% { opacity: 1; transform: translate(-50%, 0); }
+  100% { opacity: 0; transform: translate(-50%, -20px); }
+}
+
+/* Style button versions of CTA buttons to look like links */
+button.cta-button {
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
 }

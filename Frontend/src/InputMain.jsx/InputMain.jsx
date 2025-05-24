@@ -114,11 +114,14 @@ function InputMain() {
                 
                 <button 
                     type="submit" 
-                    className="submit-button"
+                    className={`submit-button ${loading ? 'loading' : ''}`}
                     disabled={loading}
                 >
                     {loading ? (
-                        <LoadingSpinner size="small" text="" textVisible={false} />
+                        <span className="button-spinner-container">
+                            <span className="button-spinner"></span>
+                            <span className="button-text">Submitting...</span>
+                        </span>
                     ) : (
                         'Submit Profile'
                     )}

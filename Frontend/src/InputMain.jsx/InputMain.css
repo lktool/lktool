@@ -132,6 +132,40 @@
   transition: all 0.3s ease;
   width: 100%;
   margin-top: 1.5rem;
+  position: relative; /* Add for positioning spinner */
+}
+
+/* Button spinner styles */
+.button-spinner-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.button-spinner {
+  width: 20px;
+  height: 20px;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: button-spin 1s linear infinite;
+  display: inline-block;
+}
+
+.button-text {
+  display: inline-block;
+}
+
+@keyframes button-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Change opacity when button is in loading state */
+.submit-button.loading {
+  opacity: 0.9;
 }
 
 .submit-button:hover {
