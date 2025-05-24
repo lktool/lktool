@@ -12,6 +12,8 @@ const UserSubmissions = () => {
     const [retryCount, setRetryCount] = useState(0);
     const [submissionNumbers, setSubmissionNumbers] = useState({});
     const maxRetries = 2;
+    // Add state to track which response cards are expanded
+    const [expandedResponses, setExpandedResponses] = useState({});
 
     // Function to fetch submissions with proper authentication handling
     const fetchSubmissions = async (retry = 0) => {
@@ -104,6 +106,17 @@ const UserSubmissions = () => {
         fetchSubmissions();
     };
 
+    // Function to toggle response expansion
+    const toggleResponseExpansion = (id, event) => {
+        // Stop event propagation to prevent other handlers from firing
+        event.stopPropagation();
+        
+        setExpandedResponses(prev => ({
+            ...prev,
+            [id]: !prev[id]
+        }));
+    };
+
     if (loading) {
         return <LoadingSpinner message="Loading your submissions..." />;
     }
@@ -159,9 +172,26 @@ const UserSubmissions = () => {
                         </div>
                         
                         {submission.admin_reply && (
-                            <div className="admin-reply">
-                                <h4>Our Response:</h4>
-                                <div className="reply-content">{submission.admin_reply}</div>
+                            <div 
+                                className={`admin-reply ${expandedResponses[submission.id] ? 'expanded' : 'collapsed'}`}
+                                onClick={(e) => toggleResponseExpansion(submission.id, e)}
+                            >
+                                <div className="reply-header">
+                                    <h4>Our Response:</h4>
+                                    <span className="expand-indicator">
+                                        {expandedResponses[submission.id] ? 'Hide Details' : 'Show Details'}
+                                    </span>
+                                </div>
+                                
+                                <div className="reply-content-wrapper">
+                                    <div className="reply-content">
+                                        {expandedResponses[submission.id] 
+                                            ? submission.admin_reply 
+                                            : `${submission.admin_reply.substring(0, 120)}...`
+                                        }
+                                    </div>
+                                </div>
+                                
                                 <div className="reply-date">
                                     Replied on {formatDate(submission.admin_reply_date)}
                                 </div>

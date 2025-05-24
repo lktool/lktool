@@ -1,11 +1,11 @@
 .navbar-container {
-    padding: 1.5rem;
-    border-bottom-left-radius: 20px;
-    border-bottom-right-radius: 20px;
+    padding: 1.25rem 2rem;
+    border-bottom-left-radius: 15px;
+    border-bottom-right-radius: 15px;
     background-color: #328E6E;
     color: white;
     border: none;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     position: sticky;
     top: 0;
     z-index: 1000;
@@ -16,21 +16,27 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    max-width: 1200px;
+    margin: 0 auto;
 }
 
 .navbar-profiles-controls {
     display: flex;
-    column-gap: 20px;
+    column-gap: 25px;
+    align-items: center;
 }
 
 .navbar-title h2 {
     cursor: pointer;
     margin: 0;
     transition: transform 0.2s;
+    font-weight: 600;
+    font-size: 1.5rem;
+    letter-spacing: 0.5px;
 }
 
 .navbar-title h2:hover {
-    transform: scale(1.05);
+    transform: scale(1.03);
 }
 
 a {

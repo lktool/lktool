@@ -58,6 +58,9 @@ const FormData = () => {
   const refreshTimerRef = useRef(null);
   const navigate = useNavigate(); // Add this hook
 
+  // Add state to track expanded messages
+  const [expandedMessages, setExpandedMessages] = useState({});
+
   useEffect(() => {
     // Check if we're in edit mode from URL params
     const queryParams = new URLSearchParams(window.location.search);
@@ -465,12 +468,23 @@ const FormData = () => {
     }
   };
 
+  // Add function to toggle message expansion
+  const toggleMessageExpansion = (id, event) => {
+    // Prevent the click from bubbling up to the card
+    event.stopPropagation();
+    
+    setExpandedMessages(prev => ({
+      ...prev,
+      [id]: !prev[id]
+    }));
+  };
+
   return (
     <div className="admin-dashboard">
       {currentView === 'submissions' && !editMode && (
         <div className="submissions-container">
           <div className="submissions-header">
-            <h3 style={{ marginRight: '2.5rem' }}>Profile Submissions</h3>
+            <h3 style={{ marginBottom: '2.5rem' }}>Profile Submissions</h3>
             <div className="dashboard-controls" style={{ marginTop: '1.5rem' }}>
               <div className="refresh-info">
                 {lastRefreshTime && (
@@ -487,7 +501,7 @@ const FormData = () => {
                 </button>
               </div>
               
-              <div className="button-container">
+              <div className="button-container" style={{ display: 'flex', flexDirection: 'row', gap: '1rem' }}>
                 <button 
                   onClick={handleRefresh} 
                   className="refresh-button" 
@@ -529,9 +543,18 @@ const FormData = () => {
                       <strong>LinkedIn:</strong> {submission.linkedin_url.substring(0, 30)}...
                     </p>
                     {submission.message && (
-                      <p className="submission-message">
-                        <strong>Message:</strong> {submission.message.substring(0, 50)}
-                        {submission.message.length > 50 ? '...' : ''}
+                      <p 
+                        className="submission-message"
+                        onClick={(e) => toggleMessageExpansion(submission.id, e)}
+                      >
+                        <strong>Message:</strong>{' '}
+                        {expandedMessages[submission.id] 
+                          ? submission.message
+                          : `${submission.message.substring(0, 50)}${submission.message.length > 50 ? '...' : ''}`
+                        }
+                        <span className="expand-indicator">
+                          {expandedMessages[submission.id] ? ' (collapse)' : ' (expand)'}
+                        </span>
                       </p>
                     )}
                   </div>

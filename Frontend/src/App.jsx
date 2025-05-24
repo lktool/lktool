@@ -19,7 +19,7 @@ import UserSubmissions from "./UserSubmissions/UserSubmissions";
 import PublicOnlyRoute from "./components/PublicOnlyRoute";
 import ResetPassword from "./ResetPassword/ResetPassword";
 import ReviewedSubmissions from "./Admin/ReviewedSubmissions";
-import Pricing from "./Pricing/Pricing";  // Add this import at the top with the other imports
+import Pricing from "./Pricing/Pricing";  // Keep this import 
 
 function App() {
   useEffect(() => {

@@ -79,7 +79,7 @@ function NavBar() {
                 </div>
                 
                 <div className={`navbar-profiles-controls ${isMobileMenuOpen ? 'mobile-open' : ''}`}>
-                    {/* Add Pricing link - visible to all users */}
+                    {/* Remove the FAQ link and keep just the Pricing link */}
                     <Link to="/pricing" onClick={() => setIsMobileMenuOpen(false)}>Pricing</Link>
                     
                     {isAuthenticated && !isAdmin && (

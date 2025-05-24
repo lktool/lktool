@@ -16,6 +16,20 @@ const ReviewedSubmissions = () => {
     const [totalPages, setTotalPages] = useState(1);
     const navigate = useNavigate();
 
+    // Add state to track expanded analysis content
+    const [expandedAnalysis, setExpandedAnalysis] = useState({});
+
+    // Function to toggle analysis expansion
+    const toggleAnalysisExpansion = (id, event) => {
+        // Prevent the click from bubbling up to parent elements
+        event.stopPropagation();
+
+        setExpandedAnalysis(prev => ({
+            ...prev,
+            [id]: !prev[id]
+        }));
+    };
+
     // Function to fetch processed submissions with cache-busting
     const fetchProcessedSubmissions = async (pageNum = 1, silent = false) => {
         if (!silent) setLoading(true);
@@ -126,6 +140,28 @@ const ReviewedSubmissions = () => {
         }
     };
 
+    // Utility function to get relative time string
+    const getRelativeTimeString = (date) => {
+        const now = new Date();
+        const processedDate = new Date(date);
+        const diffInSeconds = Math.floor((now - processedDate) / 1000);
+        
+        if (diffInSeconds < 60) {
+            return 'Just now';
+        } else if (diffInSeconds < 3600) {
+            const minutes = Math.floor(diffInSeconds / 60);
+            return `${minutes} ${minutes === 1 ? 'minute' : 'minutes'} ago`;
+        } else if (diffInSeconds < 86400) {
+            const hours = Math.floor(diffInSeconds / 3600);
+            return `${hours} ${hours === 1 ? 'hour' : 'hours'} ago`;
+        } else if (diffInSeconds < 604800) {
+            const days = Math.floor(diffInSeconds / 86400);
+            return `${days} ${days === 1 ? 'day' : 'days'} ago`;
+        } else {
+            return formatDate(date);
+        }
+    };
+
     // Render loading state
     if (loading && submissions.length === 0) {
         return <LoadingSpinner message="Loading processed submissions..." />;
@@ -134,33 +170,37 @@ const ReviewedSubmissions = () => {
     return (
         <div className="reviewed-submissions-container">
             <div className="reviewed-header">
-                <h2>Processed LinkedIn Profile Submissions</h2>
+                <h2 className="main-title">Processed LinkedIn Profile Submissions</h2>
+                
                 <div className="dashboard-controls">
-                    <div className="refresh-info">
-                        {lastRefreshTime && (
-                            <span className="last-refresh">
-                                Last updated: {lastRefreshTime.toLocaleTimeString()}
-                            </span>
-                        )}
-                        <button 
-                            className={`auto-refresh-toggle ${autoRefreshEnabled ? 'active' : ''}`} 
-                            onClick={toggleAutoRefresh}
-                            title={autoRefreshEnabled ? "Disable auto-refresh" : "Enable auto-refresh"}
-                        >
-                            {autoRefreshEnabled ? "Auto-refresh ON" : "Auto-refresh OFF"}
-                        </button>
-                    </div>
-                    <div className="button-container">
-                        <button 
-                            onClick={handleRefresh} 
-                            className="refresh-button" 
-                            disabled={loading}
-                        >
-                            {loading ? 'Refreshing...' : 'Refresh Now'}
-                        </button>
-                        <Link to="/admin/dashboard" className="back-button">
-                            Return to Dashboard
-                        </Link>
+                    <div className="controls-section">
+                        <div className="refresh-info">
+                            {lastRefreshTime && (
+                                <span className="last-refresh">
+                                    Last updated: {lastRefreshTime.toLocaleTimeString()}
+                                </span>
+                            )}
+                            <button 
+                                className={`auto-refresh-toggle ${autoRefreshEnabled ? 'active' : ''}`} 
+                                onClick={toggleAutoRefresh}
+                                title={autoRefreshEnabled ? "Disable auto-refresh" : "Enable auto-refresh"}
+                            >
+                                {autoRefreshEnabled ? "Auto-refresh ON" : "Auto-refresh OFF"}
+                            </button>
+                        </div>
+                    
+                        <div className="button-container">
+                            <button 
+                                onClick={handleRefresh} 
+                                className="refresh-button" 
+                                disabled={loading}
+                            >
+                                {loading ? 'Refreshing...' : 'Refresh Now'}
+                            </button>
+                            <Link to="/admin/dashboard" className="back-button">
+                                Return to Dashboard
+                            </Link>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -177,7 +217,9 @@ const ReviewedSubmissions = () => {
                         {submissions.map(submission => (
                             <div key={submission.id} className="processed-submission-card">
                                 <div className="submission-header">
-                                    <h2>Processed on {formatDate(submission.admin_reply_date)}</h2>
+                                    <h2 className="processed-date" title={`Processed on ${formatDate(submission.admin_reply_date)}`}>
+                                        <span className="relative-time">{getRelativeTimeString(submission.admin_reply_date)}</span>
+                                    </h2>
                                     <div className="submission-actions">
                                         <Link 
                                             to={`/admin/dashboard?edit=${submission.id}`}
@@ -200,11 +242,19 @@ const ReviewedSubmissions = () => {
                                     
                                     <div className="analysis-preview">
                                         <h4>Analysis:</h4>
-                                        <div className="analysis-content">
-                                            {submission.admin_reply.length > 200 
-                                                ? `${submission.admin_reply.substring(0, 200)}...` 
-                                                : submission.admin_reply
+                                        <div 
+                                            className="analysis-content"
+                                            onClick={(e) => toggleAnalysisExpansion(submission.id, e)}
+                                        >
+                                            {expandedAnalysis[submission.id] 
+                                                ? submission.admin_reply 
+                                                : `${submission.admin_reply.substring(0, 200)}${submission.admin_reply.length > 200 ? '...' : ''}`
                                             }
+                                            {submission.admin_reply.length > 200 && (
+                                                <span className="expand-indicator">
+                                                    {expandedAnalysis[submission.id] ? ' (collapse)' : ' (expand)'}
+                                                </span>
+                                            )}
                                         </div>
                                     </div>
                                 </div>
