@@ -3,66 +3,14 @@ import { Link } from 'react-router-dom';
 import './Pricing.css';
 
 const Pricing = () => {
-  const [expandedPlans, setExpandedPlans] = useState({
-    free: false,
-    basic: false,
-    premium: false
-  });
+  const [billingPeriod, setBillingPeriod] = useState('monthly');
   const [showFaq, setShowFaq] = useState(null);
-
-  // Toggle expanded state for a specific plan
-  const togglePlanDetails = (plan) => {
-    setExpandedPlans({
-      ...expandedPlans,
-      [plan]: !expandedPlans[plan]
-    });
-  };
-
-  // Toggle FAQ visibility
+  
   const toggleFaq = (index) => {
     setShowFaq(showFaq === index ? null : index);
   };
-
-  // Define feature lists for each plan
-  const freePlanFeatures = [
-    'Connections count',
-    'Verification Shield Present',
-    'Account Type analysis',
-    'Has Summary or About Section',
-    'Open to Connect or Recruit'
-  ];
-
-  const basicPlanFeatures = [
-    'Last Updated date analysis',
-    'Has Custom Short URL',
-    'Has Professional Profile Picture',
-    'Recent Posts or Interactions (within 6 months)',
-    'Recently Updated Headline or Info',
-    'Sparse or Recently Added Job History',
-    'Default/Stock Profile Picture',
-    'Very Low (100) Connections',
-    'No Meaningful Engagement on Content'
-  ];
-
-  const premiumPlanFeatures = [
-    'Account Age (years) analysis',
-    'Profile Picture Looks Outdated',
-    'Has Outdated Job Info or Defunct Companies',
-    'Missing or Incomplete Education/Skills Info',
-    'Overall Profile is Well-Filled',
-    'Has Given/Received Recommendations',
-    'Personalized Profile (unique summary or achievements)',
-    'Skills Endorsements Count analysis',
-    'Others Engage with Their Content',
-    'Regularly Likes/Comments/Shares',
-    'Has Posts Older Than 1 Year',
-    'Last Post Date analysis',
-    'Shared Interests or Mutual Connections',
-    'In a Relevant Industry',
-    'Has Active, Relevant Job Titles',
-    'Newly Created Account detection'
-  ];
-
+  
+  // FAQ data
   const faqs = [
     {
       question: "What's included in the free plan?",
@@ -88,80 +36,170 @@ const Pricing = () => {
 
   return (
     <div className="pricing-container">
-      <div className="coming-soon-banner">
-        <span>Coming Soon</span>
+      <div className="pricing-header">
+        <h1>Choose the Right Plan for Your LinkedIn Success</h1>
+        <p>Get professional insights to boost your LinkedIn profile and career opportunities</p>
+        
+        <div className="billing-toggle">
+          <span className={billingPeriod === 'monthly' ? 'active' : ''}>Monthly</span>
+          <label className="toggle-switch">
+            <input 
+              type="checkbox" 
+              checked={billingPeriod === 'yearly'} 
+              onChange={() => setBillingPeriod(billingPeriod === 'monthly' ? 'yearly' : 'monthly')}
+            />
+            <span className="toggle-slider"></span>
+          </label>
+          <span className={billingPeriod === 'yearly' ? 'active' : ''}>
+            Yearly
+            <div className="save-badge">Save 20%</div>
+          </span>
+        </div>
       </div>
       
-      <h1 className="pricing-title">LinkedIn Profile Analysis Packages</h1>
-      
-      <div className="pricing-plans-simple">
+      <div className="pricing-plans">
         {/* Free Plan */}
         <div className="pricing-plan">
           <div className="plan-header">
-            <h2>FREE</h2>
+            <h2>Free</h2>
+            <div className="plan-price">
+              <span className="price">$0</span>
+              <span className="period">forever</span>
+            </div>
           </div>
           <div className="plan-features">
-            <ul className="feature-list">
-              {freePlanFeatures.slice(0, expandedPlans.free ? freePlanFeatures.length : 3).map((feature, index) => (
-                <li key={index}>{feature}</li>
-              ))}
+            <ul>
+              <li>Basic LinkedIn profile analysis</li>
+              <li>1 profile submission per month</li>
+              <li>Standard response time (3-5 days)</li>
+              <li>Core recommendations</li>
+              <li>Email delivery of results</li>
             </ul>
-            {freePlanFeatures.length > 3 && (
-              <button 
-                onClick={() => togglePlanDetails('free')} 
-                className="read-more-button"
-              >
-                {expandedPlans.free ? 'Show Less' : 'Read More'}
-              </button>
-            )}
+          </div>
+          <div className="plan-cta">
+            <Link to="/signup" className="cta-button free">Get Started</Link>
           </div>
         </div>
         
         {/* Basic Plan */}
-        <div className="pricing-plan">
+        <div className="pricing-plan popular">
+          <div className="popular-badge">Most Popular</div>
           <div className="plan-header">
-            <h2>BASIC</h2>
+            <h2>Basic</h2>
+            <div className="plan-price">
+              <span className="price">${billingPeriod === 'monthly' ? '12' : '9.60'}</span>
+              <span className="period">per month</span>
+            </div>
+            {billingPeriod === 'yearly' && <div className="billed-annually">Billed annually (${9.60 * 12})</div>}
           </div>
           <div className="plan-features">
-            <ul className="feature-list">
-              {basicPlanFeatures.slice(0, expandedPlans.basic ? basicPlanFeatures.length : 3).map((feature, index) => (
-                <li key={index}>{feature}</li>
-              ))}
+            <ul>
+              <li>Comprehensive profile analysis</li>
+              <li>3 profile submissions per month</li>
+              <li>Faster response time (1-2 days)</li>
+              <li>Detailed recommendations</li>
+              <li>Email delivery of results</li>
+              <li>Profile comparison with industry leaders</li>
             </ul>
-            {basicPlanFeatures.length > 3 && (
-              <button 
-                onClick={() => togglePlanDetails('basic')} 
-                className="read-more-button"
-              >
-                {expandedPlans.basic ? 'Show Less' : 'Read More'}
-              </button>
-            )}
+          </div>
+          <div className="plan-cta">
+            <Link to="/signup" className="cta-button basic">Choose Basic</Link>
           </div>
         </div>
         
-        {/* Premium Plan */}
+        {/* Pro Plan */}
         <div className="pricing-plan">
           <div className="plan-header">
-            <h2>PREMIUM</h2>
+            <h2>Pro</h2>
+            <div className="plan-price">
+              <span className="price">${billingPeriod === 'monthly' ? '29' : '23.20'}</span>
+              <span className="period">per month</span>
+            </div>
+            {billingPeriod === 'yearly' && <div className="billed-annually">Billed annually (${23.20 * 12})</div>}
           </div>
           <div className="plan-features">
-            <ul className="feature-list">
-              {premiumPlanFeatures.slice(0, expandedPlans.premium ? premiumPlanFeatures.length : 3).map((feature, index) => (
-                <li key={index}>{feature}</li>
-              ))}
+            <ul>
+              <li>Premium in-depth profile analysis</li>
+              <li>Unlimited profile submissions</li>
+              <li>Priority response time (24 hours)</li>
+              <li>Advanced actionable recommendations</li>
+              <li>Industry-specific insights</li>
+              <li>One-on-one consultation session</li>
+              <li>Monthly performance tracking</li>
             </ul>
-            {premiumPlanFeatures.length > 3 && (
-              <button 
-                onClick={() => togglePlanDetails('premium')} 
-                className="read-more-button"
-              >
-                {expandedPlans.premium ? 'Show Less' : 'Read More'}
-              </button>
-            )}
+          </div>
+          <div className="plan-cta">
+            <Link to="/signup" className="cta-button pro">Choose Pro</Link>
           </div>
         </div>
       </div>
-
+      
+      <div className="pricing-features">
+        <h2>Compare Plan Features</h2>
+        <div className="features-table-container">
+          <table className="features-table">
+            <thead>
+              <tr>
+                <th>Feature</th>
+                <th>Free</th>
+                <th>Basic</th>
+                <th>Pro</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Profile Submissions</td>
+                <td>1 per month</td>
+                <td>3 per month</td>
+                <td>Unlimited</td>
+              </tr>
+              <tr>
+                <td>Analysis Depth</td>
+                <td>Basic</td>
+                <td>Comprehensive</td>
+                <td>Premium</td>
+              </tr>
+              <tr>
+                <td>Response Time</td>
+                <td>3-5 days</td>
+                <td>1-2 days</td>
+                <td>24 hours</td>
+              </tr>
+              <tr>
+                <td>Industry Comparison</td>
+                <td>❌</td>
+                <td>✅</td>
+                <td>✅</td>
+              </tr>
+              <tr>
+                <td>Personal Consultation</td>
+                <td>❌</td>
+                <td>❌</td>
+                <td>✅</td>
+              </tr>
+              <tr>
+                <td>Performance Tracking</td>
+                <td>❌</td>
+                <td>❌</td>
+                <td>✅</td>
+              </tr>
+              <tr>
+                <td>Keyword Optimization</td>
+                <td>❌</td>
+                <td>✅</td>
+                <td>✅</td>
+              </tr>
+              <tr>
+                <td>Export to PDF</td>
+                <td>❌</td>
+                <td>✅</td>
+                <td>✅</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      
       <div className="pricing-faq">
         <h2>Frequently Asked Questions</h2>
         <div className="faq-list">
@@ -183,12 +221,12 @@ const Pricing = () => {
           ))}
         </div>
       </div>
-{/*       
+      
       <div className="pricing-cta-section">
         <h2>Ready to Transform Your LinkedIn Profile?</h2>
         <p>Join thousands of professionals who have improved their online presence</p>
         <Link to="/signup" className="main-cta-button">Get Started Today</Link>
-      </div> */}
+      </div>
     </div>
   );
 };
