@@ -127,8 +127,9 @@
 .processed-submissions-list {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
-  gap: 1.5rem;
+  gap: 2rem;  /* Increase gap from 1.5rem to 2rem */
   margin-bottom: 2rem;
+  padding: 0.5rem;  /* Add padding to the grid container */
 }
 
 .processed-submission-card {
@@ -139,6 +140,7 @@
   display: flex;
   flex-direction: column;
   transition: transform 0.2s, box-shadow 0.2s;
+  margin-bottom: 0.5rem;  /* Add bottom margin */
 }
 
 .processed-submission-card:hover {
@@ -337,7 +339,8 @@
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .processed-submissions-list {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
   }
   
   .submission-header {
@@ -373,5 +376,10 @@
   .refresh-button {
     width: 100%;
     text-align: center;
+  }
+  
+  .processed-submissions-list {
+    grid-template-columns: 1fr;  /* One column for mobile */
+    gap: 1.2rem;
   }
 }

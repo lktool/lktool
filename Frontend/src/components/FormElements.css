@@ -1,0 +1,181 @@
+/* Reusable Form Elements Styling */
+
+/* Base form group styling */
+.form-group {
+  margin-bottom: 1rem; /* Reduce from 1.5rem to 1rem */
+  position: relative;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: #2d3748;
+  font-size: 0.95rem;
+}
+
+.required-indicator {
+  color: #e53e3e;
+  margin-left: 0.25rem;
+}
+
+/* Input styling */
+.form-input,
+.form-textarea,
+.form-select {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+  background-color: #f8fafc;
+  color: #2d3748;
+  font-family: inherit;
+}
+
+.form-input:focus,
+.form-textarea:focus,
+.form-select:focus {
+  border-color: #328e6e;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(50, 142, 110, 0.15);
+  background-color: white;
+}
+
+.form-textarea {
+  min-height: 120px;
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.form-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%232d3748' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 16px;
+  padding-right: 2.5rem;
+}
+
+/* Error state styling */
+.form-group.has-error .form-input,
+.form-group.has-error .form-textarea,
+.form-group.has-error .form-select {
+  border-color: #e53e3e;
+  background-color: #fff5f5;
+}
+
+.form-group.has-error label {
+  color: #c53030;
+}
+
+.input-error {
+  color: #c53030;
+  font-size: 0.85rem;
+  margin-top: 0.35rem;
+}
+
+/* Button styling */
+.submit-button {
+  width: 100%;
+  padding: 0.85rem 1.5rem;
+  background-color: #328e6e;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+  margin-top: 0.5rem;
+}
+
+.submit-button:hover:not(:disabled) {
+  background-color: #2c7d60;
+  transform: translateY(-2px);
+}
+
+.submit-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Loading state for button */
+.button-spinner-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.button-spinner {
+  width: 18px;
+  height: 18px;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Message styling */
+.form-message {
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  margin-bottom: 1rem;
+  font-size: 0.95rem;
+}
+
+.error-message {
+  background-color: #fed7d7;
+  color: #c53030;
+  border-left: 3px solid #e53e3e;
+}
+
+.success-message {
+  background-color: #c6f6d5;
+  color: #2f855a;
+  border-left: 3px solid #38a169;
+}
+
+.info-message {
+  background-color: #bee3f8;
+  color: #2b6cb0;
+  border-left: 3px solid #3182ce;
+}
+
+.warning-message {
+  background-color: #feebc8;
+  color: #9c4221;
+  border-left: 3px solid #dd6b20;
+}
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+  .form-group label {
+    font-size: 0.9rem;
+  }
+  
+  .form-input,
+  .form-textarea,
+  .form-select {
+    padding: 0.7rem;
+    font-size: 0.95rem;
+  }
+  
+  .submit-button {
+    padding: 0.75rem 1rem;
+  }
+}
+
+/* Add a utility class for compact form groups */
+.form-group.compact {
+  margin-bottom: 0.5rem; /* Even smaller margin for compact groups */
+}
