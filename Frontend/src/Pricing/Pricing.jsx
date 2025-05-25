@@ -6,6 +6,7 @@ const Pricing = () => {
   const [billingPeriod, setBillingPeriod] = useState('monthly');
   const [showComingSoonMessage, setShowComingSoonMessage] = useState(false);
   const [comingSoonPlan, setComingSoonPlan] = useState('');
+  const [activeFaq, setActiveFaq] = useState(null);
   
   const handlePaidPlanClick = (planName) => {
     setComingSoonPlan(planName);
@@ -14,6 +15,10 @@ const Pricing = () => {
     setTimeout(() => {
       setShowComingSoonMessage(false);
     }, 3000);
+  };
+  
+  const toggleFaq = (index) => {
+    setActiveFaq(activeFaq === index ? null : index);
   };
   
   return (
@@ -150,7 +155,7 @@ const Pricing = () => {
         </div>
       )}
       
-      {/* Replace the existing features-comparison section with this improved version */}
+      {/* Replace the entire comparison table section with this fixed version */}
       <div className="features-comparison">
         <h2>Detailed Feature Comparison</h2>
         
@@ -320,6 +325,13 @@ const Pricing = () => {
               <div className="plan-column basic">-</div>
               <div className="plan-column premium">✓</div>
             </div>
+            
+            <div className="comparison-row">
+              <div className="feature-column">Job Title Optimization</div>
+              <div className="plan-column free">-</div>
+              <div className="plan-column basic">-</div>
+              <div className="plan-column premium">✓</div>
+            </div>
           </div>
           
           {/* Service Limits */}
@@ -350,6 +362,97 @@ const Pricing = () => {
           <p>All plans coming soon! Submit your profile for a free analysis in the meantime.</p>
         </div>
         <Link to="/signup" className="main-cta-button">Get Started Today</Link>
+      </div>
+      
+      {/* FAQ Section */}
+      <div className="pricing-faq">
+        <h2>Frequently Asked Questions</h2>
+        <div className="faq-list">
+          <div className="faq-item">
+            <button 
+              className={`faq-question ${activeFaq === 0 ? 'active' : ''}`}
+              onClick={() => toggleFaq(0)}
+            >
+              How does the profile analysis work?
+              <span className="faq-icon">{activeFaq === 0 ? '−' : '+'}</span>
+            </button>
+            {activeFaq === 0 && (
+              <div className="faq-answer">
+                <p>Our tool analyzes your LinkedIn profile by examining over 20 key factors including profile completeness, 
+                engagement patterns, connection quality, and content strategy. We use these insights to provide specific 
+                recommendations to improve your professional presence and visibility.</p>
+              </div>
+            )}
+          </div>
+          
+          <div className="faq-item">
+            <button 
+              className={`faq-question ${activeFaq === 1 ? 'active' : ''}`}
+              onClick={() => toggleFaq(1)}
+            >
+              How long does it take to get my results?
+              <span className="faq-icon">{activeFaq === 1 ? '−' : '+'}</span>
+            </button>
+            {activeFaq === 1 && (
+              <div className="faq-answer">
+                <p>Free plan users typically receive their analysis within 3-5 business days. Basic plan users receive 
+                results within 1-2 business days, while Premium plan users get priority service with results 
+                delivered within 24 hours.</p>
+              </div>
+            )}
+          </div>
+          
+          <div className="faq-item">
+            <button 
+              className={`faq-question ${activeFaq === 2 ? 'active' : ''}`}
+              onClick={() => toggleFaq(2)}
+            >
+              Can I upgrade my plan later?
+              <span className="faq-icon">{activeFaq === 2 ? '−' : '+'}</span>
+            </button>
+            {activeFaq === 2 && (
+              <div className="faq-answer">
+                <p>Yes, you can upgrade your plan at any time. When you upgrade, you'll immediately gain access to all the 
+                features and benefits of your new plan. If you upgrade from a monthly to a yearly plan, you'll also 
+                benefit from the 20% discount.</p>
+              </div>
+            )}
+          </div>
+          
+          <div className="faq-item">
+            <button 
+              className={`faq-question ${activeFaq === 3 ? 'active' : ''}`}
+              onClick={() => toggleFaq(3)}
+            >
+              What if I'm not satisfied with the analysis?
+              <span className="faq-icon">{activeFaq === 3 ? '−' : '+'}</span>
+            </button>
+            {activeFaq === 3 && (
+              <div className="faq-answer">
+                <p>We stand behind the quality of our service. If you're not completely satisfied with your analysis, 
+                please contact our support team within 7 days of receiving your results, and we'll work to address 
+                your concerns or provide a full refund.</p>
+              </div>
+            )}
+          </div>
+          
+          <div className="faq-item">
+            <button 
+              className={`faq-question ${activeFaq === 4 ? 'active' : ''}`}
+              onClick={() => toggleFaq(4)}
+            >
+              Is my profile data secure?
+              <span className="faq-icon">{activeFaq === 4 ? '−' : '+'}</span>
+            </button>
+            {activeFaq === 4 && (
+              <div className="faq-answer">
+                <p>Absolutely. We take data privacy very seriously. Your profile information is only accessed for the purpose 
+                of providing our analysis services. We never share your personal information with third parties, and all 
+                data is processed according to our strict privacy policy.</p>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );
