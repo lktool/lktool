@@ -36,6 +36,10 @@ const FormData = () => {
     defaultProfilePicture: false,
     lowConnections: false,
     noEngagementOnPosts: false,
+    // Add the new fields for the requested metrics
+    profileScorePercentage: 0,
+    goodForOutreach: false,
+    spamScore: 0
   });
 
   const [submissions, setSubmissions] = useState([]);
@@ -172,6 +176,10 @@ const FormData = () => {
             defaultProfilePicture: false,
             lowConnections: false,
             noEngagementOnPosts: false,
+            // Add the new fields for the requested metrics
+            profileScorePercentage: 0,
+            goodForOutreach: false,
+            spamScore: 0
           });
         }
         
@@ -258,10 +266,40 @@ const FormData = () => {
       const negativeImpact = (riskCount / riskFactors.length) * maxNegativeImpact;
 
       const score = Math.round(Math.max(0, Math.min(100, positiveScore - negativeImpact)));
+      
+      // Calculate profile score percentage (directly use the existing score)
+      const profileScorePercentage = score;
+      
+      // Calculate spam score (0-100, higher means more likely to be spam)
+      const spamFactors = [
+        form.newlyCreated ? 25 : 0,
+        form.sparseJobHistory ? 20 : 0,
+        form.defaultProfilePicture ? 20 : 0,
+        form.lowConnections ? 15 : 0,
+        form.noEngagementOnPosts ? 10 : 0,
+        !form.hasProfileSummary ? 5 : 0,
+        form.outdatedJobInfo ? 5 : 0
+      ];
+      const spamScore = Math.min(100, spamFactors.reduce((sum, val) => sum + val, 0));
+      
+      // Determine if profile is good for outreach
+      const outreachPositiveFactors = [
+        form.openToNetworking,
+        form.industryRelevance,
+        form.recentActivity,
+        form.engagementWithContent,
+        form.hasVerificationShield,
+        form.hasProfessionalPhoto,
+        !form.lowConnections
+      ];
+      const outreachScore = outreachPositiveFactors.filter(Boolean).length / outreachPositiveFactors.length;
+      const goodForOutreach = outreachScore > 0.6; // Over 60% positive factors means good for outreach
 
       let summary = `LinkedIn Profile Analysis\n\n`;
-      summary += `Overall Score: ${score}/100\n`;
-      summary += `Risk Level: ${riskLevel.charAt(0).toUpperCase() + riskLevel.slice(1)}\n\n`;
+      summary += `Overall Score: ${score}/100 (${profileScorePercentage}%)\n`;
+      summary += `Risk Level: ${riskLevel.charAt(0).toUpperCase() + riskLevel.slice(1)}\n`;
+      summary += `Spam Score: ${spamScore}/100\n`;
+      summary += `Good for Outreach: ${goodForOutreach ? 'Yes' : 'No'}\n\n`;
       summary += `Key Observations:\n`;
 
       if (form.hasVerificationShield) summary += "✓ Profile has verification shield\n";
@@ -287,6 +325,24 @@ const FormData = () => {
       if (!form.hasCustomURL) summary += "• Create a custom LinkedIn URL\n";
       if (!form.recentActivity) summary += "• Increase activity by sharing relevant content\n";
 
+      // Add outreach-specific recommendations
+      if (!goodForOutreach) {
+        summary += "\nOutreach Limitations:\n";
+        if (!form.openToNetworking) summary += "• Profile doesn't indicate openness to networking\n";
+        if (!form.industryRelevance) summary += "• Profile isn't in a relevant industry for your outreach\n";
+        if (!form.recentActivity) summary += "• Lack of recent activity may indicate an inactive user\n";
+        if (!form.engagementWithContent) summary += "• Low engagement with content suggests limited responsiveness\n";
+        if (form.lowConnections) summary += "• Small network size limits potential reach\n";
+      }
+
+      // Update form state with the calculated metrics
+      setForm(prevForm => ({
+        ...prevForm,
+        profileScorePercentage,
+        goodForOutreach,
+        spamScore
+      }));
+
       setAnalysisPreview(summary);
       setReplyText(summary);
       setShowPreview(true);
@@ -294,7 +350,10 @@ const FormData = () => {
       return {
         summary,
         score,
-        risk_level: riskLevel
+        risk_level: riskLevel,
+        profile_score_percentage: profileScorePercentage,
+        good_for_outreach: goodForOutreach,
+        spam_score: spamScore
       };
     } catch (error) {
       console.error('Error generating analysis:', error);
@@ -426,6 +485,10 @@ const FormData = () => {
       defaultProfilePicture: false,
       lowConnections: false,
       noEngagementOnPosts: false,
+      // Add the new fields for the requested metrics
+      profileScorePercentage: 0,
+      goodForOutreach: false,
+      spamScore: 0
     });
     setCurrentView('analysis');
   };
@@ -725,6 +788,43 @@ const FormData = () => {
               <label>
                 <input type="checkbox" name="noEngagementOnPosts" checked={form.noEngagementOnPosts} onChange={handleChange} />
                 No Meaningful Engagement on Content
+              </label>
+            </fieldset>
+
+            {/* Add a new fieldset for the metrics */}
+            <fieldset className="classroom-fieldset">
+              <legend className="classroom-legend">6. Profile Metrics</legend>
+              
+              <label>Profile Score Percentage:
+                <input 
+                  type="number" 
+                  name="profileScorePercentage" 
+                  value={form.profileScorePercentage} 
+                  onChange={handleChange}
+                  min="0"
+                  max="100"
+                />
+              </label>
+              
+              <label>
+                <input 
+                  type="checkbox" 
+                  name="goodForOutreach" 
+                  checked={form.goodForOutreach} 
+                  onChange={handleChange}
+                />
+                Good for Outreach
+              </label>
+              
+              <label>Spam Score (0-100):
+                <input 
+                  type="number" 
+                  name="spamScore" 
+                  value={form.spamScore} 
+                  onChange={handleChange}
+                  min="0"
+                  max="100"
+                />
               </label>
             </fieldset>
 

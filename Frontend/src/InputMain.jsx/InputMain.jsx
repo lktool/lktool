@@ -75,23 +75,22 @@ function InputMain() {
                     <div className="service-description">
                         <h2>Optimize Your Professional Presence</h2>
                         
-                        <p className="lead">
-                            Get expert insights and recommendations to make your LinkedIn profile stand out.
-                        </p>
-                        
+                        {/* Purpose Point 1: In-depth LinkedIn Profile Analysis */}
                         <div className="feature-item">
-                            <h3>Comprehensive Analysis</h3>
-                            <p>Our tool examines over 20 key metrics on your profile to identify strengths and improvement areas.</p>
+                            <h3>Comprehensive Profile Analysis</h3>
+                            <p>Our tool conducts thorough evaluations of LinkedIn profiles by examining over 20 key metrics including connections, profile completeness, activity patterns, and engagement quality to identify strengths and improvement areas.</p>
                         </div>
                         
+                        {/* Purpose Point 2: Personalized Recommendations */}
                         <div className="feature-item">
-                            <h3>Personalized Recommendations</h3>
-                            <p>Receive tailored suggestions to optimize your visibility to recruiters and potential connections.</p>
+                            <h3>Tailored Optimization Recommendations</h3>
+                            <p>We provide customized, actionable suggestions to enhance your professional presence and improve visibility to potential employers and connections based on industry best practices.</p>
                         </div>
                         
+                        {/* Purpose Point 3: Career Advancement */}
                         <div className="feature-item">
-                            <h3>Professional Insights</h3>
-                            <p>Learn how your profile compares to industry standards and get actionable improvement steps.</p>
+                            <h3>Career Growth Acceleration</h3>
+                            <p>By optimizing your LinkedIn profile through our expert insights, you'll increase your professional opportunities, strengthen your network, and position yourself more competitively in your industry.</p>
                         </div>
                         
                         <div className="how-it-works">

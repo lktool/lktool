@@ -47,7 +47,6 @@ const Pricing = () => {
       <div className="pricing-plans">
         {/* Free Plan */}
         <div className="pricing-plan">
-{/*           <div className="coming-soon-badge">Coming Soon</div> */}
           <div className="plan-header">
             <h2>Free</h2>
             <div className="plan-price">
@@ -57,13 +56,14 @@ const Pricing = () => {
           </div>
           <div className="plan-features">
             <ul>
-              <li>Connections analysis</li>
-              <li>Verification Shield check</li>
               <li>Account Type identification</li>
-              <li>Profile Summary assessment</li>
-              <li>Open to Connect/Recruit evaluation</li>
               <li>Basic recommendations</li>
-              <li>1 profile submission per month</li>
+              <li>Connections analysis</li>
+              <li>Open to Connect/Recruit evaluation</li>
+              <li>One response per month</li>
+              <li>Profile Summary assessment</li>
+              <li>Response within 24 hours</li>
+              <li>Verification Shield check</li>
             </ul>
           </div>
           <div className="plan-cta">
@@ -78,23 +78,24 @@ const Pricing = () => {
           <div className="plan-header">
             <h2>Basic</h2>
             <div className="plan-price">
-              <span className="price">${billingPeriod === 'monthly' ? '12' : '9.60'}</span>
+              <span className="price">${billingPeriod === 'monthly' ? '899' : '719.20'}</span>
               <span className="period">per month</span>
             </div>
-            {billingPeriod === 'yearly' && <div className="billed-annually">Billed annually (${9.60 * 12})</div>}
+            {billingPeriod === 'yearly' && <div className="billed-annually">Billed annually (${719.20 * 12})</div>}
           </div>
           <div className="plan-features">
             <ul>
               <li>All Free features, plus:</li>
-              <li>Last update date analysis</li>
+              <li>Connection quality assessment</li>
               <li>Custom URL check</li>
-              <li>Profile picture assessment</li>
-              <li>Recent activity evaluation</li>
+              <li>Engagement analysis</li>
               <li>Headline analysis</li>
               <li>Job history evaluation</li>
-              <li>Connection quality assessment</li>
-              <li>Engagement analysis</li>
-              <li>3 profile submissions per month</li>
+              <li>Last update date analysis</li>
+              <li>Profile picture assessment</li>
+              <li>Recent activity evaluation</li>
+              <li>24 profile submissions per month</li>
+              <li><strong>Immediate results</strong></li>
             </ul>
           </div>
           <div className="plan-cta">
@@ -113,28 +114,29 @@ const Pricing = () => {
           <div className="plan-header">
             <h2>Premium</h2>
             <div className="plan-price">
-              <span className="price">${billingPeriod === 'monthly' ? '29' : '23.20'}</span>
+              <span className="price">${billingPeriod === 'monthly' ? '1299' : '1039.20'}</span>
               <span className="period">per month</span>
             </div>
-            {billingPeriod === 'yearly' && <div className="billed-annually">Billed annually (${23.20 * 12})</div>}
+            {billingPeriod === 'yearly' && <div className="billed-annually">Billed annually (${1039.20 * 12})</div>}
           </div>
           <div className="plan-features">
             <ul>
               <li>All Basic features, plus:</li>
               <li>Account age evaluation</li>
-              <li>Photo freshness analysis</li>
-              <li>Job information accuracy check</li>
-              <li>Education/Skills completeness</li>
-              <li>Overall profile completeness score</li>
-              <li>Recommendations assessment</li>
-              <li>Profile personalization analysis</li>
-              <li>Skills endorsements evaluation</li>
-              <li>Content engagement analysis</li>
               <li>Activity pattern assessment</li>
-              <li>Post history evaluation</li>
+              <li>Content engagement analysis</li>
+              <li>Education/Skills completeness</li>
               <li>Industry relevance analysis</li>
+              <li>Job information accuracy check</li>
               <li>Job title optimization</li>
+              <li>Overall profile completeness score</li>
+              <li>Photo freshness analysis</li>
+              <li>Post history evaluation</li>
+              <li>Profile personalization analysis</li>
+              <li>Recommendations assessment</li>
+              <li>Skills endorsements evaluation</li>
               <li>Unlimited profile submissions</li>
+              <li><strong>Immediate priority results</strong></li>
             </ul>
           </div>
           <div className="plan-cta">
@@ -341,15 +343,15 @@ const Pricing = () => {
             <div className="comparison-row">
               <div className="feature-column">Profile Submissions per Month</div>
               <div className="plan-column free">1</div>
-              <div className="plan-column basic">3</div>
+              <div className="plan-column basic">24</div>
               <div className="plan-column premium">Unlimited</div>
             </div>
             
             <div className="comparison-row">
               <div className="feature-column">Response Time</div>
-              <div className="plan-column free">3-5 days</div>
-              <div className="plan-column basic">1-2 days</div>
-              <div className="plan-column premium">24 hours</div>
+              <div className="plan-column free">24 hours</div>
+              <div className="plan-column basic">Immediate</div>
+              <div className="plan-column premium">Immediate</div>
             </div>
           </div>
         </div>
@@ -395,9 +397,8 @@ const Pricing = () => {
             </button>
             {activeFaq === 1 && (
               <div className="faq-answer">
-                <p>Free plan users typically receive their analysis within 3-5 business days. Basic plan users receive 
-                results within 1-2 business days, while Premium plan users get priority service with results 
-                delivered within 24 hours.</p>
+                <p>Free plan users receive their analysis within 24 hours. Basic and Premium 
+                plan users receive immediate results, with Premium users getting priority processing during high volume periods.</p>
               </div>
             )}
           </div>
