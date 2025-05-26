@@ -174,16 +174,9 @@ const Pricing = () => {
             <div className="category-header">Profile Basics</div>
             
             <div className="comparison-row">
-              <div className="feature-column">Connections Analysis</div>
-              <div className="plan-column free">✓</div>
-              <div className="plan-column basic">✓</div>
-              <div className="plan-column premium">✓</div>
-            </div>
-            
-            <div className="comparison-row">
-              <div className="feature-column">Verification Shield Check</div>
-              <div className="plan-column free">✓</div>
-              <div className="plan-column basic">✓</div>
+              <div className="feature-column">Account Age Analysis</div>
+              <div className="plan-column free">-</div>
+              <div className="plan-column basic">-</div>
               <div className="plan-column premium">✓</div>
             </div>
             
@@ -195,9 +188,16 @@ const Pricing = () => {
             </div>
             
             <div className="comparison-row">
-              <div className="feature-column">Account Age Analysis</div>
+              <div className="feature-column">Connections Analysis</div>
+              <div className="plan-column free">✓</div>
+              <div className="plan-column basic">✓</div>
+              <div className="plan-column premium">✓</div>
+            </div>
+            
+            <div className="comparison-row">
+              <div className="feature-column">Custom URL Check</div>
               <div className="plan-column free">-</div>
-              <div className="plan-column basic">-</div>
+              <div className="plan-column basic">✓</div>
               <div className="plan-column premium">✓</div>
             </div>
             
@@ -209,8 +209,8 @@ const Pricing = () => {
             </div>
             
             <div className="comparison-row">
-              <div className="feature-column">Custom URL Check</div>
-              <div className="plan-column free">-</div>
+              <div className="feature-column">Verification Shield Check</div>
+              <div className="plan-column free">✓</div>
               <div className="plan-column basic">✓</div>
               <div className="plan-column premium">✓</div>
             </div>
@@ -221,21 +221,7 @@ const Pricing = () => {
             <div className="category-header">Profile Content</div>
             
             <div className="comparison-row">
-              <div className="feature-column">Summary/About Section Assessment</div>
-              <div className="plan-column free">✓</div>
-              <div className="plan-column basic">✓</div>
-              <div className="plan-column premium">✓</div>
-            </div>
-            
-            <div className="comparison-row">
-              <div className="feature-column">Profile Picture Assessment</div>
-              <div className="plan-column free">-</div>
-              <div className="plan-column basic">✓</div>
-              <div className="plan-column premium">✓</div>
-            </div>
-            
-            <div className="comparison-row">
-              <div className="feature-column">Photo Freshness Analysis</div>
+              <div className="feature-column">Education/Skills Completeness</div>
               <div className="plan-column free">-</div>
               <div className="plan-column basic">-</div>
               <div className="plan-column premium">✓</div>
@@ -249,16 +235,30 @@ const Pricing = () => {
             </div>
             
             <div className="comparison-row">
-              <div className="feature-column">Education/Skills Completeness</div>
+              <div className="feature-column">Overall Profile Completeness Score</div>
               <div className="plan-column free">-</div>
               <div className="plan-column basic">-</div>
               <div className="plan-column premium">✓</div>
             </div>
             
             <div className="comparison-row">
-              <div className="feature-column">Overall Profile Completeness Score</div>
+              <div className="feature-column">Photo Freshness Analysis</div>
               <div className="plan-column free">-</div>
               <div className="plan-column basic">-</div>
+              <div className="plan-column premium">✓</div>
+            </div>
+            
+            <div className="comparison-row">
+              <div className="feature-column">Profile Picture Assessment</div>
+              <div className="plan-column free">-</div>
+              <div className="plan-column basic">✓</div>
+              <div className="plan-column premium">✓</div>
+            </div>
+            
+            <div className="comparison-row">
+              <div className="feature-column">Summary/About Section Assessment</div>
+              <div className="plan-column free">✓</div>
+              <div className="plan-column basic">✓</div>
               <div className="plan-column premium">✓</div>
             </div>
           </div>
@@ -268,9 +268,9 @@ const Pricing = () => {
             <div className="category-header">Engagement & Activity</div>
             
             <div className="comparison-row">
-              <div className="feature-column">Recent Activity Evaluation</div>
+              <div className="feature-column">Activity Pattern Assessment</div>
               <div className="plan-column free">-</div>
-              <div className="plan-column basic">✓</div>
+              <div className="plan-column basic">-</div>
               <div className="plan-column premium">✓</div>
             </div>
             
@@ -282,16 +282,16 @@ const Pricing = () => {
             </div>
             
             <div className="comparison-row">
-              <div className="feature-column">Activity Pattern Assessment</div>
+              <div className="feature-column">Post History Evaluation</div>
               <div className="plan-column free">-</div>
               <div className="plan-column basic">-</div>
               <div className="plan-column premium">✓</div>
             </div>
             
             <div className="comparison-row">
-              <div className="feature-column">Post History Evaluation</div>
+              <div className="feature-column">Recent Activity Evaluation</div>
               <div className="plan-column free">-</div>
-              <div className="plan-column basic">-</div>
+              <div className="plan-column basic">✓</div>
               <div className="plan-column premium">✓</div>
             </div>
           </div>
@@ -308,20 +308,6 @@ const Pricing = () => {
             </div>
             
             <div className="comparison-row">
-              <div className="feature-column">Recommendations Assessment</div>
-              <div className="plan-column free">-</div>
-              <div className="plan-column basic">-</div>
-              <div className="plan-column premium">✓</div>
-            </div>
-            
-            <div className="comparison-row">
-              <div className="feature-column">Skills Endorsements Evaluation</div>
-              <div className="plan-column free">-</div>
-              <div className="plan-column basic">-</div>
-              <div className="plan-column premium">✓</div>
-            </div>
-            
-            <div className="comparison-row">
               <div className="feature-column">Industry Relevance Analysis</div>
               <div className="plan-column free">-</div>
               <div className="plan-column basic">-</div>
@@ -330,6 +316,20 @@ const Pricing = () => {
             
             <div className="comparison-row">
               <div className="feature-column">Job Title Optimization</div>
+              <div className="plan-column free">-</div>
+              <div className="plan-column basic">-</div>
+              <div className="plan-column premium">✓</div>
+            </div>
+            
+            <div className="comparison-row">
+              <div className="feature-column">Recommendations Assessment</div>
+              <div className="plan-column free">-</div>
+              <div className="plan-column basic">-</div>
+              <div className="plan-column premium">✓</div>
+            </div>
+            
+            <div className="comparison-row">
+              <div className="feature-column">Skills Endorsements Evaluation</div>
               <div className="plan-column free">-</div>
               <div className="plan-column basic">-</div>
               <div className="plan-column premium">✓</div>
