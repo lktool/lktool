@@ -279,3 +279,69 @@
     padding: 0.75rem 1rem;
   }
 }
+
+/* Subscription elements styles */
+.subscription-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding: 10px 15px;
+  background-color: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+}
+
+.tier-badge {
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  color: white;
+}
+
+.tier-badge.free {
+  background-color: #64748b;
+}
+
+.tier-badge.basic {
+  background-color: #3b82f6;
+}
+
+.tier-badge.premium {
+  background-color: #10b981;
+}
+
+.submission-limit {
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.limit-reached {
+  text-align: center;
+  padding: 20px;
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.limit-reached p {
+  margin-bottom: 15px;
+  color: #64748b;
+}
+
+.upgrade-button {
+  display: inline-block;
+  background-color: #3b82f6;
+  color: white;
+  font-weight: 600;
+  padding: 10px 20px;
+  border-radius: 8px;
+  text-decoration: none;
+  transition: background-color 0.2s;
+}
+
+.upgrade-button:hover {
+  background-color: #2563eb;
+}

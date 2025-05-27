@@ -18,6 +18,7 @@ from django.utils import timezone
 from .serializers import ContactSerializer, ContactFormSerializer
 from .models import ContactSubmission
 from .email_service import send_notification_email
+from .models import UserSubscription
 
 logger = logging.getLogger(__name__)
 
@@ -138,6 +139,35 @@ class SubmitFormView(APIView):
         data = request.data.copy()
         data['email'] = request.user.email
         
+        # Check subscription limits before allowing submission
+        user = request.user
+        current_month_submissions = self._get_monthly_submission_count(user)
+        
+        # Get user's subscription tier
+        try:
+            subscription = UserSubscription.objects.get(user=user)
+            tier = subscription.tier
+        except UserSubscription.DoesNotExist:
+            tier = 'free'
+            
+        # Check limits based on tier
+        if tier == 'free' and current_month_submissions >= 1:
+            return Response({
+                "success": False,
+                "error": "Free tier is limited to 1 submission. Please upgrade for more submissions.",
+                "limit_reached": True,
+                "current_tier": "free"
+            }, status=status.HTTP_403_FORBIDDEN)
+        elif tier == 'basic' and current_month_submissions >= 24:
+            return Response({
+                "success": False,
+                "error": "Basic tier is limited to 24 submissions per month. Please upgrade to premium for unlimited submissions.",
+                "limit_reached": True,
+                "current_tier": "basic"
+            }, status=status.HTTP_403_FORBIDDEN)
+        
+        # Premium users have unlimited submissions
+        
         print(f"Processing submission with data: {data}")
         
         serializer = ContactSerializer(data=data)
@@ -186,6 +216,18 @@ class SubmitFormView(APIView):
             }, status=status.HTTP_201_CREATED)
             
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    def _get_monthly_submission_count(self, user):
+        """Count submissions by this user in the current month"""
+        from django.utils import timezone
+        now = timezone.now()
+        start_of_month = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        
+        from .models import ContactSubmission
+        return ContactSubmission.objects.filter(
+            user=user,
+            created_at__gte=start_of_month
+        ).count()
 
 @api_view(['GET'])
 @permission_classes([IsAdminUser])
