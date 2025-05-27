@@ -8,19 +8,7 @@ class UserSubscriptionInline(admin.TabularInline):
     extra = 0
     fields = ('tier', 'start_date', 'end_date', 'assigned_by', 'notes')
     readonly_fields = ('start_date',)
-    # Fix the multiple foreign key issue by specifying the user field
-    fk_name = 'user'
-    
-    def get_queryset(self, request):
-        """Only show subscriptions for this user"""
-        qs = super().get_queryset(request)
-        return qs
-    
-    def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        """Set the current user as the assigned_by field"""
-        if db_field.name == "assigned_by":
-            kwargs["initial"] = request.user.id
-        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+    fk_name = 'user'  # Specify which foreign key to use
 
 @admin.register(UserSubscription)
 class UserSubscriptionAdmin(admin.ModelAdmin):
@@ -35,7 +23,7 @@ class UserSubscriptionAdmin(admin.ModelAdmin):
     is_active.boolean = True
     is_active.short_description = "Active"
 
-# Update the CustomUserAdmin to use 'email' for ordering instead of 'username'
+# Add the inline to the user admin
 class CustomUserAdmin(UserAdmin):
     # Update these fields to match your CustomUser model
     ordering = ('email',)  # Use email instead of username for ordering
