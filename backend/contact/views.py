@@ -18,7 +18,7 @@ from django.utils import timezone
 from .serializers import ContactSerializer, ContactFormSerializer
 from .models import ContactSubmission
 from .email_service import send_notification_email
-from .models import UserSubscription
+from users.models import UserSubscription  # Import from users app, not contact app
 
 logger = logging.getLogger(__name__)
 
