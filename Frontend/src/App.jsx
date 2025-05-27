@@ -1,7 +1,8 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { useEffect } from "react";
-// Update import to use the new API structure
 import { authService } from './api';
+// Remove the UserProvider import as we're only using SubscriptionProvider for now
+import { SubscriptionProvider } from './context/SubscriptionContext';
 import Landing from "./Landing/Landing";
 /* import Admin from "./Admin/Admin"; */
 import Login from './Login/Login';
@@ -19,8 +20,9 @@ import UserSubmissions from "./UserSubmissions/UserSubmissions";
 import PublicOnlyRoute from "./components/PublicOnlyRoute";
 import ResetPassword from "./ResetPassword/ResetPassword";
 import ReviewedSubmissions from "./Admin/ReviewedSubmissions";
-import Pricing from "./Pricing/Pricing";  // Keep this import 
+import Pricing from "./Pricing/Pricing"; 
 import BlankPage from "./BlankPage/BlankPage";
+import UserSubscriptionManager from "./Admin/UserSubscriptionManager"; // Add this import
 
 function App() {
   useEffect(() => {
@@ -48,62 +50,60 @@ function App() {
 
   return (
     <>
-      <Router>
-        <NavBar />
-        
-        <Routes>
-          {/* Public Routes - redirect authenticated users */}
-          <Route path="/" element={
-            <PublicOnlyRoute>
-              <Landing />
-            </PublicOnlyRoute>
-          } />
-          <Route path="/login" element={
-            <PublicOnlyRoute>
-              <Login />
-            </PublicOnlyRoute>
-          } />
-          <Route path="/signup" element={
-            <PublicOnlyRoute>
-              <Signup />
-            </PublicOnlyRoute>
-          } />
-          <Route path="/forgot-password" element={<ForgotPassword />} />
+      <SubscriptionProvider>
+        <Router>
+          <NavBar />
           
-          {/* Add the pricing route - accessible to all */}
-          <Route path="/pricing" element={<Pricing />} />
-          
-          {/* Add the password reset route */}
-          <Route path="/reset-password/:uid/:token" element={<ResetPassword />} />
-          
-          {/* Auth callback routes */}
-          {/* Update this route to match the backend format with uid-token */}
-          <Route path="/verify-email/:token" element={<VerifyEmail />} />
-          
-          {/* This route handles the Google OAuth callback - matches the redirect URI */}
-          <Route path="/auth/google/callback" element={<GoogleAuthCallback />} />
-          
-          {/* Protected Routes - Only for authenticated users */}
-          <Route path="/inputMain" element={<ProtectedRoute><InputMain /></ProtectedRoute>} />
-          <Route path="/my-submissions" element={<ProtectedRoute><UserSubmissions /></ProtectedRoute>} />
-          
-          {/* Admin Routes */}
-{/*           <Route path="/admin" element={
-            <PublicOnlyRoute adminRedirect="/admin/dashboard" userRedirect="/inputMain">
-              <Admin />
-            </PublicOnlyRoute>
-          } /> */}
-          <Route path="/admin/dashboard" element={<AdminRoute><FormData /></AdminRoute>} />
-          <Route path="/admin/reviewed" element={<AdminRoute><ReviewedSubmissions /></AdminRoute>} />
-          
-          {/* Blank Page Route - for testing or empty state */}
-          <Route path="/blank-page" element={<BlankPage />} />
-          
-          {/* Not Found Route */}
-          <Route path="/not-found" element={<NotFound />} />
-          <Route path="*" element={<Navigate to="/not-found" replace />} />
-        </Routes>
-      </Router>
+          <Routes>
+            {/* Public Routes - redirect authenticated users */}
+            <Route path="/" element={
+              <PublicOnlyRoute>
+                <Landing />
+              </PublicOnlyRoute>
+            } />
+            <Route path="/login" element={
+              <PublicOnlyRoute>
+                <Login />
+              </PublicOnlyRoute>
+            } />
+            <Route path="/signup" element={
+              <PublicOnlyRoute>
+                <Signup />
+              </PublicOnlyRoute>
+            } />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            
+            {/* Add the pricing route - accessible to all */}
+            <Route path="/pricing" element={<Pricing />} />
+            
+            {/* Add the password reset route */}
+            <Route path="/reset-password/:uid/:token" element={<ResetPassword />} />
+            
+            {/* Auth callback routes */}
+            {/* Update this route to match the backend format with uid-token */}
+            <Route path="/verify-email/:token" element={<VerifyEmail />} />
+            
+            {/* This route handles the Google OAuth callback - matches the redirect URI */}
+            <Route path="/auth/google/callback" element={<GoogleAuthCallback />} />
+            
+            {/* Protected Routes - Only for authenticated users */}
+            <Route path="/inputMain" element={<ProtectedRoute><InputMain /></ProtectedRoute>} />
+            <Route path="/my-submissions" element={<ProtectedRoute><UserSubmissions /></ProtectedRoute>} />
+            
+            {/* Admin Routes */}
+            <Route path="/admin/dashboard" element={<AdminRoute><FormData /></AdminRoute>} />
+            <Route path="/admin/reviewed" element={<AdminRoute><ReviewedSubmissions /></AdminRoute>} />
+            <Route path="/admin/subscriptions" element={<AdminRoute><UserSubscriptionManager /></AdminRoute>} />
+            
+            {/* Blank Page Route - for testing or empty state */}
+            <Route path="/blank-page" element={<BlankPage />} />
+            
+            {/* Not Found Route */}
+            <Route path="/not-found" element={<NotFound />} />
+            <Route path="*" element={<Navigate to="/not-found" replace />} />
+          </Routes>
+        </Router>
+      </SubscriptionProvider>
     </>
   );
 }

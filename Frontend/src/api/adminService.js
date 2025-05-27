@@ -249,5 +249,48 @@ export const adminService = {
         error: error.response?.data?.error || 'Failed to delete submission'
       };
     }
+  },
+
+  /**
+   * Get list of users with their subscription details
+   * @returns {Promise<Object>} API response with users list
+   */
+  async getSubscribedUsers() {
+    try {
+      const response = await apiClient.get('/api/auth/admin/user-subscription/');
+      return {
+        success: true,
+        data: response.data || []
+      };
+    } catch (error) {
+      console.error('Error fetching subscribed users:', error);
+      return {
+        success: false,
+        error: error.response?.data?.error || 'Failed to fetch users',
+        data: []
+      };
+    }
+  },
+
+  /**
+   * Assign subscription tier to user
+   * @param {Object} data - Subscription data with email, tier, and optional validity period
+   * @returns {Promise<Object>} API response
+   */
+  async assignUserSubscription(data) {
+    try {
+      const response = await apiClient.post('/api/auth/admin/user-subscription/', data);
+      return {
+        success: true,
+        message: response.data.message || 'Subscription assigned successfully',
+        ...response.data
+      };
+    } catch (error) {
+      console.error('Error assigning subscription:', error);
+      return {
+        success: false,
+        error: error.response?.data?.error || 'Failed to assign subscription'
+      };
+    }
   }
 };

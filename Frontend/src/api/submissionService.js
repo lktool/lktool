@@ -3,7 +3,6 @@
  * Handles LinkedIn profile submissions and retrieval
  */
 import { apiClient } from './interceptors';
-import { ENDPOINTS } from './config';
 
 export const submissionService = {
   /**
@@ -13,40 +12,34 @@ export const submissionService = {
    */
   async submitProfile(data) {
     try {
-      // This endpoint is defined in contact/urls.py to point to SubmitFormView
-      const response = await apiClient.post(
-        `${ENDPOINTS.CONTACT.BASE}${ENDPOINTS.CONTACT.SUBMIT}`, 
-        data
-      );
+      const response = await apiClient.post('/api/contact/submit/', data);
       
       return {
         success: true,
         data: response.data,
-        message: "LinkedIn profile submitted successfully!"
+        message: response.data.message || 'Profile submitted successfully'
       };
     } catch (error) {
-      console.error('Error submitting LinkedIn profile:', error);
+      console.error('Error submitting profile:', error);
       return {
         success: false,
-        error: error.response?.data || 'Submission failed'
+        error: error.response?.data?.message || 'Failed to submit profile'
       };
     }
   },
   
   /**
-   * Get current user's submissions
-   * @returns {Promise<Array>} User's LinkedIn profile submissions
+   * Get user's submissions history
+   * @param {string} queryString - Optional query string for cache busting
+   * @returns {Promise<Array>} User submissions
    */
-  async getUserSubmissions() {
+  async getUserSubmissions(queryString = '') {
     try {
-      // This endpoint is defined in contact/urls.py to point to UserSubmissionsView
-      const response = await apiClient.get(
-        `${ENDPOINTS.CONTACT.BASE}${ENDPOINTS.CONTACT.USER_SUBMISSIONS}`
-      );
+      const response = await apiClient.get(`/api/contact/user-submissions/${queryString}`);
       
       return response.data;
     } catch (error) {
-      console.error('Error fetching user LinkedIn profile submissions:', error);
+      console.error('Error fetching submissions:', error);
       throw error;
     }
   }

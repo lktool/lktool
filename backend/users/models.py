@@ -1,8 +1,36 @@
 from django.db import models
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import AbstractUser, BaseUserManager
 from django.utils.translation import gettext_lazy as _
 
-from .managers import CustomUserManager
+class CustomUserManager(BaseUserManager):
+    """
+    Custom manager for CustomUser
+    """
+    def create_user(self, email, password=None, **extra_fields):
+        """
+        Create and return a 'CustomUser' with an email and password.
+        """
+        if not email:
+            raise ValueError('The Email field must be set')
+        email = self.normalize_email(email)
+        user = self.model(email=email, **extra_fields)
+        user.set_password(password)
+        user.save(using=self._db)
+        return user
+
+    def create_superuser(self, email, password=None, **extra_fields):
+        """
+        Create and return a superuser with the given email and password.
+        """
+        extra_fields.setdefault('is_staff', True)
+        extra_fields.setdefault('is_superuser', True)
+
+        if extra_fields.get('is_staff') is not True:
+            raise ValueError('Superuser must have is_staff=True.')
+        if extra_fields.get('is_superuser') is not True:
+            raise ValueError('Superuser must have is_superuser=True.')
+
+        return self.create_user(email, password, **extra_fields)
 
 class CustomUser(AbstractUser):
     """
@@ -29,3 +57,40 @@ class CustomUser(AbstractUser):
         
     def is_admin_user(self):
         return self.role == 'admin' or self.is_staff or self.is_superuser
+
+# Add the subscription model
+class UserSubscription(models.Model):
+    """Model for tracking user subscription tiers assigned by admins"""
+    
+    SUBSCRIPTION_TIERS = (
+        ('free', 'Free'),
+        ('basic', 'Basic'),
+        ('premium', 'Premium'),
+    )
+    
+    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='subscription')
+    tier = models.CharField(max_length=10, choices=SUBSCRIPTION_TIERS, default='free')
+    start_date = models.DateTimeField(auto_now_add=True)
+    end_date = models.DateTimeField(null=True, blank=True)  # Null means subscription doesn't expire
+    assigned_by = models.ForeignKey(
+        CustomUser, 
+        on_delete=models.SET_NULL, 
+        null=True, 
+        blank=True, 
+        related_name='assigned_subscriptions'
+    )
+    notes = models.TextField(blank=True, null=True)
+    
+    class Meta:
+        verbose_name = "User Subscription"
+        verbose_name_plural = "User Subscriptions"
+    
+    def __str__(self):
+        return f"{self.user.email} - {self.tier}"
+    
+    def is_active(self):
+        """Check if subscription is currently active"""
+        from django.utils import timezone
+        if not self.end_date:
+            return True
+        return self.end_date > timezone.now()

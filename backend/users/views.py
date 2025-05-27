@@ -12,9 +12,11 @@ from django.shortcuts import get_object_or_404
 from django.core.mail import send_mail
 from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
+from django.utils import timezone
 
 import logging
 from .serializers import UserSerializer, RegisterSerializer, PasswordResetSerializer, PasswordResetConfirmSerializer
+from .models import UserSubscription  # Import the UserSubscription model
 
 User = get_user_model()
 logger = logging.getLogger(__name__)
@@ -438,3 +440,31 @@ class PasswordResetConfirmView(APIView):
         except Exception as e:
             logger.error(f"Password reset confirm error: {str(e)}")
             return Response({"detail": "Error resetting password."}, status=500)
+
+class UserSubscriptionView(APIView):
+    """API endpoint for users to check their subscription tier"""
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request):
+        user = request.user
+        
+        try:
+            # Try to get user subscription
+            subscription = UserSubscription.objects.get(user=user)
+            
+            # Check if subscription has expired
+            if subscription.end_date and subscription.end_date < timezone.now():
+                return Response({
+                    'tier': 'free',
+                    'message': 'Your subscription has expired'
+                })
+            
+            return Response({
+                'tier': subscription.tier,
+                'end_date': subscription.end_date
+            })
+        except UserSubscription.DoesNotExist:
+            # Default to free tier if no subscription exists
+            return Response({
+                'tier': 'free'
+            })
