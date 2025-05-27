@@ -11,7 +11,7 @@ from .views import (
     ResendVerificationView,
     UserSubscriptionView,
 )
-from .admin_views import UserSubscriptionView  # Import the admin view here
+from .admin_views import AdminUserSubscriptionView  # Import the renamed admin view here
 
 urlpatterns = [
     path('login/', LoginView.as_view(), name='login'),
@@ -26,5 +26,6 @@ urlpatterns = [
     path('password-reset-confirm/<uidb64>/<token>/', PasswordResetConfirmView.as_view(), name='password_reset_confirm'),
     path('resend-verification/', ResendVerificationView.as_view(), name='resend_verification'),
     path('subscription/', UserSubscriptionView.as_view(), name='user_subscription'),
-    path('admin/user-subscription/', UserSubscriptionView.as_view(), name='admin_user_subscription'),  # Admin route
+    # Use the renamed admin view class
+    path('admin/user-subscription/', AdminUserSubscriptionView.as_view(), name='admin_user_subscription'),
 ]

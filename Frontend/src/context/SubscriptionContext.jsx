@@ -10,7 +10,8 @@ const SubscriptionContext = createContext({
   hasPremiumAccess: false,
   hasBasicAccess: false,
   checkTierAccess: () => false,
-  refreshSubscription: () => {} // Add this function
+  refreshSubscription: () => {},
+  lastRefresh: null
 });
 
 // Export the provider component
@@ -37,7 +38,7 @@ export const SubscriptionProvider = ({ children }) => {
     }
 
     try {
-      // Always use timestamp to prevent caching issues
+      // Always add timestamp parameter to prevent caching
       const timestamp = new Date().getTime();
       
       console.log(`Fetching subscription info${forceRefresh ? ' (forced refresh)' : ''}...`);
@@ -45,16 +46,16 @@ export const SubscriptionProvider = ({ children }) => {
       const response = await axios.get(`/api/auth/subscription/?t=${timestamp}`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
-          'Cache-Control': 'no-cache, no-store'
+          'Cache-Control': 'no-cache'
         }
       });
 
-      console.log('DEBUG: Subscription response:', response.data);
+      console.log('DEBUG: Subscription API response:', response.data);
       
-      // Normalize tier to lowercase for consistency
+      // Always normalize tier to lowercase
       const tier = (response.data.tier || 'free').toLowerCase();
       
-      console.log(`DEBUG: Setting tier to: ${tier}`);
+      console.log(`DEBUG: Setting subscription tier to: '${tier}'`);
       
       setSubscription({
         tier: tier,
@@ -62,18 +63,18 @@ export const SubscriptionProvider = ({ children }) => {
         subscriptionId: response.data.subscription_id,
         loading: false,
         error: null,
-        lastUpdated: new Date()
+        lastUpdated: new Date(),
+        debugInfo: response.data.debug_info || null
       });
     } catch (error) {
       console.error('Failed to fetch subscription:', error);
       
-      // Don't default to free tier if there was an error loading
-      // Keep the current tier to avoid disrupting premium users
+      // Keep the current tier on error instead of defaulting to free
       setSubscription(prev => ({
         ...prev,
         loading: false,
         error: error.response?.status === 500 
-          ? 'Database error. Please try refreshing.' 
+          ? 'Server error loading subscription. Please try refreshing.' 
           : 'Failed to load subscription data',
         lastUpdated: new Date()
       }));
@@ -85,7 +86,7 @@ export const SubscriptionProvider = ({ children }) => {
     fetchSubscription();
     
     // Listen for auth changes
-    const handleAuthChange = () => fetchSubscription(true); // Force refresh on auth change
+    const handleAuthChange = () => fetchSubscription(true);
     window.addEventListener('authChange', handleAuthChange);
     
     // Create a refresh interval (every 5 minutes)
@@ -109,14 +110,14 @@ export const SubscriptionProvider = ({ children }) => {
       premium: 2
     };
 
-    // Normalize tiers to lowercase for consistent comparison
-    const userLevel = tierLevels[subscription.tier?.toLowerCase() || 'free'] || 0;
-    const requiredLevel = tierLevels[requiredTier?.toLowerCase() || 'free'] || 0;
+    // Normalize tiers for consistent comparison
+    const userLevel = tierLevels[(subscription.tier || 'free').toLowerCase()] || 0;
+    const requiredLevel = tierLevels[(requiredTier || 'free').toLowerCase()] || 0;
 
     return userLevel >= requiredLevel;
   };
 
-  // Function to manually refresh subscription data
+  // Manually refresh subscription data
   const refreshSubscription = () => {
     setSubscription(prev => ({ ...prev, loading: true }));
     fetchSubscription(true);
@@ -133,7 +134,8 @@ export const SubscriptionProvider = ({ children }) => {
         hasPremiumAccess: checkTierAccess('premium'),
         hasBasicAccess: checkTierAccess('basic'),
         checkTierAccess,
-        refreshSubscription // Expose refresh function
+        refreshSubscription,
+        debugInfo: subscription.debugInfo
       }}
     >
       {children}

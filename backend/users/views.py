@@ -447,18 +447,19 @@ class UserSubscriptionView(APIView):
     
     def get(self, request):
         user = request.user
+        import traceback
         
         try:
-            # Enhanced logging for debugging subscription issues
+            # Enhanced debugging for subscription issues
             print(f"DEBUG: Fetching subscription for user: {user.email} (id: {user.id})")
             
-            # Try to get user subscription - use a case-insensitive lookup
+            # Try to get user subscription with a direct query
             subscription = UserSubscription.objects.filter(user=user).first()
             
             if subscription:
-                print(f"DEBUG: Found subscription: tier={subscription.tier}, end_date={subscription.end_date}")
+                print(f"DEBUG: Found subscription in DB: tier={subscription.tier}, end_date={subscription.end_date}")
                 
-                # Normalize the tier value to lowercase for consistency
+                # Always normalize the tier to lowercase for consistency
                 tier = subscription.tier.lower() if subscription.tier else 'free'
                 
                 # Check if subscription has expired
@@ -477,8 +478,7 @@ class UserSubscriptionView(APIView):
                     'subscription_id': subscription.id
                 })
             else:
-                print(f"DEBUG: No subscription found for user: {user.email}")
-                
+                print(f"DEBUG: No subscription found in DB for user: {user.email}")
                 # Default to free tier if no subscription exists
                 return Response({
                     'tier': 'free',

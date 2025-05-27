@@ -17,8 +17,8 @@ function InputMain() {
     const [submissionCount, setSubmissionCount] = useState(0);
     const [limitReached, setLimitReached] = useState(false);
     
-    // Get subscription information from context
-    const { tier, loading: subscriptionLoading, refreshSubscription } = useSubscription();
+    // Get subscription information from context with debug info
+    const { tier, loading: subscriptionLoading, refreshSubscription, debugInfo } = useSubscription();
 
     useEffect(() => {
         // Fetch the user's submission count for the current month
@@ -36,23 +36,38 @@ function InputMain() {
                 
                 setSubmissionCount(monthlyCount);
                 
-                // FIXED: Premium users should never reach limit
-                // Also normalize tier comparison to be case-insensitive
-                if ((tier?.toLowerCase() === 'free' && monthlyCount >= 1) || 
-                    (tier?.toLowerCase() === 'basic' && monthlyCount >= 24)) {
-                    setLimitReached(true);
-                } else {
-                    // Explicitly set to false to handle tier changes
+                // IMPORTANT: Always normalize tier for comparison
+                const normalizedTier = (tier || 'free').toLowerCase();
+                
+                // Premium users should never reach limit
+                if (normalizedTier === 'premium') {
                     setLimitReached(false);
+                    console.log('DEBUG: Premium tier detected - no submission limit applied');
+                }
+                // Basic users limited to 24 submissions per month
+                else if (normalizedTier === 'basic' && monthlyCount >= 24) {
+                    setLimitReached(true);
+                    console.log(`DEBUG: Basic tier with ${monthlyCount}/24 submissions - limit reached`);
+                }
+                // Free users limited to 1 submission
+                else if (normalizedTier === 'free' && monthlyCount >= 1) {
+                    setLimitReached(true);
+                    console.log(`DEBUG: Free tier with ${monthlyCount}/1 submissions - limit reached`);
+                }
+                // Otherwise, no limit reached
+                else {
+                    setLimitReached(false);
+                    console.log(`DEBUG: Tier ${normalizedTier} with ${monthlyCount} submissions - no limit reached`);
                 }
             } catch (err) {
                 console.error('Error fetching submission count:', err);
             }
         };
         
-        fetchSubmissionCount();
-        // Add tier to dependencies so it rechecks when tier changes
-    }, [tier]);
+        if (!subscriptionLoading) {
+            fetchSubmissionCount();
+        }
+    }, [tier, subscriptionLoading]);  // Include subscriptionLoading in dependencies
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -193,7 +208,7 @@ function InputMain() {
                         
                         {/* Display subscription tier and limits */}
                         <div className="subscription-info">
-                            <p className={`tier-badge ${tier?.toLowerCase()}`}>
+                            <p className={`tier-badge ${(tier || 'free').toLowerCase()}`}>
                                 {tier ? tier.charAt(0).toUpperCase() + tier.slice(1) : 'Free'} Tier
                             </p>
                             <p className="submission-limit">
@@ -266,14 +281,21 @@ function InputMain() {
                         {authService.isAdmin() && (
                             <div className="admin-debug-panel">
                                 <h4>Admin Subscription Debug</h4>
-                                <p>Current Tier: <strong>{tier || 'undefined'}</strong></p>
+                                <p>Raw Tier: <strong>{tier || 'undefined'}</strong></p>
+                                <p>Normalized Tier: <strong>{(tier || 'free').toLowerCase()}</strong></p>
                                 <p>Limit Reached: <strong>{limitReached ? 'Yes' : 'No'}</strong></p>
                                 <p>Monthly Submissions: <strong>{submissionCount}</strong></p>
+                                {debugInfo && (
+                                    <p>Debug Info: <strong>{debugInfo}</strong></p>
+                                )}
                                 <button 
                                     onClick={() => {
                                         console.log('Force refreshing subscription...');
                                         refreshSubscription();
-                                        setTimeout(() => window.location.reload(), 1000);
+                                        setTimeout(() => {
+                                            alert("Subscription refreshed! Reloading page to apply changes...");
+                                            window.location.reload();
+                                        }, 1000);
                                     }}
                                     className="debug-refresh-btn"
                                 >

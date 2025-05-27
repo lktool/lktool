@@ -6,8 +6,9 @@ from django.utils import timezone
 from datetime import timedelta
 from .models import CustomUser, UserSubscription
 from .authentication import AdminJWTAuthentication
+import traceback
 
-class UserSubscriptionView(APIView):
+class AdminUserSubscriptionView(APIView):
     """API endpoint for admin users to manage subscriptions"""
     permission_classes = [IsAdminUser]
     authentication_classes = [AdminJWTAuthentication]
@@ -20,7 +21,7 @@ class UserSubscriptionView(APIView):
             data = [{
                 'id': sub.id,
                 'email': sub.user.email,
-                'tier': sub.tier,
+                'tier': sub.tier.lower() if sub.tier else 'free',  # Normalize tier
                 'start_date': sub.start_date.isoformat() if sub.start_date else None,
                 'end_date': sub.end_date.isoformat() if sub.end_date else None,
                 'is_active': sub.is_active() if hasattr(sub, 'is_active') else True
@@ -28,6 +29,8 @@ class UserSubscriptionView(APIView):
             
             return Response(data)
         except Exception as e:
+            print(f"ERROR in AdminUserSubscriptionView.get: {str(e)}")
+            print(traceback.format_exc())
             return Response({
                 'error': f"Failed to fetch subscriptions: {str(e)}"
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -67,15 +70,18 @@ class UserSubscriptionView(APIView):
                         'error': 'valid_for_days must be a positive number'
                     }, status=status.HTTP_400_BAD_REQUEST)
             
-            # Create or update subscription - don't set assigned_by field
+            print(f"DEBUG: Creating/updating subscription for {email} with tier={tier}, end_date={end_date}")
+            
+            # Create or update subscription - don't set assigned_by field to avoid FK errors
             subscription, created = UserSubscription.objects.update_or_create(
                 user=user,
                 defaults={
                     'tier': tier,
                     'end_date': end_date,
-                    # Remove assigned_by field which was causing the error
                 }
             )
+            
+            print(f"DEBUG: Subscription {'created' if created else 'updated'} successfully: {subscription.id}")
             
             action = 'created' if created else 'updated'
             
@@ -95,6 +101,8 @@ class UserSubscriptionView(APIView):
                 'error': f'User with email {email} not found'
             }, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
+            print(f"ERROR in AdminUserSubscriptionView.post: {str(e)}")
+            print(traceback.format_exc())
             return Response({
                 'error': f'Failed to update subscription: {str(e)}'
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
