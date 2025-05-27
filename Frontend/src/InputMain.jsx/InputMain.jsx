@@ -98,88 +98,93 @@ function InputMain() {
                 setSubmissionCount(prev => prev + 1);
                 
                 // Check if we've hit the limit after this submission
-                if ((tier === 'free' && submissionCount + 1 >= 1) || 
-                    (tier === 'basic' && submissionCount + 1 >= 24)) {
+                if ((tier?.toLowerCase() === 'free' && submissionCount + 1 >= 1) || 
+                    (tier?.toLowerCase() === 'basic' && submissionCount + 1 >= 24)) {
                     setLimitReached(true);
                 }
                 
                 setTimeout(() => {
                     setSuccess(false);
                 }, 5000);
-            } else {   // Check if limit was reached
-            }ponse.limit_reached) {
+            } else {
+                // Check if limit was reached
+                if (response.limit_reached) {
+                    setLimitReached(true);
+                }
+                setError(response.error || 'Failed to submit profile');
+            }
         } catch (err) {
-            console.error('Error submitting profile:', err);    }
-             to submit profile');
+            console.error('Error submitting profile:', err);
+            
             // Check for subscription limit errors
             if (err.response?.data?.limit_reached) {
                 setLimitReached(true);
                 setError(err.response.data.error || 'Subscription limit reached');
             } else {
-                setError(err.response?.data?.message || 'Something went wrong. Please try again.');f (err.response?.data?.limit_reached) {
-            }LimitReached(true);
-        } finally {esponse.data.error || 'Subscription limit reached');
-            setLoading(false);   } else {
-        }          setError(err.response?.data?.message || 'Something went wrong. Please try again.');
-    };        }
+                setError(err.response?.data?.message || 'Something went wrong. Please try again.');
+            }
+        } finally {
+            setLoading(false);
+        }
+    };
     
     // Get limit text based on subscription tier
     const getLimitText = () => {
-        switch(tier) {
+        switch(tier?.toLowerCase()) {
             case 'premium':
-                return 'Unlimited submissions available';ed on subscription tier
+                return 'Unlimited submissions available';
             case 'basic':
                 return `${24 - submissionCount} of 24 monthly submissions remaining`;
-            case 'free':emium':
+            case 'free':
             default:
-                return submissionCount >= 1 ? 'Submission limit reached' : '1 submission available';   case 'basic':
-        }          return `${24 - submissionCount} of 24 monthly submissions remaining`;
-    };            case 'free':
+                return submissionCount >= 1 ? 'Submission limit reached' : '1 submission available';
+        }
+    };
 
-    // Add a function to manually refresh subscription'Submission limit reached' : '1 submission available';
+    // Add a function to manually refresh subscription
     const handleRefreshSubscription = (e) => {
         e.preventDefault();
         refreshSubscription();
-    };// Add a function to manually refresh subscription
-    ndleRefreshSubscription = (e) => {
+    };
+    
     return (
         <div className="input-main-container">
             <div className="two-column-layout">
                 {/* Left Column - Content */}
                 <div className="content-column">
-                    <h1>LinkedIn Profile Analysis</h1>me="input-main-container">
+                    <h1>LinkedIn Profile Analysis</h1>
                     
                     <div className="service-description">
-                        <h2>Optimize Your Professional Presence</h2>ssName="content-column">
+                        <h2>Optimize Your Professional Presence</h2>
                         
                         {/* Purpose Point 1: In-depth LinkedIn Profile Analysis */}
                         <div className="feature-item">
                             <h3>Comprehensive Profile Analysis</h3>
                             <p>Our tool conducts thorough evaluations of LinkedIn profiles by examining over 20 key metrics including connections, profile completeness, activity patterns, and engagement quality to identify strengths and improvement areas.</p>
-                        </div>{/* Purpose Point 1: In-depth LinkedIn Profile Analysis */}
+                        </div>
                         
-                        {/* Purpose Point 2: Personalized Recommendations */}Analysis</h3>
-                        <div className="feature-item">inkedIn profiles by examining over 20 key metrics including connections, profile completeness, activity patterns, and engagement quality to identify strengths and improvement areas.</p>
+                        {/* Purpose Point 2: Personalized Recommendations */}
+                        <div className="feature-item">
                             <h3>Tailored Optimization Recommendations</h3>
                             <p>We provide customized, actionable suggestions to enhance your professional presence and improve visibility to potential employers and connections based on industry best practices.</p>
-                        </div>{/* Purpose Point 2: Personalized Recommendations */}
+                        </div>
                         
-                        {/* Purpose Point 3: Career Advancement */}Recommendations</h3>
-                        <div className="feature-item">e suggestions to enhance your professional presence and improve visibility to potential employers and connections based on industry best practices.</p>
+                        {/* Purpose Point 3: Career Advancement */}
+                        <div className="feature-item">
                             <h3>Career Growth Acceleration</h3>
                             <p>By optimizing your LinkedIn profile through our expert insights, you'll increase your professional opportunities, strengthen your network, and position yourself more competitively in your industry.</p>
-                        </div>{/* Purpose Point 3: Career Advancement */}
+                        </div>
                         
-                        <div className="how-it-works">eleration</h3>
-                            <h3>How It Works</h3>y optimizing your LinkedIn profile through our expert insights, you'll increase your professional opportunities, strengthen your network, and position yourself more competitively in your industry.</p>
+                        <div className="how-it-works">
+                            <h3>How It Works</h3>
                             <ol>
                                 <li>Submit your LinkedIn profile URL using our secure form</li>
                                 <li>Our algorithm analyzes your profile content and engagement metrics</li>
-                                <li>Receive a detailed report with actionable recommendations</li>ow It Works</h3>
-                            </ol>l>
-                        </div>      <li>Submit your LinkedIn profile URL using our secure form</li>
-                    </div>          <li>Our algorithm analyzes your profile content and engagement metrics</li>
-                </div>                <li>Receive a detailed report with actionable recommendations</li>
+                                <li>Receive a detailed report with actionable recommendations</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
                 
                 {/* Right Column - Form */}
                 <div className="form-column">
@@ -188,103 +193,98 @@ function InputMain() {
                         
                         {/* Display subscription tier and limits */}
                         <div className="subscription-info">
-                            <p className={`tier-badge ${tier}`}>
-                                {tier.charAt(0).toUpperCase() + tier.slice(1)} Tier
-                            </p>mits */}
-                            <p className="submission-limit">tion-info">
-                                {getLimitText()}lassName={`tier-badge ${tier}`}>
-                            </p>r.charAt(0).toUpperCase() + tier.slice(1)} Tier
+                            <p className={`tier-badge ${tier?.toLowerCase()}`}>
+                                {tier ? tier.charAt(0).toUpperCase() + tier.slice(1) : 'Free'} Tier
+                            </p>
+                            <p className="submission-limit">
+                                {getLimitText()}
+                            </p>
                             <button 
                                 onClick={handleRefreshSubscription}
                                 className="refresh-subscription-btn"
-                                title="Refresh subscription info"/p>
-                            >on 
-                                ↻ck={handleRefreshSubscription}
-                            </button>  className="refresh-subscription-btn"
-                        </div>        title="Refresh subscription info"
+                                title="Refresh subscription info"
+                            >
+                                ↻
+                            </button>
+                        </div>
                         
                         {success && (
                             <FormMessage type="success">
                                 Your LinkedIn profile has been submitted successfully!
                             </FormMessage>
-                        )}{success && (
-                        ssage type="success">
-                        {error && (has been submitted successfully!
-                            <FormMessage type="error">ge>
+                        )}
+                        
+                        {error && (
+                            <FormMessage type="error">
                                 {error}
                             </FormMessage>
-                        )}{error && (
-                        type="error">
+                        )}
+                        
                         {limitReached ? (
                             <div className="limit-reached">
                                 <p>You've reached your submission limit for this subscription tier.</p>
                                 <Link to="/pricing" className="upgrade-button">
-                                    Upgrade Your Plan (
-                                </Link>lassName="limit-reached">
-                            </div>   <p>You've reached your submission limit for this subscription tier.</p>
+                                    Upgrade Your Plan
+                                </Link>
+                            </div>
                         ) : (
-                            <form onSubmit={handleSubmit} className="submission-form compact-form">e Your Plan
+                            <form onSubmit={handleSubmit} className="submission-form compact-form">
                                 <FormInput
                                     id="linkedin_url"
                                     name="linkedin_url"
-                                    value={formData.linkedin_url}lassName="submission-form compact-form">
+                                    value={formData.linkedin_url}
                                     onChange={handleChange}
                                     placeholder="https://www.linkedin.com/in/yourprofile"
-                                    label="LinkedIn Profile URL""
-                                    disabled={loading}.linkedin_url}
+                                    label="LinkedIn Profile URL"
+                                    disabled={loading}
                                     required={true}
-                                    className="compact" /* Add compact class to reduce spacing */  placeholder="https://www.linkedin.com/in/yourprofile"
-                                />    label="LinkedIn Profile URL"
-                                {loading}
-                                <FormTextareaue}
-                                    id="message"pact" /* Add compact class to reduce spacing */
+                                    className="compact" /* Add compact class to reduce spacing */
+                                />
+                                
+                                <FormTextarea
+                                    id="message"
                                     name="message"
                                     value={formData.message}
                                     onChange={handleChange}
                                     placeholder="Any specific details you'd like us to know"
                                     label="Additional Information (Optional)"
-                                    rows={4} /* Reduced from 5 to 4 */ssage}
-                                    disabled={loading}  onChange={handleChange}
-                                />    placeholder="Any specific details you'd like us to know"
-                                ditional Information (Optional)"
-                                <SubmitButton from 5 to 4 */
+                                    rows={4} /* Reduced from 5 to 4 */
+                                    disabled={loading}
+                                />
+                                
+                                <SubmitButton
                                     isLoading={loading}
                                     loadingText="Submitting..."
                                     disabled={loading}
                                 >
-                                    Submit Profileloading}
-                                </SubmitButton> loadingText="Submitting..."
-                            </form>          disabled={loading}
-                        )}      >
-                                      Submit Profile
-                        {/* Add debug panel for admins only */}              </SubmitButton>
-                        {authService.isAdmin() && (              </form>
-                            <div className="admin-debug-panel">                  )}
-                                <h4>Admin Subscription Debug</h4>                   </div>
-                                <p>Current Tier: <strong>{tier || 'undefined'}</strong></p>                </div>
+                                    Submit Profile
+                                </SubmitButton>
+                            </form>
+                        )}
+                        
+                        {/* Add debug panel for admins only */}
+                        {authService.isAdmin() && (
+                            <div className="admin-debug-panel">
+                                <h4>Admin Subscription Debug</h4>
+                                <p>Current Tier: <strong>{tier || 'undefined'}</strong></p>
                                 <p>Limit Reached: <strong>{limitReached ? 'Yes' : 'No'}</strong></p>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-export default InputMain;}    );        </div>            </div>                </div>                    </div>                        )}                            </div>                                </button>                                    Force Refresh & Reload                                >                                    className="debug-refresh-btn"                                    }}                                        setTimeout(() => window.location.reload(), 1000);                                        refreshSubscription();                                        console.log('Force refreshing subscription...');                                    onClick={() => {                                <button                                 <p>Monthly Submissions: <strong>{submissionCount}</strong></p>        </div>
+                                <p>Monthly Submissions: <strong>{submissionCount}</strong></p>
+                                <button 
+                                    onClick={() => {
+                                        console.log('Force refreshing subscription...');
+                                        refreshSubscription();
+                                        setTimeout(() => window.location.reload(), 1000);
+                                    }}
+                                    className="debug-refresh-btn"
+                                >
+                                    Force Refresh & Reload
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
+        </div>
     );
 }
 
