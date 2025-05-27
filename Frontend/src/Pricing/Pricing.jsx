@@ -439,13 +439,13 @@ const Pricing = () => {
           </div>
           <div className="faq-item">
             <button 
-              className={`faq-question ${activeFaq === 0 ? 'active' : ''}`}
-              onClick={() => toggleFaq(0)}
+              className={`faq-question ${activeFaq === 5 ? 'active' : ''}`}
+              onClick={() => toggleFaq(5)}
             >
               What is the purpose of this profile analysis work?
-              <span className="faq-icon">{activeFaq === 0 ? '−' : '+'}</span>
+              <span className="faq-icon">{activeFaq === 5 ? '−' : '+'}</span>
             </button>
-            {activeFaq === 0 && (
+            {activeFaq === 5 && (
 
               <div className="faq-answer">
                 <p>
