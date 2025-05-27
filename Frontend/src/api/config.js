@@ -3,8 +3,41 @@
  * Central configuration for API endpoints and settings
  */
 
+// Get base API URL from environment variables
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://lktool.onrender.com';
+
+// Log the API base URL for debugging
+console.log('API Base URL configured as:', API_BASE_URL);
+
+// Helper to ensure URLs are properly formed
+const formatEndpoint = (endpoint) => {
+  // If endpoint already starts with http/https, return as is (it's already a complete URL)
+  if (endpoint.startsWith('http://') || endpoint.startsWith('https://')) {
+    return endpoint;
+  }
+  
+  // Fix double slashes in endpoints before joining
+  if (endpoint.includes('//')) {
+    endpoint = endpoint.replace(/\/+/g, '/');
+  }
+  
+  // Make sure endpoint starts with a slash
+  if (!endpoint.startsWith('/')) {
+    endpoint = `/${endpoint}`;
+  }
+  
+  // Fix base URL trailing slash if needed
+  let baseUrl = API_BASE_URL;
+  if (baseUrl.endsWith('/') && endpoint.startsWith('/')) {
+    baseUrl = baseUrl.slice(0, -1);
+  }
+  
+  // Return the properly formatted URL
+  return `${baseUrl}${endpoint}`;
+};
+
 // Base URL for API requests
-export const BASE_URL = 'https://lktool.onrender.com';
+export const BASE_URL = API_BASE_URL;
 
 // API endpoints
 export const ENDPOINTS = {
@@ -54,3 +87,5 @@ export const OAUTH_CONFIG = {
     PROMPT: 'select_account',
   }
 };
+
+export { API_BASE_URL, formatEndpoint };

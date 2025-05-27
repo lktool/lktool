@@ -74,7 +74,11 @@ export const adminService = {
    */
   async getSubmissionDetails(id) {
     try {
-      const response = await apiClient.get(`${ENDPOINTS.ADMIN.SUBMISSIONS}/${id}/`);
+      // Fix URL path to avoid double slashes
+      const endpoint = `/api/admin/submissions/${id}/`.replace(/\/+/g, '/');
+      console.log(`Fetching submission details from: ${endpoint}`);
+      
+      const response = await apiClient.get(endpoint);
       return {
         success: true,
         data: response.data
@@ -207,9 +211,11 @@ export const adminService = {
    */
   async getProcessedSubmissions(filters = {}) {
     try {
-      console.log(`Fetching processed submissions`);
+      // Fix URL path to avoid double slashes
+      const endpoint = `/api/admin/processed/`.replace(/\/+/g, '/');
+      console.log(`Fetching processed submissions from: ${endpoint}`);
       
-      const response = await apiClient.get(ENDPOINTS.ADMIN.PROCESSED_SUBMISSIONS, {
+      const response = await apiClient.get(endpoint, {
         params: filters
       });
       
