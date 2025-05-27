@@ -313,6 +313,19 @@ input:checked + .toggle-slider:before {
   margin: 0 auto;
 }
 
+.faq-list-numbered {
+  padding-left: 1.5rem;
+  margin: 1rem 0;
+}
+
+.faq-list-numbered li {
+  margin-bottom: 0.75rem;
+}
+
+.faq-list-numbered li strong {
+  color: #2c5282;
+}
+
 .faq-item {
   margin-bottom: 1rem;
   border: 1px solid #e2e8f0;
@@ -357,6 +370,8 @@ input:checked + .toggle-slider:before {
   margin: 0;
   font-size: 0.938rem;
   color: #64748b;
+  margin-bottom: 1rem;
+  line-height: 1.6;
 }
 
 /* Bottom CTA section */

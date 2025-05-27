@@ -20,6 +20,7 @@ import PublicOnlyRoute from "./components/PublicOnlyRoute";
 import ResetPassword from "./ResetPassword/ResetPassword";
 import ReviewedSubmissions from "./Admin/ReviewedSubmissions";
 import Pricing from "./Pricing/Pricing";  // Keep this import 
+import BlankPage from "./BlankPage/BlankPage";
 
 function App() {
   useEffect(() => {
@@ -94,6 +95,9 @@ function App() {
           } /> */}
           <Route path="/admin/dashboard" element={<AdminRoute><FormData /></AdminRoute>} />
           <Route path="/admin/reviewed" element={<AdminRoute><ReviewedSubmissions /></AdminRoute>} />
+          
+          {/* Blank Page Route - for testing or empty state */}
+          <Route path="/blank-page" element={<BlankPage />} />
           
           {/* Not Found Route */}
           <Route path="/not-found" element={<NotFound />} />

@@ -1,20 +1,15 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import './Pricing.css';
 
 const Pricing = () => {
   const [billingPeriod, setBillingPeriod] = useState('monthly');
-  const [showComingSoonMessage, setShowComingSoonMessage] = useState(false);
-  const [comingSoonPlan, setComingSoonPlan] = useState('');
   const [activeFaq, setActiveFaq] = useState(null);
+  const navigate = useNavigate();
   
   const handlePaidPlanClick = (planName) => {
-    setComingSoonPlan(planName);
-    setShowComingSoonMessage(true);
-    
-    setTimeout(() => {
-      setShowComingSoonMessage(false);
-    }, 3000);
+    // Navigate to a blank page instead of showing toast
+    navigate('/blank-page');
   };
   
   const toggleFaq = (index) => {
@@ -67,14 +62,13 @@ const Pricing = () => {
             </ul>
           </div>
           <div className="plan-cta">
-            <Link to="/signup" className="cta-button free coming-soon">Get Started</Link>
+            <Link to="/signup" className="cta-button free">Get Started</Link>
           </div>
         </div>
         
         {/* Basic Plan */}
         <div className="pricing-plan popular">
           <div className="popular-badge">Most Popular</div>
-          <div className="coming-soon-badge">Coming Soon</div>
           <div className="plan-header">
             <h2>Basic</h2>
             <div className="plan-price">
@@ -100,7 +94,7 @@ const Pricing = () => {
           </div>
           <div className="plan-cta">
             <button 
-              className="cta-button basic coming-soon" 
+              className="cta-button basic" 
               onClick={() => handlePaidPlanClick('Basic')}
             >
               Choose Basic
@@ -110,7 +104,6 @@ const Pricing = () => {
         
         {/* Premium Plan */}
         <div className="pricing-plan">
-          <div className="coming-soon-badge">Coming Soon</div>
           <div className="plan-header">
             <h2>Premium</h2>
             <div className="plan-price">
@@ -141,7 +134,7 @@ const Pricing = () => {
           </div>
           <div className="plan-cta">
             <button 
-              className="cta-button pro coming-soon" 
+              className="cta-button pro" 
               onClick={() => handlePaidPlanClick('Premium')}
             >
               Choose Premium
@@ -149,13 +142,6 @@ const Pricing = () => {
           </div>
         </div>
       </div>
-      
-      {/* Coming Soon message toast */}
-      {showComingSoonMessage && (
-        <div className="coming-soon-toast">
-          {comingSoonPlan} plan is coming soon!
-        </div>
-      )}
       
       {/* Replace the entire comparison table section with this fixed version */}
       <div className="features-comparison">
@@ -360,9 +346,6 @@ const Pricing = () => {
       <div className="pricing-cta-section">
         <h2>Ready to Transform Your LinkedIn Profile?</h2>
         <p>Join thousands of professionals who have improved their online presence</p>
-        <div className="coming-soon-note">
-          <p>All plans coming soon! Submit your profile for a free analysis in the meantime.</p>
-        </div>
         <Link to="/signup" className="main-cta-button">Get Started Today</Link>
       </div>
       
@@ -386,6 +369,7 @@ const Pricing = () => {
               </div>
             )}
           </div>
+          
           
           <div className="faq-item">
             <button 
@@ -450,6 +434,37 @@ const Pricing = () => {
                 <p>Absolutely. We take data privacy very seriously. Your profile information is only accessed for the purpose 
                 of providing our analysis services. We never share your personal information with third parties, and all 
                 data is processed according to our strict privacy policy.</p>
+              </div>
+            )}
+          </div>
+          <div className="faq-item">
+            <button 
+              className={`faq-question ${activeFaq === 0 ? 'active' : ''}`}
+              onClick={() => toggleFaq(0)}
+            >
+              What is the purpose of this profile analysis work?
+              <span className="faq-icon">{activeFaq === 0 ? '−' : '+'}</span>
+            </button>
+            {activeFaq === 0 && (
+
+              <div className="faq-answer">
+                <p>
+                  The purpose of this profile analysis is to evaluate the effectiveness and credibility 
+                  of a profile for outreach purposes. The analysis is structured around four key areas:
+                </p>
+                
+                <ol className="faq-list-numbered">
+                  <li><strong>Profile Basics:</strong> Assessing fundamental profile information.</li>
+                  <li><strong>Profile Content:</strong> Evaluating the quality and relevance of content.</li>
+                  <li><strong>Engagement & Activity:</strong> Analyzing interaction levels and activity.</li>
+                  <li><strong>Network Quality:</strong> Examining connections and network strength.</li>
+                </ol>
+                
+                <p>
+                  This comprehensive analysis undergoes 25 checks to determine whether a profile is 
+                  well-suited for outreach, minimizing delivery issues and spam rates, and ultimately 
+                  to determine the profile score of the profile.
+                </p>
               </div>
             )}
           </div>
