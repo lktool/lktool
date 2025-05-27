@@ -449,22 +449,46 @@ class UserSubscriptionView(APIView):
         user = request.user
         
         try:
-            # Try to get user subscription
-            subscription = UserSubscription.objects.get(user=user)
+            # Enhanced logging for debugging subscription issues
+            print(f"DEBUG: Fetching subscription for user: {user.email} (id: {user.id})")
             
-            # Check if subscription has expired
-            if subscription.end_date and subscription.end_date < timezone.now():
+            # Try to get user subscription - use a case-insensitive lookup
+            subscription = UserSubscription.objects.filter(user=user).first()
+            
+            if subscription:
+                print(f"DEBUG: Found subscription: tier={subscription.tier}, end_date={subscription.end_date}")
+                
+                # Normalize the tier value to lowercase for consistency
+                tier = subscription.tier.lower() if subscription.tier else 'free'
+                
+                # Check if subscription has expired
+                if subscription.end_date and subscription.end_date < timezone.now():
+                    print(f"DEBUG: Subscription expired: {subscription.end_date} < {timezone.now()}")
+                    return Response({
+                        'tier': 'free',
+                        'message': 'Your subscription has expired',
+                        'debug_info': 'Subscription exists but has expired'
+                    })
+                
+                print(f"DEBUG: Returning active subscription with tier: {tier}")
+                return Response({
+                    'tier': tier,
+                    'end_date': subscription.end_date,
+                    'subscription_id': subscription.id
+                })
+            else:
+                print(f"DEBUG: No subscription found for user: {user.email}")
+                
+                # Default to free tier if no subscription exists
                 return Response({
                     'tier': 'free',
-                    'message': 'Your subscription has expired'
+                    'debug_info': 'No subscription record found'
                 })
-            
+        except Exception as e:
+            print(f"ERROR: Exception in UserSubscriptionView: {str(e)}")
+            print(f"ERROR: {traceback.format_exc()}")
             return Response({
-                'tier': subscription.tier,
-                'end_date': subscription.end_date
-            })
-        except UserSubscription.DoesNotExist:
-            # Default to free tier if no subscription exists
-            return Response({
-                'tier': 'free'
+                'tier': 'free',
+                'error': str(e),
+                'debug_info': 'Exception occurred during subscription lookup'
             })

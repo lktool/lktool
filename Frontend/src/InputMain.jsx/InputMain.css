@@ -290,6 +290,26 @@
   background-color: #f8fafc;
   border-radius: 8px;
   border: 1px solid #e2e8f0;
+  position: relative;
+}
+
+.refresh-subscription-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.2rem;
+  color: #64748b;
+  padding: 5px;
+  border-radius: 50%;
+  position: absolute;
+  right: 5px;
+  top: 5px;
+  transition: transform 0.3s ease;
+}
+
+.refresh-subscription-btn:hover {
+  color: #3b82f6;
+  transform: rotate(180deg);
 }
 
 .tier-badge {
@@ -344,4 +364,32 @@
 
 .upgrade-button:hover {
   background-color: #2563eb;
+}
+
+/* Debug panel styles */
+.admin-debug-panel {
+  margin-top: 30px;
+  padding: 15px;
+  border: 1px dashed #ff6b6b;
+  border-radius: 8px;
+  background-color: #fff5f5;
+}
+
+.admin-debug-panel h4 {
+  margin-top: 0;
+  color: #e03131;
+}
+
+.debug-refresh-btn {
+  background-color: #e03131;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 12px;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.debug-refresh-btn:hover {
+  background-color: #c92a2a;
 }
