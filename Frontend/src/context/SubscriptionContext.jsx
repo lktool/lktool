@@ -41,30 +41,59 @@ export const SubscriptionProvider = ({ children }) => {
       // Always add timestamp parameter to prevent caching
       const timestamp = new Date().getTime();
       
-      console.log(`Fetching subscription info${forceRefresh ? ' (forced refresh)' : ''}...`);
+      // FIXED: Use the base URL with API_BASE_URL from config, not a relative path
+      // This ensures the URL is absolute and includes the domain
+      const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://lktool.onrender.com';
+      const endpoint = `${API_BASE_URL}/api/auth/subscription/?t=${timestamp}`;
       
-      const response = await axios.get(`/api/auth/subscription/?t=${timestamp}`, {
+      console.log(`Fetching subscription info${forceRefresh ? ' (forced refresh)' : ''}...`);
+      console.log('Subscription API URL:', endpoint);
+      
+      const response = await axios({
+        method: 'GET',
+        url: endpoint,
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
-          'Cache-Control': 'no-cache'
-        }
+          'Cache-Control': 'no-cache',
+          'Accept': 'application/json'
+        },
+        responseType: 'text' // First get as text to validate
       });
-
-      console.log('DEBUG: Subscription API response:', response.data);
       
-      // Always normalize tier to lowercase
-      const tier = (response.data.tier || 'free').toLowerCase();
+      // Add improved validation for HTML responses
+      if (typeof response.data === 'string' && response.data.trim().startsWith('<!doctype html')) {
+        console.error('Received HTML instead of JSON. API URL may be incorrect:', endpoint);
+        setSubscription(prev => ({
+          ...prev,
+          loading: false,
+          tier: 'free', // Default to free tier on error
+          error: 'Invalid API response format (received HTML). Please contact support.',
+          lastUpdated: new Date(),
+          debugInfo: 'HTML response detected'
+        }));
+        return;
+      }
+      
+      // Parse response data if it's a string
+      const responseData = typeof response.data === 'string' 
+        ? JSON.parse(response.data) 
+        : response.data;
+      
+      console.log('DEBUG: Subscription API response:', responseData);
+      
+      // Always normalize tier to lowercase for consistent comparison
+      const tier = (responseData.tier || 'free').toLowerCase();
       
       console.log(`DEBUG: Setting subscription tier to: '${tier}'`);
       
       setSubscription({
         tier: tier,
-        endDate: response.data.end_date || null,
-        subscriptionId: response.data.subscription_id,
+        endDate: responseData.end_date || null,
+        subscriptionId: responseData.subscription_id,
         loading: false,
         error: null,
         lastUpdated: new Date(),
-        debugInfo: response.data.debug_info || null
+        debugInfo: responseData.debug_info || null
       });
     } catch (error) {
       console.error('Failed to fetch subscription:', error);
