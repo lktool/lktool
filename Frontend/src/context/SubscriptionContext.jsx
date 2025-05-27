@@ -42,7 +42,6 @@ export const SubscriptionProvider = ({ children }) => {
       const timestamp = new Date().getTime();
       
       // FIXED: Use the base URL with API_BASE_URL from config, not a relative path
-      // This ensures the URL is absolute and includes the domain
       const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://lktool.onrender.com';
       const endpoint = `${API_BASE_URL}/api/auth/subscription/?t=${timestamp}`;
       
@@ -54,7 +53,7 @@ export const SubscriptionProvider = ({ children }) => {
         url: endpoint,
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
-          'Cache-Control': 'no-cache',
+          // Remove cache-control header that's causing CORS issues
           'Accept': 'application/json'
         },
         responseType: 'text' // First get as text to validate
@@ -97,6 +96,21 @@ export const SubscriptionProvider = ({ children }) => {
       });
     } catch (error) {
       console.error('Failed to fetch subscription:', error);
+      
+      // Gracefully handle CORS errors
+      if (error.message === 'Network Error') {
+        console.warn('CORS or network issue detected with subscription API');
+        // Default to free tier on CORS error
+        setSubscription(prev => ({
+          ...prev,
+          loading: false,
+          tier: 'free', // Default to free tier on error
+          error: 'Connection issue detected. Using free tier as fallback.',
+          lastUpdated: new Date(),
+          debugInfo: 'CORS/Network Error - defaulting to free tier'
+        }));
+        return;
+      }
       
       // Keep the current tier on error instead of defaulting to free
       setSubscription(prev => ({

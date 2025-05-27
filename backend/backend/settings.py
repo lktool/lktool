@@ -258,7 +258,7 @@ CORS_ALLOWED_ORIGINS = [
 # Allow credentials
 CORS_ALLOW_CREDENTIALS = True
 
-# Explicitly add these headers
+# Update CORS allowed headers to include cache-control and pragma
 CORS_ALLOW_HEADERS = [
     "accept",
     "accept-encoding", 
@@ -269,6 +269,8 @@ CORS_ALLOW_HEADERS = [
     "user-agent",
     "x-csrftoken",
     "x-requested-with",
+    "cache-control",  # Add this
+    "pragma"          # Add this
 ]
 
 # Let preflight responses be cached for 1 hour
