@@ -11,6 +11,7 @@ const UserSubscriptionManager = () => {
   const [error, setError] = useState('');
   const [subscribers, setSubscribers] = useState([]);
   const [loadingSubscribers, setLoadingSubscribers] = useState(false);
+  const [databaseError, setDatabaseError] = useState(false);
   
   // Load existing subscriptions when component mounts
   useEffect(() => {
@@ -23,11 +24,20 @@ const UserSubscriptionManager = () => {
       const result = await adminService.getSubscribedUsers();
       if (result.success) {
         setSubscribers(result.data || []);
+        setDatabaseError(false);
       } else {
         console.error('Failed to fetch subscribers:', result.error);
+        // Check for the database setup error
+        if (result.error && result.error.includes('relation "users_usersubscription" does not exist')) {
+          setDatabaseError(true);
+        }
       }
     } catch (err) {
       console.error('Error fetching subscribers:', err);
+      // Check for the database setup error
+      if (err.message && err.message.includes('relation "users_usersubscription" does not exist')) {
+        setDatabaseError(true);
+      }
     } finally {
       setLoadingSubscribers(false);
     }
@@ -38,6 +48,13 @@ const UserSubscriptionManager = () => {
     setLoading(true);
     setMessage('');
     setError('');
+    
+    // Check if database is ready
+    if (databaseError) {
+      setError('Database setup required. Please run migrations first.');
+      setLoading(false);
+      return;
+    }
     
     try {
       const result = await adminService.assignUserSubscription({
@@ -55,14 +72,51 @@ const UserSubscriptionManager = () => {
         // Refresh subscriber list
         fetchSubscribers();
       } else {
-        setError(result.error || 'Failed to update subscription');
+        // Check for database setup error
+        if (result.error && result.error.includes('relation "users_usersubscription" does not exist')) {
+          setDatabaseError(true);
+          setError('Database setup required. Please run migrations first.');
+        } else {
+          setError(result.error || 'Failed to update subscription');
+        }
       }
     } catch (err) {
-      setError(`Error: ${err.message || 'Unknown error occurred'}`);
+      // Check for database setup error
+      if (err.message && err.message.includes('relation "users_usersubscription" does not exist')) {
+        setDatabaseError(true);
+        setError('Database setup required. Please run migrations first.');
+      } else {
+        setError(`Error: ${err.message || 'Unknown error occurred'}`);
+      }
     } finally {
       setLoading(false);
     }
   };
+  
+  // Render database setup required message
+  if (databaseError) {
+    return (
+      <div className="subscription-manager-container">
+        <h2>Database Setup Required</h2>
+        <div className="error-message">
+          <p>The subscription database tables have not been set up yet. Please complete the following steps:</p>
+          <ol>
+            <li>Create the migration file as shown in the instructions</li>
+            <li>Apply the migration with <code>python manage.py migrate</code></li>
+            <li>Restart the server</li>
+          </ol>
+          <p>This is a one-time setup process. Once completed, subscription management will be available.</p>
+          <button 
+            onClick={fetchSubscribers} 
+            className="refresh-button"
+            disabled={loading}
+          >
+            Check Again
+          </button>
+        </div>
+      </div>
+    );
+  }
   
   return (
     <div className="subscription-manager-container">

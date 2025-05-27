@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { authService } from '../api'; // Change import to only use authService
+import { authService } from '../api';
 import axios from 'axios';
 
 // Create the context
@@ -36,19 +36,32 @@ export const SubscriptionProvider = ({ children }) => {
       }
 
       try {
-        // Use axios directly instead of userService
-        const response = await axios.get('/api/auth/subscription/', {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`
-          }
-        });
+        // Try to fetch subscription info, but don't break if it fails
+        try {
+          const response = await axios.get('/api/auth/subscription/', {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem('token')}`
+            }
+          });
 
-        setSubscription({
-          tier: response.data.tier || 'free',
-          endDate: response.data.end_date || null,
-          loading: false,
-          error: null
-        });
+          setSubscription({
+            tier: response.data.tier || 'free',
+            endDate: response.data.end_date || null,
+            loading: false,
+            error: null
+          });
+        } catch (error) {
+          // If we get a 500 error about missing database table, just use free tier
+          // This allows the app to work while migrations are being applied
+          console.error('Failed to fetch subscription:', error);
+          
+          setSubscription({
+            tier: 'free',
+            endDate: null,
+            loading: false,
+            error: error.response?.status === 500 ? 'Database setup in progress. Using free tier.' : 'Failed to load subscription data'
+          });
+        }
       } catch (error) {
         console.error('Failed to fetch subscription:', error);
         setSubscription({
