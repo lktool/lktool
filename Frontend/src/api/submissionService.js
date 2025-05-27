@@ -3,6 +3,7 @@
  * Handles LinkedIn profile submissions and retrieval
  */
 import { apiClient } from './interceptors';
+import { ENDPOINTS } from './config';
 
 export const submissionService = {
   /**
@@ -12,7 +13,7 @@ export const submissionService = {
    */
   async submitProfile(data) {
     try {
-      const response = await apiClient.post('/api/contact/submit/', data);
+      const response = await apiClient.post(ENDPOINTS.SUBMIT_PROFILE, data);
       
       return {
         success: true,
@@ -33,13 +34,36 @@ export const submissionService = {
    * @param {string} queryString - Optional query string for cache busting
    * @returns {Promise<Array>} User submissions
    */
-  async getUserSubmissions(queryString = '') {
+  async getUserSubmissions(queryParams = '') {
     try {
-      const response = await apiClient.get(`/api/contact/user-submissions/${queryString}`);
+      console.log('Fetching user submissions...');
       
+      // Ensure token is attached to request
+      const token = localStorage.getItem('token');
+      if (!token) {
+        console.error('No auth token available');
+        throw new Error('Authentication required');
+      }
+      
+      const response = await apiClient.get(`${ENDPOINTS.USER_SUBMISSIONS}${queryParams}`);
+      
+      // Validate response format
+      if (!Array.isArray(response.data)) {
+        console.error('Invalid response format:', response.data);
+        return [];
+      }
+      
+      console.log(`Got ${response.data.length} submissions`);
       return response.data;
     } catch (error) {
-      console.error('Error fetching submissions:', error);
+      console.error('Failed to fetch user submissions:', error);
+      
+      // If we get a 401, clear the token to force re-login
+      if (error.response && error.response.status === 401) {
+        localStorage.removeItem('token');
+        window.dispatchEvent(new Event('authChange'));
+      }
+      
       throw error;
     }
   }

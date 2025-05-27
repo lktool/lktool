@@ -8,6 +8,8 @@ class UserSubscriptionInline(admin.TabularInline):
     extra = 0
     fields = ('tier', 'start_date', 'end_date', 'assigned_by', 'notes')
     readonly_fields = ('start_date',)
+    # Fix the multiple foreign key issue by specifying the user field
+    fk_name = 'user'
     
     def get_queryset(self, request):
         """Only show subscriptions for this user"""
@@ -33,12 +35,30 @@ class UserSubscriptionAdmin(admin.ModelAdmin):
     is_active.boolean = True
     is_active.short_description = "Active"
 
-# Add the inline to the user admin
+# Update the CustomUserAdmin to use 'email' for ordering instead of 'username'
 class CustomUserAdmin(UserAdmin):
-    # ...existing code...
+    # Update these fields to match your CustomUser model
+    ordering = ('email',)  # Use email instead of username for ordering
+    list_display = ('email', 'first_name', 'last_name', 'is_staff', 'role')
+    search_fields = ('email', 'first_name', 'last_name')
+    
+    # Adjust fieldsets to match your CustomUser model
+    fieldsets = (
+        (None, {'fields': ('email', 'password')}),
+        ('Personal info', {'fields': ('first_name', 'last_name')}),
+        ('Permissions', {'fields': ('is_active', 'is_staff', 'is_superuser', 'role', 'groups', 'user_permissions')}),
+        ('Important dates', {'fields': ('last_login', 'date_joined')}),
+    )
+    
+    add_fieldsets = (
+        (None, {
+            'classes': ('wide',),
+            'fields': ('email', 'password1', 'password2', 'role'),
+        }),
+    )
     
     # Add the subscription inline
     inlines = [UserSubscriptionInline]
-    
-# Admin site registration
+
+# Register the CustomUser with the updated admin
 admin.site.register(CustomUser, CustomUserAdmin)
