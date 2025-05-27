@@ -335,6 +335,7 @@
 .submission-limit {
   font-size: 0.85rem;
   color: #64748b;
+  margin-right: 15px;
 }
 
 .limit-reached {

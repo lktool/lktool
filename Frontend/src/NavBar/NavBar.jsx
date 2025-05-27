@@ -92,7 +92,7 @@ function NavBar() {
                     {isAuthenticated && isAdmin && (
                         <>
                             <Link to="/admin/dashboard" onClick={() => setIsMobileMenuOpen(false)}>Admin Dashboard</Link>
-                            <Link to="/admin/reviewed" onClick={() => setIsMobileMenuOpen(false)}>Reviewed Submissions</Link>
+{/*                             <Link to="/admin/reviewed" onClick={() => setIsMobileMenuOpen(false)}>Reviewed Submissions</Link> */}
                             <Link to="/admin/subscriptions" onClick={() => setIsMobileMenuOpen(false)}>Manage Subscriptions</Link>
                         </>
                     )}
