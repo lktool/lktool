@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser, BaseUserManager
+from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 class CustomUserManager(BaseUserManager):
@@ -68,12 +69,12 @@ class UserSubscription(models.Model):
         ('premium', 'Premium'),
     )
     
-    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='subscription')
+    user = models.OneToOneField('users.CustomUser', on_delete=models.CASCADE, related_name='subscription')
     tier = models.CharField(max_length=10, choices=SUBSCRIPTION_TIERS, default='free')
     start_date = models.DateTimeField(auto_now_add=True)
     end_date = models.DateTimeField(null=True, blank=True)  # Null means subscription doesn't expire
     assigned_by = models.ForeignKey(
-        CustomUser, 
+        'users.CustomUser', 
         on_delete=models.SET_NULL, 
         null=True, 
         blank=True, 
@@ -90,7 +91,8 @@ class UserSubscription(models.Model):
     
     def is_active(self):
         """Check if subscription is currently active"""
-        from django.utils import timezone
-        if not self.end_date:
+        if self.tier == 'free':
             return True
-        return self.end_date > timezone.now()
+        if self.end_date is None:  # Unlimited subscription
+            return True
+        return timezone.now() <= self.end_date

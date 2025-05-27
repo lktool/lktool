@@ -4,9 +4,12 @@ from django.conf import settings
 
 
 class Migration(migrations.Migration):
-
+    """
+    This migration creates the UserSubscription model for tracking subscription tiers
+    """
+    # Instead of depending on a specific migration name, we'll depend on the app
     dependencies = [
-        ('users', '0001_initial'),  # Make sure this matches your actual last migration
+        ('users', '__first__'),  # Depend on whatever the first migration is
     ]
 
     operations = [
