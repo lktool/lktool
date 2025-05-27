@@ -15,7 +15,7 @@ class UserSubscriptionView(APIView):
     def get(self, request):
         """Get list of all user subscriptions"""
         try:
-            subscriptions = UserSubscription.objects.select_related('user', 'assigned_by').all()
+            subscriptions = UserSubscription.objects.select_related('user').all()
             
             data = [{
                 'id': sub.id,
@@ -23,7 +23,6 @@ class UserSubscriptionView(APIView):
                 'tier': sub.tier,
                 'start_date': sub.start_date.isoformat() if sub.start_date else None,
                 'end_date': sub.end_date.isoformat() if sub.end_date else None,
-                'assigned_by': sub.assigned_by.email if sub.assigned_by else None,
                 'is_active': sub.is_active() if hasattr(sub, 'is_active') else True
             } for sub in subscriptions]
             
@@ -68,13 +67,13 @@ class UserSubscriptionView(APIView):
                         'error': 'valid_for_days must be a positive number'
                     }, status=status.HTTP_400_BAD_REQUEST)
             
-            # Create or update subscription
+            # Create or update subscription - don't set assigned_by field
             subscription, created = UserSubscription.objects.update_or_create(
                 user=user,
                 defaults={
                     'tier': tier,
                     'end_date': end_date,
-                    'assigned_by': request.user
+                    # Remove assigned_by field which was causing the error
                 }
             )
             

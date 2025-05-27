@@ -68,17 +68,13 @@ class UserSubscription(models.Model):
         ('premium', 'Premium'),
     )
     
-    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='subscription')
+    user = models.OneToOneField('users.CustomUser', on_delete=models.CASCADE, related_name='subscription')
     tier = models.CharField(max_length=10, choices=SUBSCRIPTION_TIERS, default='free')
     start_date = models.DateTimeField(auto_now_add=True)
     end_date = models.DateTimeField(null=True, blank=True)
-    assigned_by = models.ForeignKey(
-        CustomUser, 
-        on_delete=models.SET_NULL,
-        null=True, 
-        blank=True, 
-        related_name='assigned_subscriptions'
-    )
+    # Make assigned_by nullable
+    assigned_by = models.ForeignKey('users.CustomUser', on_delete=models.SET_NULL, 
+                                   null=True, blank=True, related_name='assigned_subscriptions')
     notes = models.TextField(null=True, blank=True)
     
     class Meta:

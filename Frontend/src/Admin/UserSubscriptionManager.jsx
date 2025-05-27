@@ -49,13 +49,6 @@ const UserSubscriptionManager = () => {
     setMessage('');
     setError('');
     
-    // Check if database is ready
-    if (databaseError) {
-      setError('Database setup required. Please run migrations first.');
-      setLoading(false);
-      return;
-    }
-    
     try {
       const result = await adminService.assignUserSubscription({
         email, 
@@ -72,22 +65,16 @@ const UserSubscriptionManager = () => {
         // Refresh subscriber list
         fetchSubscribers();
       } else {
-        // Check for database setup error
-        if (result.error && result.error.includes('relation "users_usersubscription" does not exist')) {
-          setDatabaseError(true);
-          setError('Database setup required. Please run migrations first.');
+        // Show a more readable error message for foreign key constraint violations
+        if (result.error && result.error.includes('foreign key constraint')) {
+          setError('Failed to assign role. Check that the user exists and try again.');
         } else {
           setError(result.error || 'Failed to update subscription');
         }
       }
     } catch (err) {
-      // Check for database setup error
-      if (err.message && err.message.includes('relation "users_usersubscription" does not exist')) {
-        setDatabaseError(true);
-        setError('Database setup required. Please run migrations first.');
-      } else {
-        setError(`Error: ${err.message || 'Unknown error occurred'}`);
-      }
+      console.error('Error in subscription assignment:', err);
+      setError(`Error: ${err.message || 'Unknown error occurred'}`);
     } finally {
       setLoading(false);
     }
