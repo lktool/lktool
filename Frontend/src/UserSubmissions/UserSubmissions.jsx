@@ -196,16 +196,15 @@ const UserSubmissions = () => {
                                 
                                 <div className="reply-content-wrapper">
                                     <div className="reply-content">
-                                        {expandedResponses[submission.id] 
-                                            ? submission.admin_reply 
-                                            : `${submission.admin_reply.substring(0, 120)}...`
-                                        }
+                                        {submission.admin_reply}
                                     </div>
                                 </div>
                                 
-                                <div className="reply-date">
-                                    Replied on {formatDate(submission.admin_reply_date)}
-                                </div>
+                                {submission.admin_reply_date && (
+                                    <div className="reply-date">
+                                        Replied on {formatDate(submission.admin_reply_date)}
+                                    </div>
+                                )}
                             </div>
                         )}
                         

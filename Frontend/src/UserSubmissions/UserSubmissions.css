@@ -222,8 +222,8 @@
 }
 
 .admin-reply {
-  margin: 1.2rem 0 0;
-  padding: 1.25rem;
+  margin-top: 1.2rem;
+  padding: 1.5rem;
   background-color: #ebf8ff;
   border-radius: 8px;
   border-left: 4px solid #4299e1;
@@ -231,37 +231,81 @@
   transition: all 0.2s ease;
   overflow-wrap: break-word;
   word-break: break-word;
+  position: relative;
 }
 
 .admin-reply:hover {
   background-color: #e6f6ff;
 }
 
-.reply-header {
+.admin-reply .reply-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 0.8rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid rgba(66, 153, 225, 0.3);
 }
 
 .admin-reply h4 {
   margin: 0;
-  color: #2b6cb0;
-  font-size: 1rem;
+  color: #2c5282;
+  font-size: 1.1rem;
   font-weight: 600;
 }
 
 .admin-reply .expand-indicator {
   color: #4299e1;
-  font-size: 0.8rem;
-  font-weight: 600;
-  opacity: 0.8;
+  font-size: 0.85rem;
+  font-weight: 500;
+  padding: 0.3rem 0.6rem;
+  background: rgba(66, 153, 225, 0.1);
+  border-radius: 4px;
+  margin-left: 0.5rem;
+}
+
+.reply-content-wrapper {
+  position: relative;
+  padding: 0.5rem 0;
+}
+
+.reply-content {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  white-space: pre-line;
+  color: #2d3748;
+  transition: max-height 0.3s ease;
+}
+
+.admin-reply.collapsed .reply-content {
+  max-height: 4.5rem;
+  overflow: hidden;
+  position: relative;
+}
+
+.admin-reply.expanded .reply-content {
+  max-height: none;
+  margin-bottom: 1rem;
+}
+
+.admin-reply.collapsed .reply-content::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 3rem;
+  background: linear-gradient(to bottom, rgba(235, 248, 255, 0), rgba(235, 248, 255, 1));
+  pointer-events: none;
 }
 
 .reply-date {
-  margin-top: 0.8rem;
-  font-size: 0.8rem;
+  margin-top: 1rem;
+  padding-top: 0.8rem;
+  border-top: 1px solid rgba(66, 153, 225, 0.2);
+  font-size: 0.85rem;
   color: #718096;
+  text-align: right;
 }
 
 .card-actions {
