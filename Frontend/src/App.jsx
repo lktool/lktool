@@ -23,6 +23,7 @@ import ReviewedSubmissions from "./Admin/ReviewedSubmissions";
 import Pricing from "./Pricing/Pricing"; 
 import BlankPage from "./BlankPage/BlankPage";
 import UserSubscriptionManager from "./Admin/UserSubscriptionManager"; // Add this import
+import SubmissionDetails from "./UserSubmissions/SubmissionDetails";
 
 function App() {
   useEffect(() => {
@@ -89,6 +90,7 @@ function App() {
             {/* Protected Routes - Only for authenticated users */}
             <Route path="/inputMain" element={<ProtectedRoute><InputMain /></ProtectedRoute>} />
             <Route path="/my-submissions" element={<ProtectedRoute><UserSubmissions /></ProtectedRoute>} />
+            <Route path="/submission/:id" element={<ProtectedRoute><SubmissionDetails /></ProtectedRoute>} />
             
             {/* Admin Routes */}
             <Route path="/admin/dashboard" element={<AdminRoute><FormData /></AdminRoute>} />

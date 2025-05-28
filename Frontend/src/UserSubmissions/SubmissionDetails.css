@@ -1,0 +1,228 @@
+.submission-details-container {
+  max-width: 900px;
+  margin: 3rem auto;
+  padding: 0 1.5rem;
+}
+
+.submission-details-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.submission-details-header h1 {
+  font-size: 2rem;
+  color: #2d3748;
+  margin: 0;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.status-badge {
+  margin-left: 1rem;
+}
+
+.submission-details-card {
+  background-color: white;
+  border-radius: 16px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.06), 0 5px 15px rgba(0, 0, 0, 0.04);
+  padding: 2.5rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.submission-details-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 5px;
+  background: linear-gradient(to right, #4299e1, #667eea);
+}
+
+.submission-section {
+  margin-bottom: 2.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid #edf2f7;
+  position: relative;
+}
+
+.submission-section:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.submission-section h2 {
+  font-size: 1.4rem;
+  color: #2d3748;
+  margin: 0 0 1.5rem 0;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.detail-row {
+  display: flex;
+  margin-bottom: 1rem;
+}
+
+.detail-label {
+  font-weight: 600;
+  width: 180px;
+  color: #4a5568;
+  font-size: 1rem;
+}
+
+.detail-value {
+  flex: 1;
+  color: #2d3748;
+  font-size: 1rem;
+}
+
+.detail-value a {
+  color: #4299e1;
+  text-decoration: none;
+  word-break: break-all;
+  position: relative;
+  transition: color 0.2s;
+}
+
+.detail-value a:hover {
+  color: #2b6cb0;
+}
+
+.detail-value a::after {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 1px;
+  bottom: -1px;
+  left: 0;
+  background-color: currentColor;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s ease;
+}
+
+.detail-value a:hover::after {
+  transform: scaleX(1);
+}
+
+.message-content, .response-content {
+  background-color: #f8fafc;
+  padding: 1.5rem;
+  border-radius: 10px;
+  white-space: pre-line;
+  line-height: 1.6;
+  color: #4a5568;
+  font-size: 1rem;
+  border-left: 3px solid #e2e8f0;
+}
+
+.response-section {
+  background-color: #ebf8ff;
+  padding: 2rem;
+  border-radius: 10px;
+  margin-top: 2rem;
+  position: relative;
+  border-left: 4px solid #4299e1;
+}
+
+.response-section::before {
+  content: '✓';
+  position: absolute;
+  top: -10px;
+  right: 20px;
+  background: #4299e1;
+  color: white;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.response-date {
+  font-size: 0.9rem;
+  color: #718096;
+  margin-bottom: 1rem;
+}
+
+.pending-message {
+  background-color: #fff5f5;
+  border-left: 4px solid #fc8181;
+  padding: 1rem 1.5rem;
+  margin: 2rem 0;
+  color: #c53030;
+  border-radius: 8px;
+  font-size: 1rem;
+}
+
+.back-button-container {
+  margin-top: 2.5rem;
+  display: flex;
+  justify-content: center;
+}
+
+.back-button {
+  background-color: #4299e1;
+  color: white;
+  border: none;
+  padding: 0.8rem 1.8rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  letter-spacing: 0.01em;
+}
+
+.back-button::before {
+  content: '←';
+  margin-right: 8px;
+  font-size: 1.1rem;
+}
+
+.back-button:hover {
+  background-color: #3182ce;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(66, 153, 225, 0.3);
+}
+
+.back-button:active {
+  transform: translateY(0);
+}
+
+/* Responsive styles */
+@media (max-width: 640px) {
+  .submission-details-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  .submission-details-card {
+    padding: 1.5rem;
+  }
+  
+  .detail-row {
+    flex-direction: column;
+  }
+  
+  .detail-label {
+    width: 100%;
+    margin-bottom: 0.5rem;
+  }
+  
+  .submission-section {
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+  }
+}

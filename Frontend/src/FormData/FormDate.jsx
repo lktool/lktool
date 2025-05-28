@@ -645,7 +645,7 @@ const FormData = () => {
               )}
             </div>
             <button className="back-button" onClick={handleCancel}>
-              {editMode ? '← Back to Reviewed Submissions' : '← Back to Submissions'}
+              {editMode ? 'Back to Reviewed Submissions' : 'Back to Submissions'}
             </button>
           </div>
           

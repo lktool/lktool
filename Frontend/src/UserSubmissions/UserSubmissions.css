@@ -96,33 +96,31 @@
   margin: 2rem 0;
   width: 100%;
   padding: 0.5rem;
-  /* Add grid-auto-rows to prevent overlapping */
+  /* Ensure proper layout */
   grid-auto-rows: minmax(min-content, max-content);
   align-items: start;
 }
 
 .submission-card {
+  position: relative;
   background-color: white;
   border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  /* Improved shadow for depth */
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.1);
   overflow: hidden;
-  transition: transform 0.2s;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
   display: flex;
   flex-direction: column;
-  /* Remove height: 100% which was causing the issue */
-  /* Add full width to ensure proper alignment */
   width: 100%;
-  /* Ensure content doesn't overflow */
   overflow-wrap: break-word;
-  /* Prevent content overflow */
   contain: content;
-  /* Add margin to ensure separation */
-  margin-bottom: 1rem;
+  cursor: pointer;
+  border: 1px solid rgba(0, 0, 0, 0.05);
 }
 
 .submission-card:hover {
-  transform: translateY(-4px);
-  /* Keep the hover translation but prevent overlap with neighboring cards */
+  transform: translateY(-5px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1), 0 3px 6px rgba(0, 0, 0, 0.08);
   z-index: 1;
 }
 
@@ -130,88 +128,107 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1.5rem;
-  background-color: #f7fafc;
+  padding: 1.25rem 1.5rem;
+  /* Gradient background for header */
+  background: linear-gradient(to right, #f7fafc, #edf2f7);
   border-bottom: 1px solid #edf2f7;
 }
 
 .submission-header h3 {
   margin: 0;
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   color: #2d3748;
   font-weight: 600;
+  letter-spacing: -0.01em;
 }
 
 .status {
   display: inline-block;
-  padding: 0.4rem 0.8rem;
-  border-radius: 1rem;
-  font-size: 0.8rem;
-  font-weight: 500;
+  padding: 0.35rem 0.8rem;
+  border-radius: 2rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
 }
 
 .status.processed {
   background-color: #c6f6d5;
   color: #22543d;
+  box-shadow: 0 1px 2px rgba(34, 84, 61, 0.1);
 }
 
 .status.pending {
   background-color: #fed7d7;
   color: #822727;
+  box-shadow: 0 1px 2px rgba(130, 39, 39, 0.1);
 }
 
 .submission-details {
   padding: 1.5rem;
-  font-size: 1rem;
+  font-size: 0.95rem;
   line-height: 1.6;
   flex: 1;
+  color: #4a5568;
 }
 
 .submission-details p {
   margin: 0.7rem 0;
 }
 
+.submission-details strong {
+  color: #2d3748;
+  font-weight: 600;
+}
+
 .submission-details a {
   color: #4299e1;
   text-decoration: none;
   word-break: break-all;
+  position: relative;
+  transition: color 0.2s;
+  font-weight: 500;
 }
 
 .submission-details a:hover {
-  text-decoration: underline;
+  color: #2b6cb0;
+  text-decoration: none;
+}
+
+.submission-details a::after {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 1px;
+  bottom: -1px;
+  left: 0;
+  background-color: currentColor;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s ease;
+}
+
+.submission-details a:hover::after {
+  transform: scaleX(1);
 }
 
 .submission-message {
-  margin-top: 1.2rem;
+  margin: 1.2rem 0 0.8rem;
   padding: 1rem;
   background-color: #f7fafc;
   border-radius: 8px;
-}
-
-.submission-message strong {
-  display: block;
-  margin-bottom: 0.5rem;
-  color: #2d3748;
-}
-
-.error-message {
-  background-color: #fee;
-  color: #c00;
-  padding: 1rem;
-  border-radius: 8px;
-  margin-bottom: 1.5rem;
-  text-align: center;
+  border-left: 3px solid #e2e8f0;
+  font-size: 0.9rem;
 }
 
 .admin-reply {
-  margin-top: 1.2rem;
-  padding: 1.5rem;
+  margin: 1.2rem 0 0;
+  padding: 1.25rem;
   background-color: #ebf8ff;
   border-radius: 8px;
   border-left: 4px solid #4299e1;
   cursor: pointer;
   transition: all 0.2s ease;
-  /* Add to prevent text overflow */
   overflow-wrap: break-word;
   word-break: break-word;
 }
@@ -220,82 +237,70 @@
   background-color: #e6f6ff;
 }
 
-.admin-reply .reply-header {
+.reply-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 0.8rem;
 }
 
+.admin-reply h4 {
+  margin: 0;
+  color: #2b6cb0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
 .admin-reply .expand-indicator {
   color: #4299e1;
-  font-size: 0.85rem;
-  font-weight: 500;
+  font-size: 0.8rem;
+  font-weight: 600;
+  opacity: 0.8;
 }
 
-.admin-reply.collapsed .reply-content {
-  max-height: 4.5rem;
-  overflow: hidden;
-  position: relative;
+.reply-date {
+  margin-top: 0.8rem;
+  font-size: 0.8rem;
+  color: #718096;
 }
 
-.admin-reply.expanded .reply-content {
-  max-height: none;
+.card-actions {
+  display: flex;
+  justify-content: center;
+  padding: 1rem 1.5rem 1.5rem;
 }
 
-.admin-reply h4 {
-  margin-top: 0;
-  margin-bottom: 0;
-  color: #2c5282;
-  font-size: 1.1rem;
+.view-details-button {
+  background-color: #edf2f7;
+  color: #2b6cb0;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  letter-spacing: 0.01em;
 }
 
-.reply-content-wrapper {
-  position: relative;
+.view-details-button:hover {
+  background-color: #e2e8f0;
+  transform: translateY(-1px);
 }
 
-.reply-content {
-  font-size: 0.95rem;
-  line-height: 1.6;
-  white-space: pre-line;
-  color: #2d3748;
-  transition: max-height 0.3s ease;
+.view-details-button::after {
+  content: ' →';
+  opacity: 0;
+  margin-left: 0;
+  transition: opacity 0.2s, margin-left 0.2s;
 }
 
-.admin-reply.collapsed .reply-content::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  height: 2rem;
-  background: linear-gradient(to bottom, rgba(235, 248, 255, 0), rgba(235, 248, 255, 1));
-}
-
-.cta-button {
-    background-color: #2196f3;
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 4px;
-    margin-top: 1.5rem;
-    cursor: pointer;
-    font-size: 1rem;
-    font-weight: 500;
-}
-
-.cta-button:hover {
-    background-color: #1976d2;
-}
-
-.error-container {
-    text-align: center;
-    color: #d32f2f;
-    margin: 4rem auto;
-    padding: 1rem;
-    background-color: #ffebee;
-    border-radius: 4px;
-    max-width: 500px;
+.view-details-button:hover::after {
+  opacity: 1;
+  margin-left: 5px;
 }
 
 /* Responsive adjustments */

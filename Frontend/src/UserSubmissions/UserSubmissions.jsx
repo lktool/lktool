@@ -4,6 +4,7 @@ import { submissionService } from '../api';
 import LoadingSpinner from '../components/LoadingSpinner';
 import './UserSubmissions.css';
 import { formatDate } from '../Utils/dateUtils'; 
+import { useNavigate } from 'react-router-dom';
 
 const UserSubmissions = () => {
     const [submissions, setSubmissions] = useState([]);
@@ -14,6 +15,7 @@ const UserSubmissions = () => {
     const maxRetries = 2;
     // Add state to track which response cards are expanded
     const [expandedResponses, setExpandedResponses] = useState({});
+    const navigate = useNavigate();
 
     // Function to fetch submissions with proper authentication handling
     const fetchSubmissions = async (retry = 0) => {
@@ -117,6 +119,11 @@ const UserSubmissions = () => {
         }));
     };
 
+    // Add navigation to submission details
+    const viewSubmissionDetails = (submission) => {
+        navigate(`/submission/${submission.id}`);
+    };
+    
     if (loading) {
         return <LoadingSpinner message="Loading your submissions..." />;
     }
@@ -151,7 +158,11 @@ const UserSubmissions = () => {
             </div>
             <div className="submissions-list">
                 {submissions.map((submission) => (
-                    <div key={submission.id} className="submission-card">
+                    <div 
+                        key={submission.id} 
+                        className="submission-card"
+                        onClick={() => viewSubmissionDetails(submission)}
+                    >
                         <div className="submission-header">
                             <h3>Submission #{submissionNumbers[submission.id] || '?'}</h3>
                             <span className={`status ${submission.is_processed ? 'processed' : 'pending'}`}>
@@ -197,6 +208,13 @@ const UserSubmissions = () => {
                                 </div>
                             </div>
                         )}
+                        
+                        {/* Add view details button */}
+                        <div className="card-actions">
+                            <button className="view-details-button">
+                                View Details
+                            </button>
+                        </div>
                     </div>
                 ))}
             </div>
