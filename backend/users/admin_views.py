@@ -9,7 +9,7 @@ import traceback
 from .models import UserSubscription
 from .authentication import AdminJWTAuthentication
 
-User = get_user_model()
+User = get_user_model()  # This properly gets the CustomUser model
 
 class AdminUserSubscriptionView(APIView):
     """API endpoint for admin users to manage subscriptions"""
@@ -59,7 +59,7 @@ class AdminUserSubscriptionView(APIView):
         
         try:
             # Find the user
-            user = CustomUser.objects.get(email=email)
+            user = User.objects.get(email=email)
             
             # Calculate end date if days specified
             end_date = None
@@ -67,7 +67,7 @@ class AdminUserSubscriptionView(APIView):
                 try:
                     days = int(days)
                     if days > 0:
-                        end_date = timezone.now() + timedelta(days=days)
+                        end_date = timezone.now() + datetime.timedelta(days=days)
                 except ValueError:
                     return Response({
                         'error': 'valid_for_days must be a positive number'
@@ -99,7 +99,7 @@ class AdminUserSubscriptionView(APIView):
                 }
             })
             
-        except CustomUser.DoesNotExist:
+        except User.DoesNotExist:
             return Response({
                 'error': f'User with email {email} not found'
             }, status=status.HTTP_404_NOT_FOUND)
