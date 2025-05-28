@@ -92,10 +92,13 @@
 .submissions-list {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 2rem;  /* Increase gap from 1.5rem to 2rem */
+  gap: 2rem;
   margin: 2rem 0;
   width: 100%;
-  padding: 0.5rem;  /* Add padding around the entire grid */
+  padding: 0.5rem;
+  /* Add grid-auto-rows to prevent overlapping */
+  grid-auto-rows: minmax(min-content, max-content);
+  align-items: start;
 }
 
 .submission-card {
@@ -104,14 +107,23 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   overflow: hidden;
   transition: transform 0.2s;
-  height: 100%;
   display: flex;
   flex-direction: column;
-  margin-bottom: 0.5rem;  /* Add bottom margin for extra vertical spacing */
+  /* Remove height: 100% which was causing the issue */
+  /* Add full width to ensure proper alignment */
+  width: 100%;
+  /* Ensure content doesn't overflow */
+  overflow-wrap: break-word;
+  /* Prevent content overflow */
+  contain: content;
+  /* Add margin to ensure separation */
+  margin-bottom: 1rem;
 }
 
 .submission-card:hover {
   transform: translateY(-4px);
+  /* Keep the hover translation but prevent overlap with neighboring cards */
+  z-index: 1;
 }
 
 .submission-header {
@@ -199,6 +211,9 @@
   border-left: 4px solid #4299e1;
   cursor: pointer;
   transition: all 0.2s ease;
+  /* Add to prevent text overflow */
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .admin-reply:hover {
