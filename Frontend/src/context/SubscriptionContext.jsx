@@ -41,7 +41,7 @@ export const SubscriptionProvider = ({ children }) => {
       // Always add timestamp parameter to prevent caching
       const timestamp = new Date().getTime();
       
-      // FIXED: Use the base URL with API_BASE_URL from config, not a relative path
+      // Use the API_BASE_URL from config or environment
       const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://lktool.onrender.com';
       const endpoint = `${API_BASE_URL}/api/auth/subscription/?t=${timestamp}`;
       
@@ -53,10 +53,9 @@ export const SubscriptionProvider = ({ children }) => {
         url: endpoint,
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
-          // Remove cache-control header that's causing CORS issues
+          // IMPORTANT: Remove the Cache-Control header causing CORS issues
           'Accept': 'application/json'
-        },
-        responseType: 'text' // First get as text to validate
+        }
       });
       
       // Add improved validation for HTML responses
@@ -97,17 +96,16 @@ export const SubscriptionProvider = ({ children }) => {
     } catch (error) {
       console.error('Failed to fetch subscription:', error);
       
-      // Gracefully handle CORS errors
+      // Handle CORS errors more gracefully
       if (error.message === 'Network Error') {
         console.warn('CORS or network issue detected with subscription API');
         // Default to free tier on CORS error
         setSubscription(prev => ({
           ...prev,
           loading: false,
-          tier: 'free', // Default to free tier on error
+          tier: 'free',
           error: 'Connection issue detected. Using free tier as fallback.',
-          lastUpdated: new Date(),
-          debugInfo: 'CORS/Network Error - defaulting to free tier'
+          lastUpdated: new Date()
         }));
         return;
       }
@@ -164,6 +162,37 @@ export const SubscriptionProvider = ({ children }) => {
   const refreshSubscription = () => {
     setSubscription(prev => ({ ...prev, loading: true }));
     fetchSubscription(true);
+  };
+
+  const getDefaultSubmissionLimit = (tier) => {
+    const normalizedTier = (tier || 'free').toLowerCase();
+    
+    switch (normalizedTier) {
+      case 'premium':
+      case 'premium_elite':
+        return Infinity;
+      case 'basic':
+        return 24;
+      case 'free':
+      default:
+        return 1;
+    }
+  };
+
+  const getResponseTimeEstimate = (tier) => {
+    const normalizedTier = (tier || 'free').toLowerCase();
+    
+    switch (normalizedTier) {
+      case 'premium':
+        return 'immediate priority';
+      case 'premium_elite':
+        return '6 hours';
+      case 'basic':
+        return 'immediate';  
+      case 'free':
+      default:
+        return '24 hours';
+    }
   };
 
   return (

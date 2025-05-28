@@ -39,10 +39,10 @@ function InputMain() {
                 // IMPORTANT: Always normalize tier for comparison
                 const normalizedTier = (tier || 'free').toLowerCase();
                 
-                // Premium users should never reach limit
-                if (normalizedTier === 'premium') {
+                // Premium and Premium Elite users should never reach limit
+                if (normalizedTier === 'premium' || normalizedTier === 'premium_elite') {
                     setLimitReached(false);
-                    console.log('DEBUG: Premium tier detected - no submission limit applied');
+                    console.log('DEBUG: Premium/Premium Elite tier detected - no submission limit applied');
                 }
                 // Basic users limited to 24 submissions per month
                 else if (normalizedTier === 'basic' && monthlyCount >= 24) {
@@ -147,6 +147,8 @@ function InputMain() {
     const getLimitText = () => {
         switch(tier?.toLowerCase()) {
             case 'premium':
+                return 'Unlimited submissions available';
+            case 'premium_elite':
                 return 'Unlimited submissions available';
             case 'basic':
                 return `${24 - submissionCount} of 24 monthly submissions remaining`;

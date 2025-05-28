@@ -133,6 +133,21 @@ input:checked + .toggle-slider:before {
   transform: scale(1.05) translateY(-5px);
 }
 
+.pricing-plan.special {
+  border: 2px solid #9c27b0;
+  transform: scale(1.03);
+  position: relative;
+  z-index: 2; /* Ensure it appears above other cards */
+  box-shadow: 0 8px 24px rgba(156, 39, 176, 0.25);
+  background: linear-gradient(to bottom, #ffffff, #f9f4fb);
+  transition: all 0.4s ease;
+}
+
+.pricing-plan.special:hover {
+  transform: scale(1.05) translateY(-8px);
+  box-shadow: 0 12px 30px rgba(156, 39, 176, 0.35);
+}
+
 .popular-badge {
   position: absolute;
   top: -12px;
@@ -144,6 +159,42 @@ input:checked + .toggle-slider:before {
   font-weight: bold;
   padding: 0.25rem 0.75rem;
   border-radius: 100px;
+}
+
+.special-badge {
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: linear-gradient(135deg, #9c27b0, #673ab7);
+  color: white;
+  font-size: 0.75rem;
+  font-weight: bold;
+  padding: 0.3rem 1rem;
+  border-radius: 100px;
+  box-shadow: 0 4px 8px rgba(156, 39, 176, 0.3);
+  z-index: 3;
+}
+
+/* Special glow effect */
+.pricing-plan.special::after {
+  content: '';
+  position: absolute;
+  top: -10px;
+  left: -10px;
+  right: -10px;
+  bottom: -10px;
+  background: radial-gradient(circle at center, rgba(156, 39, 176, 0.2) 0%, rgba(156, 39, 176, 0) 70%);
+  border-radius: inherit;
+  z-index: -1;
+  opacity: 0.7;
+  animation: pulse 3s infinite;
+}
+
+@keyframes pulse {
+  0% { transform: scale(0.98); opacity: 0.5; }
+  50% { transform: scale(1.02); opacity: 0.8; }
+  100% { transform: scale(0.98); opacity: 0.5; }
 }
 
 .plan-header {
@@ -250,6 +301,23 @@ input:checked + .toggle-slider:before {
 
 .cta-button.pro:hover {
   background-color: #c05621;
+}
+
+.cta-button.elite {
+  background: linear-gradient(135deg, #9c27b0, #673ab7);
+  color: white;
+  border: none;
+  font-weight: 600;
+  width: 100%;
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.cta-button.elite:hover {
+  box-shadow: 0 5px 15px rgba(156, 39, 176, 0.4);
+  transform: translateY(-3px);
 }
 
 /* Features table */
@@ -429,6 +497,7 @@ input:checked + .toggle-slider:before {
   overflow: hidden;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   border: 1px solid #e2e8f0;
+  grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
 }
 
 .comparison-header {
@@ -468,6 +537,18 @@ input:checked + .toggle-slider:before {
 
 .plan-column.premium {
   background-color: #e6fffa;
+}
+
+.plan-column.elite {
+  background-color: #f3e5f5;
+  font-weight: 500;
+  border-bottom: 2px solid #9c27b0;
+}
+
+.comparison-header .plan-column.elite {
+  background: linear-gradient(135deg, #9c27b0, #673ab7);
+  color: white;
+  font-weight: bold;
 }
 
 .comparison-row {

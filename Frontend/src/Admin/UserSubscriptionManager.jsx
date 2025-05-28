@@ -139,6 +139,7 @@ const UserSubscriptionManager = () => {
             <option value="free">Free</option>
             <option value="basic">Basic</option>
             <option value="premium">Premium</option>
+            <option value="premium_elite">Premium Elite</option>
           </select>
         </div>
         
@@ -211,5 +212,85 @@ const UserSubscriptionManager = () => {
     </div>
   );
 };
+
+// Update the subscription tier options in the form
+function EditSubscriptionForm({ user, onSave, onCancel }) {
+  const [subscription, setSubscription] = useState({...user});
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onSave(subscription);
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="edit-subscription-form">
+      <div className="form-group">
+        <label>User Email</label>
+        <input 
+          type="email" 
+          value={subscription.email} 
+          onChange={(e) => setSubscription({...subscription, email: e.target.value})}
+          required
+        />
+      </div>
+      <div className="form-group">
+        <label>Subscription Tier</label>
+        <select 
+          value={subscription.tier} 
+          onChange={(e) => setSubscription({...subscription, tier: e.target.value})}
+          required
+        >
+          <option value="free">Free</option>
+          <option value="basic">Basic</option>
+          <option value="premium">Premium</option>
+          <option value="premium_elite">Premium Elite</option>
+        </select>
+      </div>
+      <div className="form-group">
+        <label>Valid Until (optional)</label>
+        <input 
+          type="date" 
+          value={subscription.end_date ? new Date(subscription.end_date).toISOString().substring(0, 10) : ''} 
+          onChange={(e) => setSubscription({...subscription, end_date: e.target.value})}
+        />
+      </div>
+      <div className="form-actions">
+        <button type="submit" className="save-button">
+          Save Changes
+        </button>
+        <button type="button" className="cancel-button" onClick={onCancel}>
+          Cancel
+        </button>
+      </div>
+    </form>
+  );
+}
+
+// Update the subscription display to properly color-code the Premium Elite tier
+function SubscriptionBadge({ tier }) {
+  const getBadgeClass = () => {
+    switch(tier) {
+      case 'premium_elite':
+        return 'badge premium-elite';
+      case 'premium':
+        return 'badge premium';
+      case 'basic':
+        return 'badge basic';
+      default:
+        return 'badge free';
+    }
+  };
+  
+  const getDisplayName = () => {
+    if (tier === 'premium_elite') return 'Premium Elite';
+    return tier.charAt(0).toUpperCase() + tier.slice(1);
+  };
+
+  return (
+    <span className={getBadgeClass()}>
+      {getDisplayName()}
+    </span>
+  );
+}
 
 export default UserSubscriptionManager;

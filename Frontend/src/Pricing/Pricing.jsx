@@ -66,16 +66,15 @@ const Pricing = () => {
           </div>
         </div>
         
-        {/* Basic Plan */}
-        <div className="pricing-plan popular">
-          <div className="popular-badge">Most Popular</div>
+        {/* Basic Plan - Remove 'popular' class and badge */}
+        <div className="pricing-plan">
           <div className="plan-header">
             <h2>Basic</h2>
             <div className="plan-price">
-              <span className="price">${billingPeriod === 'monthly' ? '899' : '719.20'}</span>
+              <span className="price">${billingPeriod === 'monthly' ? '599' : '479.20'}</span>
               <span className="period">per month</span>
             </div>
-            {billingPeriod === 'yearly' && <div className="billed-annually">Billed annually (${719.20 * 12})</div>}
+            {billingPeriod === 'yearly' && <div className="billed-annually">Billed annually (${479.20 * 12})</div>}
           </div>
           <div className="plan-features">
             <ul>
@@ -102,7 +101,40 @@ const Pricing = () => {
           </div>
         </div>
         
-        {/* Premium Plan */}
+        {/* Premium Elite Plan */}
+        <div className="pricing-plan special">
+          <div className="special-badge">Special Offer</div>
+          <div className="plan-header">
+            <h2>Premium Elite</h2>
+            <div className="plan-price">
+              <span className="price">${billingPeriod === 'monthly' ? '899' : '719.20'}</span>
+              <span className="period">per month</span>
+            </div>
+            {billingPeriod === 'yearly' && <div className="billed-annually">Billed annually (${719.20 * 12})</div>}
+          </div>
+          <div className="plan-features highlight-features">
+            <ul>
+              <li><strong>All Premium features, plus:</strong></li>
+              <li className="featured-item">Results after 6 hours</li>
+              <li className="featured-item">Special priority support</li>
+              <li className="featured-item">Exclusive monthly insights report</li>
+              <li>Advanced SEO optimization tips</li>
+              <li>Extended profile history analysis</li>
+              <li>Unlimited profile submissions</li>
+            </ul>
+          </div>
+          <div className="plan-cta">
+            <button 
+              className="cta-button elite" 
+              onClick={() => handlePaidPlanClick('PremiumElite')}
+            >
+              Choose Premium Elite
+            </button>
+          </div>
+          <div className="elite-ribbon"></div>
+        </div>
+        
+        {/* Premium Plan - Now last */}
         <div className="pricing-plan">
           <div className="plan-header">
             <h2>Premium</h2>
@@ -153,6 +185,7 @@ const Pricing = () => {
             <div className="plan-column free">Free</div>
             <div className="plan-column basic">Basic</div>
             <div className="plan-column premium">Premium</div>
+            <div className="plan-column elite">Premium Elite</div>
           </div>
           
           {/* Profile Basics */}
@@ -164,6 +197,7 @@ const Pricing = () => {
               <div className="plan-column free">-</div>
               <div className="plan-column basic">-</div>
               <div className="plan-column premium">✓</div>
+              <div className="plan-column elite">✓</div>
             </div>
             
             <div className="comparison-row">
@@ -171,6 +205,7 @@ const Pricing = () => {
               <div className="plan-column free">✓</div>
               <div className="plan-column basic">✓</div>
               <div className="plan-column premium">✓</div>
+              <div className="plan-column elite">✓</div>
             </div>
             
             <div className="comparison-row">
@@ -178,6 +213,7 @@ const Pricing = () => {
               <div className="plan-column free">✓</div>
               <div className="plan-column basic">✓</div>
               <div className="plan-column premium">✓</div>
+              <div className="plan-column elite">✓</div>
             </div>
             
             <div className="comparison-row">
@@ -185,6 +221,7 @@ const Pricing = () => {
               <div className="plan-column free">-</div>
               <div className="plan-column basic">✓</div>
               <div className="plan-column premium">✓</div>
+              <div className="plan-column elite">✓</div>
             </div>
             
             <div className="comparison-row">
@@ -192,6 +229,7 @@ const Pricing = () => {
               <div className="plan-column free">-</div>
               <div className="plan-column basic">✓</div>
               <div className="plan-column premium">✓</div>
+              <div className="plan-column elite">✓</div>
             </div>
             
             <div className="comparison-row">
@@ -199,6 +237,7 @@ const Pricing = () => {
               <div className="plan-column free">✓</div>
               <div className="plan-column basic">✓</div>
               <div className="plan-column premium">✓</div>
+              <div className="plan-column elite">✓</div>
             </div>
           </div>
           
@@ -211,6 +250,7 @@ const Pricing = () => {
               <div className="plan-column free">-</div>
               <div className="plan-column basic">-</div>
               <div className="plan-column premium">✓</div>
+              <div className="plan-column elite">✓</div>
             </div>
             
             <div className="comparison-row">
@@ -218,6 +258,7 @@ const Pricing = () => {
               <div className="plan-column free">-</div>
               <div className="plan-column basic">✓</div>
               <div className="plan-column premium">✓</div>
+              <div className="plan-column elite">✓</div>
             </div>
             
             <div className="comparison-row">
@@ -225,6 +266,7 @@ const Pricing = () => {
               <div className="plan-column free">-</div>
               <div className="plan-column basic">-</div>
               <div className="plan-column premium">✓</div>
+              <div className="plan-column elite">✓</div>
             </div>
             
             <div className="comparison-row">
@@ -232,6 +274,7 @@ const Pricing = () => {
               <div className="plan-column free">-</div>
               <div className="plan-column basic">-</div>
               <div className="plan-column premium">✓</div>
+              <div className="plan-column elite">✓</div>
             </div>
             
             <div className="comparison-row">
@@ -239,6 +282,7 @@ const Pricing = () => {
               <div className="plan-column free">-</div>
               <div className="plan-column basic">✓</div>
               <div className="plan-column premium">✓</div>
+              <div className="plan-column elite">✓</div>
             </div>
             
             <div className="comparison-row">
@@ -246,6 +290,7 @@ const Pricing = () => {
               <div className="plan-column free">✓</div>
               <div className="plan-column basic">✓</div>
               <div className="plan-column premium">✓</div>
+              <div className="plan-column elite">✓</div>
             </div>
           </div>
           
@@ -258,6 +303,7 @@ const Pricing = () => {
               <div className="plan-column free">-</div>
               <div className="plan-column basic">-</div>
               <div className="plan-column premium">✓</div>
+              <div className="plan-column elite">✓</div>
             </div>
             
             <div className="comparison-row">
@@ -265,6 +311,7 @@ const Pricing = () => {
               <div className="plan-column free">-</div>
               <div className="plan-column basic">-</div>
               <div className="plan-column premium">✓</div>
+              <div className="plan-column elite">✓</div>
             </div>
             
             <div className="comparison-row">
@@ -272,6 +319,7 @@ const Pricing = () => {
               <div className="plan-column free">-</div>
               <div className="plan-column basic">-</div>
               <div className="plan-column premium">✓</div>
+              <div className="plan-column elite">✓</div>
             </div>
             
             <div className="comparison-row">
@@ -279,6 +327,7 @@ const Pricing = () => {
               <div className="plan-column free">-</div>
               <div className="plan-column basic">✓</div>
               <div className="plan-column premium">✓</div>
+              <div className="plan-column elite">✓</div>
             </div>
           </div>
           
@@ -291,6 +340,7 @@ const Pricing = () => {
               <div className="plan-column free">-</div>
               <div className="plan-column basic">✓</div>
               <div className="plan-column premium">✓</div>
+              <div className="plan-column elite">✓</div>
             </div>
             
             <div className="comparison-row">
@@ -298,6 +348,7 @@ const Pricing = () => {
               <div className="plan-column free">-</div>
               <div className="plan-column basic">-</div>
               <div className="plan-column premium">✓</div>
+              <div className="plan-column elite">✓</div>
             </div>
             
             <div className="comparison-row">
@@ -305,6 +356,7 @@ const Pricing = () => {
               <div className="plan-column free">-</div>
               <div className="plan-column basic">-</div>
               <div className="plan-column premium">✓</div>
+              <div className="plan-column elite">✓</div>
             </div>
             
             <div className="comparison-row">
@@ -312,6 +364,7 @@ const Pricing = () => {
               <div className="plan-column free">-</div>
               <div className="plan-column basic">-</div>
               <div className="plan-column premium">✓</div>
+              <div className="plan-column elite">✓</div>
             </div>
             
             <div className="comparison-row">
@@ -319,6 +372,7 @@ const Pricing = () => {
               <div className="plan-column free">-</div>
               <div className="plan-column basic">-</div>
               <div className="plan-column premium">✓</div>
+              <div className="plan-column elite">✓</div>
             </div>
           </div>
           
@@ -331,6 +385,7 @@ const Pricing = () => {
               <div className="plan-column free">1</div>
               <div className="plan-column basic">24</div>
               <div className="plan-column premium">Unlimited</div>
+              <div className="plan-column elite">Unlimited</div>
             </div>
             
             <div className="comparison-row">
@@ -338,6 +393,7 @@ const Pricing = () => {
               <div className="plan-column free">24 hours</div>
               <div className="plan-column basic">Immediate</div>
               <div className="plan-column premium">Immediate</div>
+              <div className="plan-column elite">6 hours</div>
             </div>
           </div>
         </div>
@@ -475,3 +531,27 @@ const Pricing = () => {
 };
 
 export default Pricing;
+
+/* Add additional CSS for highlighted features */
+/* .highlight-features .featured-item {
+  font-weight: 600;
+  position: relative;
+  padding-left: 5px;
+}
+
+.highlight-features .featured-item::before {
+  content: '★';
+  color: #9c27b0;
+  margin-right: 5px;
+}
+
+.elite-ribbon {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 30px;
+  height: 30px;
+  background: linear-gradient(135deg, #9c27b0, #673ab7);
+  transform: rotate(45deg) translate(15px, -15px);
+}
+ */
