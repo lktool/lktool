@@ -70,7 +70,7 @@ export const adminService = {
   /**
    * Get detailed information about a specific submission
    * @param {number} id - Submission ID
-   * @returns {Promise<Object>} Submission details
+   * @returns {Promise<Object>}
    */
   async getSubmissionDetails(id) {
     try {
@@ -279,23 +279,38 @@ export const adminService = {
   },
 
   /**
-   * Assign subscription tier to user
-   * @param {Object} data - Subscription data with email, tier, and optional validity period
-   * @returns {Promise<Object>} API response
+   * Assign or update a subscription for a user
+   * @param {string} email - User's email
+   * @param {string} tier - Subscription tier (free, basic, premium, premium_elite)
+   * @param {number} validForDays - Days the subscription is valid
+   * @returns {Promise<Object>} Result of the operation
    */
-  async assignUserSubscription(data) {
+  async assignUserSubscription(email, tier, validForDays = 30) {
     try {
-      const response = await apiClient.post('/api/auth/admin/user-subscription/', data);
+      // Convert validForDays to number to ensure proper type in request
+      validForDays = parseInt(validForDays, 10);
+      
+      const response = await apiClient.post(
+        `/api/auth/admin/user-subscription/`, 
+        {
+          email,
+          tier,
+          valid_for_days: validForDays
+        }
+      );
+      
       return {
         success: true,
-        message: response.data.message || 'Subscription assigned successfully',
-        ...response.data
+        data: response.data
       };
     } catch (error) {
       console.error('Error assigning subscription:', error);
+      
+      // Include the original error response for debugging
       return {
         success: false,
-        error: error.response?.data?.error || 'Failed to assign subscription'
+        error: error.response?.data?.error || 'Failed to update subscription',
+        originalError: error.response?.data || error.message
       };
     }
   }

@@ -281,6 +281,7 @@ function SubscriptionBadge({ tier }) {
     }
   };
   
+  // Format display name for Premium Elite tier
   const getDisplayName = () => {
     if (tier === 'premium_elite') return 'Premium Elite';
     return tier.charAt(0).toUpperCase() + tier.slice(1);
