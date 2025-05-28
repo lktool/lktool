@@ -140,16 +140,6 @@
   color: #2f855a;
 }
 
-/* Add styles for the Premium Elite badge and indicators */
-.badge.premium-elite {
-  background-color: #9c27b0;
-  color: white;
-}
-
-.subscription-row.premium-elite {
-  border-left: 4px solid #9c27b0;
-}
-
 .edit-button {
   background-color: #4299e1;
   color: white;
