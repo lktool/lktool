@@ -7,6 +7,7 @@ from django.views.generic import TemplateView
 from django.conf import settings
 from django.conf.urls.static import static
 from users.views import GoogleAuthView  # Import the view directly
+from contact.admin_views import AdminSubmissionsView, AdminSubmissionDetailView, AdminProcessedSubmissionsView
 
 urlpatterns = [
     # Django admin site
@@ -16,9 +17,12 @@ urlpatterns = [
     path('api/auth/', include('users.urls')),
     path('api/contact/', include('contact.urls')),
     
-    # Admin API endpoints - fix the configuration to use the dedicated files
+    # Admin API endpoints
     path('api/admin/', include('admin_panel.urls')),
-    path('api/admin/', include('contact.admin_urls')),  # Use admin_urls.py instead of direct views
+    path('api/admin/submissions/', AdminSubmissionsView.as_view(), name='admin_submissions'),
+    path('api/admin/submissions/<int:submission_id>/', AdminSubmissionDetailView.as_view(), name='admin_submission_detail'),
+    path('api/admin/processed/', AdminProcessedSubmissionsView.as_view(), name='admin_processed_submissions'),
+    path('api/admin/processed/<int:submission_id>/', AdminProcessedSubmissionsView.as_view(), name='admin_delete_submission'),
     
     # IMPORTANT: Add legacy auth routes for compatibility with frontend
     path('auth/', include('users.urls')),  # This will handle /auth/signup/ as well

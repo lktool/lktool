@@ -61,25 +61,33 @@ class CustomUser(AbstractUser):
 
 # Add the subscription model
 class UserSubscription(models.Model):
-    """Model to track user subscription details"""
-    TIER_CHOICES = (
+    """Model to track user subscription tiers and status"""
+    SUBSCRIPTION_TIERS = (
         ('free', 'Free'),
         ('basic', 'Basic'),
         ('premium', 'Premium'),
-        ('premium_elite', 'Premium Elite'),  # Add the new Premium Elite tier
     )
     
     user = models.OneToOneField('users.CustomUser', on_delete=models.CASCADE, related_name='subscription')
-    tier = models.CharField(max_length=20, choices=TIER_CHOICES, default='free')
+    tier = models.CharField(max_length=10, choices=SUBSCRIPTION_TIERS, default='free')
     start_date = models.DateTimeField(auto_now_add=True)
     end_date = models.DateTimeField(null=True, blank=True)
-    is_active = models.BooleanField(default=True)
-    last_updated = models.DateTimeField(auto_now=True)
-
-    def __str__(self):
-        return f"{self.user.email} - {self.tier} ({self.is_active})"
+    # Make assigned_by nullable
+    assigned_by = models.ForeignKey('users.CustomUser', on_delete=models.SET_NULL, 
+                                   null=True, blank=True, related_name='assigned_subscriptions')
+    notes = models.TextField(null=True, blank=True)
     
     class Meta:
-        ordering = ['-start_date']
-        verbose_name = "User Subscription"
-        verbose_name_plural = "User Subscriptions"
+        verbose_name = 'User Subscription'
+        verbose_name_plural = 'User Subscriptions'
+    
+    def is_active(self):
+        """Check if subscription is still active"""
+        if self.tier == 'free':
+            return True
+        if self.end_date is None:  # Unlimited subscription
+            return True
+        return timezone.now() <= self.end_date
+    
+    def __str__(self):
+        return f"{self.user.email}: {self.tier} ({'Active' if self.is_active() else 'Expired'})"
