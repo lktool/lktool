@@ -298,5 +298,29 @@ export const adminService = {
         error: error.response?.data?.error || 'Failed to assign subscription'
       };
     }
+  },
+
+  /**
+   * Delete a user's subscription
+   * @param {string} email - User's email
+   * @returns {Promise<Object>} Result of the operation
+   */
+  async deleteUserSubscription(email) {
+    try {
+      const response = await apiClient.delete(`/api/auth/admin/user-subscription/`, {
+        params: { email }
+      });
+      
+      return {
+        success: true,
+        data: response.data
+      };
+    } catch (error) {
+      console.error('Error deleting subscription:', error);
+      return {
+        success: false,
+        error: error.response?.data?.error || 'Failed to delete subscription'
+      };
+    }
   }
 };

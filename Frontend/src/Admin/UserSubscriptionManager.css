@@ -153,6 +153,73 @@
   background-color: #3182ce;
 }
 
+/* Delete modal styling */
+.delete-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.delete-modal-content {
+  background-color: white;
+  padding: 24px;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 500px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.delete-modal-content h3 {
+  margin-top: 0;
+  color: #e53935;
+}
+
+.delete-modal-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.delete-modal-buttons .cancel-button {
+  background-color: #f5f5f5;
+  color: #333;
+  border: 1px solid #ddd;
+}
+
+.delete-modal-buttons .delete-button {
+  background-color: #e53935;
+  color: white;
+  border: none;
+}
+
+/* Add styles for the delete button in the table */
+.action-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.delete-button {
+  background-color: #e53935;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.delete-button:hover {
+  background-color: #c62828;
+}
+
 @media (max-width: 768px) {
   .subscription-manager-container {
     padding: 1.5rem;

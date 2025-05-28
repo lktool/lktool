@@ -2,11 +2,14 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAdminUser
+from django.contrib.auth import get_user_model
 from django.utils import timezone
-from datetime import timedelta
-from .models import CustomUser, UserSubscription
-from .authentication import AdminJWTAuthentication
+import datetime
 import traceback
+from .models import UserSubscription
+from .authentication import AdminJWTAuthentication
+
+User = get_user_model()
 
 class AdminUserSubscriptionView(APIView):
     """API endpoint for admin users to manage subscriptions"""
@@ -105,4 +108,41 @@ class AdminUserSubscriptionView(APIView):
             print(traceback.format_exc())
             return Response({
                 'error': f'Failed to update subscription: {str(e)}'
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def delete(self, request):
+        """Delete a user's subscription"""
+        try:
+            email = request.query_params.get('email')
+            
+            if not email:
+                return Response({
+                    'error': 'Email parameter is required'
+                }, status=status.HTTP_400_BAD_REQUEST)
+                
+            # Find user by email
+            try:
+                user = User.objects.get(email=email)
+            except User.DoesNotExist:
+                return Response({
+                    'error': f'User with email {email} not found'
+                }, status=status.HTTP_404_NOT_FOUND)
+            
+            # Try to find and delete the subscription
+            try:
+                subscription = UserSubscription.objects.get(user=user)
+                subscription.delete()
+                return Response({
+                    'message': f'Subscription deleted for {email}'
+                }, status=status.HTTP_200_OK)
+            except UserSubscription.DoesNotExist:
+                return Response({
+                    'error': f'No subscription found for {email}'
+                }, status=status.HTTP_404_NOT_FOUND)
+            
+        except Exception as e:
+            print(f"Error deleting subscription: {str(e)}")
+            print(traceback.format_exc())
+            return Response({
+                'error': f'Failed to delete subscription: {str(e)}'
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
