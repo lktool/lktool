@@ -4,7 +4,7 @@
  */
 
 // Get base API URL from environment variables
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://lktool.onrender.com';
+const API_BASE_URL = import.meta.env.VITE_API_URL ;
 
 // Log the API base URL for debugging
 console.log('API Base URL configured as:', API_BASE_URL);
@@ -80,7 +80,8 @@ export const AUTH_CONFIG = {
 // OAuth configuration
 export const OAUTH_CONFIG = {
   GOOGLE: {
-    CLIENT_ID: '865917249576-o12qfisk9hpp4b10vjvdj2d1kqhunva9.apps.googleusercontent.com',
+    // Use the environment variable for CLIENT_ID
+    CLIENT_ID: import.meta.env.VITE_GOOGLE_CLIENT_ID ,
     REDIRECT_URI: `${window.location.origin}/auth/google/callback`,
     RESPONSE_TYPE: 'id_token',
     SCOPE: 'email profile',
