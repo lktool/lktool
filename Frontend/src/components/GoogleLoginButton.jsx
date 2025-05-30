@@ -83,7 +83,7 @@ const GoogleLoginButton = ({ onSuccess, actionType = 'login' }) => {
       localStorage.removeItem('google_auth_action');
       
       // Using the now-working API endpoint
-      const url = 'https://lktool.onrender.com/api/auth/google/';
+      const url = `${import.meta.env.VITE_API_URL}/api/auth/google/`;
       
       const response = await axios({
         method: 'POST',
