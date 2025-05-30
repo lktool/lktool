@@ -235,7 +235,7 @@ def test_email(request):
     """Admin only view to test email configuration"""
     try:
         # Get email settings from Django settings
-        admin_email = getattr(settings, 'ADMIN_EMAIL', 'mathan21092006@gmail.com')
+        admin_email = getattr(settings, 'ADMIN_EMAIL')
         from_email = settings.DEFAULT_FROM_EMAIL
         email_host = settings.EMAIL_HOST
         email_port = settings.EMAIL_PORT
