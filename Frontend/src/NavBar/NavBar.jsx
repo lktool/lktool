@@ -75,7 +75,7 @@ function NavBar() {
         <nav className="navbar-container">
             <div className="navbar-content">
                 <div className="navbar-title" onClick={() => navigate(getHomeDestination())}>
-                    <h2>LK Tool Box</h2>
+                    <h2>LK Tool Kit</h2>
                 </div>
                 
                 <div className={`navbar-profiles-controls ${isMobileMenuOpen ? 'mobile-open' : ''}`}>
