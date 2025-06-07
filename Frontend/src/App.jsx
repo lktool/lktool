@@ -24,10 +24,16 @@ import Pricing from "./Pricing/Pricing";
 import BlankPage from "./BlankPage/BlankPage";
 import UserSubscriptionManager from "./Admin/UserSubscriptionManager"; // Add this import
 import SubmissionDetails from "./UserSubmissions/SubmissionDetails";
+import CancellationRefundPolicy from "./CancellationRefundPolicy/CancellationRefundPolicy"
+import ContactUs from "./ContactUs/ContactUs"
+import PrivacyPolicy from "./PrivacyPolicy/PrivacyPolicy"
+import ShippingDeliveryPolicy from "./ShippingDeliveryPolicy/ShippingDeliveryPolicy"
+import TermsAndConditions from "./TermsAndConditions/TermsAndConditions"
+import Footer from "./components/Footer"; // Add Footer import
 
 function App() {
   useEffect(() => {
-    document.title = "LinkedIn Profile Analysis Tool";
+    document.title = "LK Tool Kit";
     
     // Check for token expiration on app load
     const checkToken = async () => {
@@ -86,6 +92,11 @@ function App() {
             
             {/* This route handles the Google OAuth callback - matches the redirect URI */}
             <Route path="/auth/google/callback" element={<GoogleAuthCallback />} />
+            <Route path="/terms_and_conditions" element={<TermsAndConditions/>}/>
+            <Route path="/privacy_policy" element={<PrivacyPolicy/>}/>
+            <Route path="/shipping_delivery_policy" element={<ShippingDeliveryPolicy/>}/>
+            <Route path="/contact_us" element={<ContactUs/>}/>
+            <Route path="/cancellation_refund_policy" element={<CancellationRefundPolicy/>}/>
             
             {/* Protected Routes - Only for authenticated users */}
             <Route path="/inputMain" element={<ProtectedRoute><InputMain /></ProtectedRoute>} />
@@ -104,6 +115,7 @@ function App() {
             <Route path="/not-found" element={<NotFound />} />
             <Route path="*" element={<Navigate to="/not-found" replace />} />
           </Routes>
+          <Footer /> {/* Add Footer below Routes */}
         </Router>
       </SubscriptionProvider>
     </>

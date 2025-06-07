@@ -1,0 +1,31 @@
+.contact-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 40px 20px;
+  background-color: white;
+  color: black;
+  text-align: left;
+  font-family: Arial, sans-serif;
+  line-height: 1.6;
+  border-radius: 8px;
+}
+
+.contact-container h1 {
+  font-size: 32px;
+  margin-bottom: 20px;
+}
+
+.contact-container h2 {
+  font-size: 22px;
+  margin-top: 30px;
+  margin-bottom: 10px;
+}
+
+.contact-container p {
+  margin-bottom: 15px;
+}
+
+.contact-container a {
+  color: blue;
+  text-decoration: underline;
+}
