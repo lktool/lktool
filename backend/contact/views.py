@@ -80,28 +80,8 @@ class ContactMessageView(APIView):
             submission = serializer.save()
             
             # Send email notification to admin
-            try:
-                subject = f"New Contact Form Message: {submission.subject}"
-                message = f"""
-                A new contact form message has been submitted:
-                
-                From: {submission.name} <{submission.email}>
-                Subject: {submission.subject}
-                Type: {submission.message_type}
-                
-                Message:
-                {submission.message}
-                """
-                send_notification_email(
-                    subject=subject,
-                    message=message,
-                    recipient_list=[settings.ADMIN_EMAIL]
-                )
-            except Exception as e:
-                print(f"Failed to send contact notification: {e}")
-                
-            return Response({"message": "Your message has been sent successfully!"}, status=status.HTTP_201_CREATED)
-        
+                            
+
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class SubmitFormView(APIView):
