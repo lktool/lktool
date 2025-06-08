@@ -66,9 +66,12 @@ const Pricing = () => {
           </div>
         </div>
         
-        {/* Basic Plan - Remove 'popular' class and badge */}
+        {/* Basic Plan */}
         <div className="pricing-plan">
           <div className="plan-header">
+            <div className="plan-shield basic-shield">
+              <span role="img" aria-label="shield">🛡️</span>
+            </div>
             <h2>Basic</h2>
             <div className="plan-price">
               <span className="price">${billingPeriod === 'monthly' ? '599' : '479.20'}</span>
@@ -105,6 +108,9 @@ const Pricing = () => {
         <div className="pricing-plan special">
           <div className="special-badge">Special Offer</div>
           <div className="plan-header">
+            <div className="plan-shield elite-shield">
+              <span role="img" aria-label="shield">🛡️</span>
+            </div>
             <h2>Premium Elite</h2>
             <div className="plan-price">
               <span className="price">${billingPeriod === 'monthly' ? '899' : '719.20'}</span>
@@ -134,9 +140,12 @@ const Pricing = () => {
           <div className="elite-ribbon"></div>
         </div>
         
-        {/* Premium Plan - Now last */}
+        {/* Premium Plan */}
         <div className="pricing-plan">
           <div className="plan-header">
+            <div className="plan-shield premium-shield">
+              <span role="img" aria-label="shield">🛡️</span>
+            </div>
             <h2>Premium</h2>
             <div className="plan-price">
               <span className="price">${billingPeriod === 'monthly' ? '1299' : '1039.20'}</span>
