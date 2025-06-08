@@ -130,36 +130,6 @@ class SubmitFormView(APIView):
             submission = serializer.save(user=request.user)
             
             # Send email notification to admin
-            try:
-                subject = f"New LinkedIn Profile Submission: {submission.email}"
-                message = f"""
-                A new LinkedIn profile has been submitted:
-                
-                Email: {submission.email}
-                LinkedIn URL: {submission.linkedin_url}
-                
-                Message:
-                {submission.message or 'No additional message provided'}
-                
-                You can review this submission in the admin dashboard.
-                """
-                
-                # Print debug information before sending
-                print(f"Attempting to send admin notification email to {settings.ADMIN_EMAIL}")
-                
-                send_mail(
-                    subject=subject,
-                    message=message,
-                    from_email=settings.DEFAULT_FROM_EMAIL,
-                    recipient_list=[settings.ADMIN_EMAIL],
-                    fail_silently=False,
-                )
-                
-                print(f"Admin notification email sent successfully to {settings.ADMIN_EMAIL}")
-            except Exception as e:
-                print(f"Failed to send admin notification email: {str(e)}")
-                # Log the error but don't affect the user response
-                logger.error(f"Failed to send admin notification: {str(e)}", exc_info=True)
             
             # Return the submission data along with a success message
             return Response({
@@ -182,55 +152,6 @@ class SubmitFormView(APIView):
             created_at__gte=start_of_month
         ).count()
 
-@api_view(['GET'])
-@permission_classes([IsAdminUser])
-def test_email(request):
-    """Admin only view to test email configuration"""
-    try:
-        # Get email settings from Django settings
-        admin_email = getattr(settings, 'ADMIN_EMAIL')
-        from_email = settings.DEFAULT_FROM_EMAIL
-        email_host = settings.EMAIL_HOST
-        email_port = settings.EMAIL_PORT
-        email_user = settings.EMAIL_HOST_USER
-        
-        # Log settings
-        logger.info(f"Testing email: FROM={from_email}, TO={admin_email}, HOST={email_host}, PORT={email_port}, USER={email_user}")
-        
-        # Send test email
-        result = send_mail(
-            subject="Test Email from Django",
-            message="This is a test email to verify your email configuration.",
-            from_email=from_email,
-            recipient_list=[admin_email],
-            fail_silently=False
-        )
-        
-        # Return result
-        return HttpResponse(
-            json.dumps({
-                "success": result > 0,
-                "message": f"Email sent: {result}",
-                "config": {
-                    "host": email_host,
-                    "port": email_port,
-                    "from": from_email,
-                    "to": admin_email,
-                    "use_tls": settings.EMAIL_USE_TLS
-                }
-            }),
-            content_type="application/json"
-        )
-    except Exception as e:
-        return HttpResponse(
-            json.dumps({
-                "success": False,
-                "error": str(e),
-                "traceback": traceback.format_exc()
-            }),
-            content_type="application/json",
-            status=500
-        )
 
 class UserSubmissionsView(APIView):
     """
@@ -341,31 +262,6 @@ class AdminReplyView(APIView):
             submission.save()
             
             # Send email notification to user using the email_service
-            try:
-                subject = f"Response to your LinkedIn Profile Submission"
-                message = f"""
-                Hello,
-                
-                We've reviewed your LinkedIn profile submission and provided feedback:
-                
-                {submission.admin_reply}
-                
-                You can view this response in your account dashboard.
-                
-                Thank you for using our service!
-                """
-                
-                send_notification_email(
-                    subject=subject,
-                    message=message,
-                    recipient_list=[submission.email]
-                )
-                
-                print(f"Reply notification email sent to {submission.email}")
-            except Exception as e:
-                print(f"Failed to send reply notification: {e}")
-            
-            return Response({"message": "Reply sent successfully"}, status=status.HTTP_200_OK)
             
         except ContactSubmission.DoesNotExist:
             return Response({"error": "Submission not found"}, status=status.HTTP_404_NOT_FOUND)
