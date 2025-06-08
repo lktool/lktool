@@ -43,6 +43,9 @@ const Pricing = () => {
         {/* Free Plan */}
         <div className="pricing-plan">
           <div className="plan-header">
+            <span className="plan-shield free-shield">
+              <span role="img" aria-label="shield">🛡️</span>
+            </span>
             <h2>Free</h2>
             <div className="plan-price">
               <span className="price">$0</span>
@@ -69,9 +72,9 @@ const Pricing = () => {
         {/* Basic Plan */}
         <div className="pricing-plan">
           <div className="plan-header">
-            <div className="plan-shield basic-shield">
+            <span className="plan-shield basic-shield">
               <span role="img" aria-label="shield">🛡️</span>
-            </div>
+            </span>
             <h2>Basic</h2>
             <div className="plan-price">
               <span className="price">${billingPeriod === 'monthly' ? '599' : '479.20'}</span>
@@ -108,9 +111,9 @@ const Pricing = () => {
         <div className="pricing-plan special">
           <div className="special-badge">Special Offer</div>
           <div className="plan-header">
-            <div className="plan-shield elite-shield">
+            <span className="plan-shield elite-shield">
               <span role="img" aria-label="shield">🛡️</span>
-            </div>
+            </span>
             <h2>Premium Elite</h2>
             <div className="plan-price">
               <span className="price">${billingPeriod === 'monthly' ? '899' : '719.20'}</span>
@@ -143,9 +146,9 @@ const Pricing = () => {
         {/* Premium Plan */}
         <div className="pricing-plan">
           <div className="plan-header">
-            <div className="plan-shield premium-shield">
+            <span className="plan-shield premium-shield">
               <span role="img" aria-label="shield">🛡️</span>
-            </div>
+            </span>
             <h2>Premium</h2>
             <div className="plan-price">
               <span className="price">${billingPeriod === 'monthly' ? '1299' : '1039.20'}</span>

@@ -303,7 +303,7 @@ CSRF_TRUSTED_ORIGINS = [
     'https://lktool.vercel.app',
 ]
 
-# Email Configuration - Properly load from environment with defaults
+# Email Configuration - Only for Signup Verification
 EMAIL_BACKEND = os.environ.get('EMAIL_BACKEND', 'django.core.mail.backends.smtp.EmailBackend')
 EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
 EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 587))
@@ -313,6 +313,15 @@ EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
 
 # Default to EMAIL_HOST_USER if no DEFAULT_FROM_EMAIL is provided
 DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL') or EMAIL_HOST_USER
+
+# Comment out unused email settings
+"""
+ADMIN_EMAIL = os.environ.get('ADMIN_EMAIL') or DEFAULT_FROM_EMAIL
+SEND_VERIFICATION_EMAIL = True 
+"""
+
+# Frontend URL for email verification links
+FRONTEND_URL = os.environ.get('FRONTEND_URL')
 
 # Admin email for receiving notifications
 ADMIN_EMAIL = os.environ.get('ADMIN_EMAIL') or DEFAULT_FROM_EMAIL
@@ -327,15 +336,6 @@ print(f"EMAIL_HOST_USER: {EMAIL_HOST_USER}")
 print(f"DEFAULT_FROM_EMAIL: {DEFAULT_FROM_EMAIL}")
 print(f"ADMIN_EMAIL: {ADMIN_EMAIL}")
 print("-------------------------\n")
-
-# Frontend URL for email verification links
-FRONTEND_URL = os.environ.get('FRONTEND_URL')
-
-# Email background processing setting
-SEND_VERIFICATION_EMAIL = True 
-
-# Admin email for receiving contact form submissions
-ADMIN_EMAIL = os.environ.get('ADMIN_EMAIL', DEFAULT_FROM_EMAIL)
 
 # Add email debugging in development
 if DEBUG:

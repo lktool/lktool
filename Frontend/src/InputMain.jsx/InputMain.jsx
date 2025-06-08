@@ -208,7 +208,7 @@ function InputMain() {
                         
                         {/* Display subscription tier and limits */}
                         <div className="subscription-info">
-                            {/* Add shield icon with color based on tier */}
+                            {/* Gradient shield icon with color based on tier */}
                             <span
                                 className={`inputmain-shield ${
                                     (tier || 'free').toLowerCase() === 'basic'
@@ -217,7 +217,7 @@ function InputMain() {
                                             ? 'elite-shield'
                                             : (tier || 'free').toLowerCase() === 'premium'
                                                 ? 'premium-shield'
-                                                : ''
+                                                : 'free-shield'
                                 }`}
                                 style={{
                                     marginRight: "10px",
@@ -228,9 +228,11 @@ function InputMain() {
                                     borderRadius: "50%",
                                     width: "2.2rem",
                                     height: "2.2rem",
+                                    background: "none" // let CSS class handle background
                                 }}
                             >
                                 {(tier || 'free').toLowerCase() !== 'free' && <span role="img" aria-label="shield">🛡️</span>}
+                                {(tier || 'free').toLowerCase() === 'free' && <span role="img" aria-label="shield">🛡️</span>}
                             </span>
                             <p className={`tier-badge ${(tier || 'free').toLowerCase()}`}>
                                 {tier ? tier.charAt(0).toUpperCase() + tier.slice(1) : 'Free'} Tier

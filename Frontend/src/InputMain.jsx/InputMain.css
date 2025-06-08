@@ -394,3 +394,26 @@
 .debug-refresh-btn:hover {
   background-color: #c92a2a;
 }
+
+.inputmain-shield {
+  /* fallback for browsers that don't support gradients */
+  background: #e2e8f0;
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+.inputmain-shield.basic-shield {
+  background: linear-gradient(135deg, #805ad5 0%, #a084e8 100%);
+  color: #fff;
+}
+.inputmain-shield.elite-shield {
+  background: linear-gradient(135deg, #9c27b0 0%, #673ab7 100%);
+  color: #fff;
+}
+.inputmain-shield.premium-shield {
+  background: linear-gradient(135deg, #ff9800 0%, #dd6b20 100%);
+  color: #fff;
+}
+.inputmain-shield.free-shield {
+  background: linear-gradient(135deg, #64748b 0%, #a0aec0 100%);
+  color: #fff;
+}
