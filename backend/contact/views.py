@@ -54,6 +54,7 @@ class ContactFormView(APIView):
                 print(f"Updated submission with user reference: {request.user}")
             
             # Send email notification to admin
+            """
             try:
                 subject = f"New LinkedIn Profile Submission: {submission.email}"
                 message = f"""
@@ -81,7 +82,7 @@ class ContactFormView(APIView):
             except Exception as e:
                 print(f"Failed to send email notification: {e}")
                 # Continue even if email fails - don't impact user experience
-            
+            """
             return Response({"message": "Form submitted successfully!"}, status=status.HTTP_201_CREATED)
         
         # Debug validation errors
@@ -176,6 +177,7 @@ class SubmitFormView(APIView):
             print(f"Associating submission with authenticated user: {request.user.email}")
             submission = serializer.save(user=request.user)
             
+            """
             # Send email notification to admin
             try:
                 subject = f"New LinkedIn Profile Submission: {submission.email}"
@@ -207,7 +209,7 @@ class SubmitFormView(APIView):
                 print(f"Failed to send admin notification email: {str(e)}")
                 # Log the error but don't affect the user response
                 logger.error(f"Failed to send admin notification: {str(e)}", exc_info=True)
-            
+            """
             # Return the submission data along with a success message
             return Response({
                 "success": True, 
