@@ -246,9 +246,7 @@ class UserAnalysesView(APIView):
         return Response(data)
 
 class AdminReplyView(APIView):
-    """
-    API endpoint for admins to reply to user submissions
-    """
+    """API endpoint for admins to reply to user submissions"""
     permission_classes = [IsAdminUser]
     
     def post(self, request, submission_id):
@@ -261,9 +259,20 @@ class AdminReplyView(APIView):
             submission.is_processed = True
             submission.save()
             
-            # Send email notification to user using the email_service
+            # Return success response immediately without waiting for email
+            return Response({
+                "success": True,
+                "message": "Reply sent successfully",
+                "submission_id": submission_id
+            }, status=status.HTTP_200_OK)
             
         except ContactSubmission.DoesNotExist:
-            return Response({"error": "Submission not found"}, status=status.HTTP_404_NOT_FOUND)
+            return Response({
+                "success": False,
+                "error": "Submission not found"
+            }, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response({
+                "success": False,
+                "error": str(e)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
